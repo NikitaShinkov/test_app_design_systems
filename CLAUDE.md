@@ -32,7 +32,9 @@ design/
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU) + antd App + reset.css
-        ├── App.tsx      # page shell
+        ├── App.tsx      # shell: Layout > Header (logo, global Input.Search, Badge bell, user Dropdown,
+        │                #   settings/logout) + horizontal Menu (9 sections) + Content + Footer
+        ├── assets/logo.svg
         └── data/
             └── contacts.ts  # `Contact` type + 37 mock records (first 10 = screenshot), newest first
 ```
@@ -54,3 +56,6 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - 2026-11-16: GitHub remote `origin` connected, first push.
 - 2026-11-16: Scaffolded `antd-contacts` (Vite react-ts template, demo files removed, antd + ruRU wired in).
 - 2026-11-16: Added typed mock data `src/data/contacts.ts` (37 contacts).
+- 2026-11-16: App layout shell. The light Header follows the antd docs pattern (`theme.useToken()` →
+  `colorBgContainer`, no custom colours). Responsive parts use `Grid.useBreakpoint()`. Actions outside the demo
+  show `App.useApp().message`.
