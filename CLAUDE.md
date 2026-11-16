@@ -16,8 +16,11 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   custom CSS look.
 - All visual customisation goes **only through antd design tokens** in `antd-contacts/src/theme.ts`
   (`ConfigProvider theme={appTheme}`). Don't put colours or spacing overrides in components. Current theme:
-  `colorPrimary`/`colorLink` `#0084C9`, default antd spacing (no compact algorithm), Table `cellPaddingBlock`
-  3.5px (30px rows).
+  `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 16, Layout
+  `footerPadding` `0px 24px 12px`, Menu `itemPaddingInline` 8, Table `cellPaddingBlock` 4.5px (32px rows).
+  The one exception is the Content padding `16px 24px`, set inline in `App.tsx` because Layout has no token for it.
+- Header actions: notifications, user dropdown (which holds "Выйти"), and a text+icon "Настройки" button.
+  There's no separate logout button.
 - Page layout: exactly one viewport high (`Layout` `100dvh`). Content → Card → `ant-card-body` stretch to the
   free height. The Table has **no pagination**. Only its body scrolls (`scroll.y` measured with a ResizeObserver),
   so the header, menu, breadcrumb, toolbar and table header stay fixed.
@@ -40,9 +43,9 @@ design/
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
-        ├── theme.ts     # appTheme: the single place for tokens (colour, Table row height)
+        ├── theme.ts     # appTheme: the single place for tokens (colour, paddings, Table row height)
         ├── App.tsx      # shell: Layout(100dvh) > Header (logo, global Input.Search, Badge bell, user Dropdown,
-        │                #   settings/logout) + horizontal Menu (9 sections) + Content (flex) + Footer
+        │                #   "Настройки" button) + horizontal Menu (9 sections) + Content (flex) + Footer
         ├── assets/logo.svg
         ├── pages/
         │   └── ContactsPage.tsx  # Breadcrumb (view switcher menu) + full-height Card: title, Input.Search,
@@ -84,6 +87,11 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   it fixed. The row "open" action became an icon `Typography.Link` so rows stay at 30px. Playwright: 29/29 pass
   (page doesn't scroll, card/body/table fill the height, fixed parts don't move while scrolling, rows 30px,
   height follows window resize, 390px OK), 0 console warnings.
+- 2026-11-16: Requested tweaks: `--ant-padding` 8px, `--ant-card-body-padding` 16px,
+  `--ant-layout-footer-padding` `0px 24px 12px`, `--ant-menu-item-padding-inline` 8px, Content padding
+  `16px 24px`, 32px rows. The "Выйти" icon button was removed. "Настройки" is now icon + text. All CSS variables
+  were verified with computed styles in Chrome. Side effect: `padding` 8 also shrinks the `gap="medium"` Flex
+  gaps. Playwright 29/29, 0 console warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:

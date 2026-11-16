@@ -7,11 +7,18 @@ All visual customisation is done with design tokens in `src/theme.ts`.
 
 ## 0. Theme (src/theme.ts)
 ```ts
-token: { colorPrimary: '#0084C9', colorLink: '#0084C9' },
+token: { colorPrimary: '#0084C9', colorLink: '#0084C9', padding: 8 },   // --ant-padding
 components: {
-  Table: { cellPaddingBlock: 3.5 },   // 3.5 + 22 + 3.5 + 1px border = 30px rows
+  Card:   { bodyPadding: 16 },                 // --ant-card-body-padding
+  Layout: { footerPadding: '0px 24px 12px' },  // --ant-layout-footer-padding
+  Menu:   { itemPaddingInline: 8 },            // --ant-menu-item-padding-inline
+  Table:  { cellPaddingBlock: 4.5 },           // 4.5 + 22 + 4.5 + 1px border = 32px rows
 }
 ```
+Every `--ant-*` CSS variable maps one-to-one to a token: drop the `--ant-` prefix, then the component name, and
+camelCase the rest. This makes requests like "set `--ant-card-body-padding: 16px`" easy to automate. Layout
+`Content` has no padding token, so its `16px 24px` is an inline style. The global `padding` token also changes
+every `gap="medium"` and every component padding derived from it.
 Brand colour and row height take **one small file** and no CSS, so the skill can ship a shared `theme.ts` to every
 app. Density can be changed globally the same way: `algorithm: [theme.defaultAlgorithm, theme.compactAlgorithm]`
 was tried and then reverted at the user's request (too compressed). Measured in Chrome: rows 30px, primary
@@ -119,7 +126,7 @@ level 3.
   - The page doesn't scroll. Card, card body and table fill the free height. All 37 rows show, with no pagination.
   - When the list is scrolled to the end, the header, menu, breadcrumb, title and column header don't move
     by even 1px, and the last row can be reached.
-  - Rows are 30px. The primary colour is `rgb(0,132,201)`. The table height follows window resizes.
+  - Rows are 32px. The primary colour is `rgb(0,132,201)`. The table height follows window resizes.
   - Search, sort with its label, the drawer, the create form (validation, then the row inserted on top and the
     list scrolled back to the top) and the breadcrumb view filter all work. 390px has no horizontal scroll.
   - **0 console warnings or errors in dev mode.**

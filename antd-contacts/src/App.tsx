@@ -125,17 +125,9 @@ export default function App() {
             </Button>
           </Dropdown>
 
-          <Tooltip title="Настройки">
-            <Button
-              type="text"
-              icon={<SettingOutlined />}
-              aria-label="Настройки"
-              onClick={() => notInDemo('Настройки')}
-            />
-          </Tooltip>
-          <Tooltip title="Выйти">
-            <Button type="text" icon={<LogoutOutlined />} aria-label="Выйти" onClick={() => notInDemo('Выход')} />
-          </Tooltip>
+          <Button type="text" icon={<SettingOutlined />} onClick={() => notInDemo('Настройки')}>
+            Настройки
+          </Button>
         </Space>
       </Header>
 
@@ -151,7 +143,7 @@ export default function App() {
       />
 
       {/* Content fills the space between the menu and the footer; only the table body scrolls. */}
-      <Content style={{ padding: token.paddingLG, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <Content style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <ContactsPage />
       </Content>
 
