@@ -5,6 +5,8 @@ A skill will standardise the company's internal apps on **TypeScript + React + N
 and it needs a design system. This repo holds trials in which one real page is rebuilt with a candidate
 design system, so we can judge how it looks and how well the skill can use it.
 
+Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, branch `main`).
+
 Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" list (`img_design_1.png`).
 
 ## Rules (must follow)
@@ -32,3 +34,4 @@ None yet. They will be added when `antd-contacts/` is scaffolded.
 
 ## Progress log
 - 2026-11-16: Repo initialised (`.gitignore`, `CLAUDE.md`, reference screenshot).
+- 2026-11-16: GitHub remote `origin` connected, first push.
