@@ -67,17 +67,18 @@ export default function App() {
   const notInDemo = (what: string) => message.info(`«${what}» не входит в демо-страницу`);
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ height: '100dvh' }}>
       <Header
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: token.margin,
+          gap: token.marginLG,
           background: token.colorBgContainer,
+          paddingInline: token.paddingLG,
         }}
       >
         <Space size="small" align="center">
-          <Image src={logo} alt="Dynamics Scientific" height={24} preview={false} />
+          <Image src={logo} alt="Dynamics Scientific" height={28} preview={false} />
           {screens.md && (
             <>
               <Divider orientation="vertical" />
@@ -142,14 +143,15 @@ export default function App() {
         mode="horizontal"
         selectedKeys={['contacts']}
         items={sections}
-        style={{ paddingInline: token.paddingXS }}
+        style={{ paddingInline: token.paddingLG }}
         onClick={({ key }) => {
           const section = sections.find((s) => s.key === key);
           if (key !== 'contacts' && section) notInDemo(`Раздел ${section.label}`);
         }}
       />
 
-      <Content style={{ padding: token.padding }}>
+      {/* Content fills the space between the menu and the footer; only the table body scrolls. */}
+      <Content style={{ padding: token.paddingLG, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <ContactsPage />
       </Content>
 

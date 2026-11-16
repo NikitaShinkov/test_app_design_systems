@@ -16,8 +16,11 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   custom CSS look.
 - All visual customisation goes **only through antd design tokens** in `antd-contacts/src/theme.ts`
   (`ConfigProvider theme={appTheme}`). Don't put colours or spacing overrides in components. Current theme:
-  `colorPrimary`/`colorLink` `#0084C9`, `defaultAlgorithm + compactAlgorithm`, Layout header 48px,
-  menu line 40px, Table cell padding 4px/12px (30px rows).
+  `colorPrimary`/`colorLink` `#0084C9`, default antd spacing (no compact algorithm), Table `cellPaddingBlock`
+  3.5px (30px rows).
+- Page layout: exactly one viewport high (`Layout` `100dvh`). Content → Card → `ant-card-body` stretch to the
+  free height. The Table has **no pagination**. Only its body scrolls (`scroll.y` measured with a ResizeObserver),
+  so the header, menu, breadcrumb, toolbar and table header stay fixed.
 - Frontend only, with typed mock data. There's no Express server in this trial.
 - Look up antd APIs in the machine-readable docs: https://ant.design/llms.txt and
   https://ant.design/llms-full.txt, plus the installed types in `node_modules/antd/es/**/*.d.ts`.
@@ -30,21 +33,21 @@ design/
 ├── CLAUDE.md            # this file
 ├── img_design_1.png     # reference screenshot (structure only)
 ├── logo.svg             # Dynamics Scientific logo (source file)
-├── docs/screenshots/    # rendered results of the antd trial (1440px, 390px, drawer, create modal)
+├── docs/screenshots/    # rendered results (1440px, 1440px scrolled, 390px, drawer, create modal)
 └── antd-contacts/       # Ant Design trial
     ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
     ├── index.html
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
-        ├── theme.ts     # appTheme: the single place for tokens (colour, compact algorithm, component tokens)
-        ├── App.tsx      # shell: Layout > Header (logo, global Input.Search, Badge bell, user Dropdown,
-        │                #   settings/logout) + horizontal Menu (9 sections) + Content + Footer
+        ├── theme.ts     # appTheme: the single place for tokens (colour, Table row height)
+        ├── App.tsx      # shell: Layout(100dvh) > Header (logo, global Input.Search, Badge bell, user Dropdown,
+        │                #   settings/logout) + horizontal Menu (9 sections) + Content (flex) + Footer
         ├── assets/logo.svg
         ├── pages/
-        │   └── ContactsPage.tsx  # Breadcrumb (view switcher menu) + Card: title, Input.Search, reload,
-        │                         #   "Создать контакт" (Modal+Form), Table (sort/search/pagination),
-        │                         #   row open → Drawer+Descriptions
+        │   └── ContactsPage.tsx  # Breadcrumb (view switcher menu) + full-height Card: title, Input.Search,
+        │                         #   reload, "Создать контакт" (Modal+Form), Table (sort/search, no pagination,
+        │                         #   body scroll), row open → Drawer+Descriptions
         └── data/
             └── contacts.ts  # `Contact` type + 37 mock records (first 10 = screenshot), newest first
 ```
@@ -76,6 +79,11 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - 2026-11-16: Requested changes: primary colour `#0084C9`, 30px table rows, a compact layout (compact algorithm,
   smaller header/menu/paddings/gaps, Card `size="small"`, Title level 4). Measured in Chrome: rows 30px,
   header 48px, menu 40px, primary `rgb(0,132,201)`. 14/14 checks pass, 0 console warnings.
+- 2026-11-16: Requested changes: compact spacing reverted to antd defaults (the colour stays). The Card body fills
+  the free height. Pagination removed, all rows shown, and only the table body scrolls, with everything above
+  it fixed. The row "open" action became an icon `Typography.Link` so rows stay at 30px. Playwright: 29/29 pass
+  (page doesn't scroll, card/body/table fill the height, fixed parts don't move while scrolling, rows 30px,
+  height follows window resize, 390px OK), 0 console warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -83,6 +91,8 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - `Divider` `type` is deprecated in v6. Use `orientation="vertical"`.
 - A Modal with a Form uses the `modalRender` + `okButtonProps.htmlType="submit"` pattern and `destroyOnHidden`.
 - Headless Chrome `--window-size` can't go below ~500px wide, so use Playwright viewports for mobile checks.
-- Row height = `cellPaddingBlock` × 2 + 22px line height. Buttons inside rows need `size="small"`, or they
-  stretch the row.
+- Row height = `cellPaddingBlock` × 2 + 22px line height + 1px row border. Any Button in a row (even `small`,
+  24px) stretches it, so use an icon `Typography.Link` instead.
+- Table body scrolling needs a numeric `scroll.y`. Measure the wrapper (`flex: 1`, `minHeight: 0`) minus the
+  `.ant-table-thead` height. Every flex ancestor needs `minHeight: 0`.
 - Stopping a background `npx vite` task can leave the node process running on its port. Check with `netstat`.

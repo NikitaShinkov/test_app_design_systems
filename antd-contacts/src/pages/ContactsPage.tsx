@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   App as AntApp,
   Breadcrumb,
@@ -8,7 +8,6 @@ import {
   Drawer,
   Flex,
   Form,
-  Grid,
   Input,
   Modal,
   Space,
@@ -16,7 +15,7 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
-import type { BreadcrumbProps, TableProps } from 'antd';
+import type { BreadcrumbProps, TableProps, TableRef } from 'antd';
 import { ContactsOutlined, ExportOutlined, HomeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { contacts as initialContacts } from '../data/contacts';
 import type { Contact } from '../data/contacts';
@@ -24,7 +23,7 @@ import type { Contact } from '../data/contacts';
 const { Title, Text, Link } = Typography;
 
 type BreadcrumbItemMenu = NonNullable<NonNullable<BreadcrumbProps['items']>[number]['menu']>;
-type ViewKey ='all' | 'withPhone' | 'withPosition';
+type ViewKey = 'all' | 'withPhone' | 'withPosition';
 type SortField = 'name' | 'email' | 'phone' | 'position';
 type SortState = { field: SortField; order: 'ascend' | 'descend' } | null;
 type ContactForm = Pick<Contact, 'name' | 'email' | 'phone' | 'position'>;
@@ -59,15 +58,34 @@ const formatDate = (iso: string) =>
 
 export default function ContactsPage() {
   const { message } = AntApp.useApp();
-  const screens = Grid.useBreakpoint();
   const [data, setData] = useState<Contact[]>(initialContacts);
   const [view, setView] = useState<ViewKey>('all');
   const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortState>(null);
   const [loading, setLoading] = useState(false);
   const [opened, setOpened] = useState<Contact | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // Table body height = free space in the card body minus the sticky column header.
+  // antd Table scrolls its body only with a fixed `scroll.y`, so measure the available space.
+  const tableBoxRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<TableRef>(null);
+  const [scrollY, setScrollY] = useState<number>();
+
+  useEffect(() => {
+    const box = tableBoxRef.current;
+    if (!box) return;
+    const update = () => {
+      const headerHeight = box.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 0;
+      setScrollY(Math.max(0, Math.floor(box.clientHeight - headerHeight)));
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(box);
+    update();
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToTop = () => tableRef.current?.scrollTo({ top: 0 });
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -86,7 +104,7 @@ export default function ContactsPage() {
     selectedKeys: [view],
     onClick: ({ key }) => {
       setView(key as ViewKey);
-      setPage(1);
+      scrollToTop();
     },
   };
 
@@ -116,20 +134,16 @@ export default function ContactsPage() {
       align: 'center',
       render: (_, record) => (
         <Tooltip title="Открыть карточку">
-          <Button
-            type="text"
-            size="small"
-            icon={<ExportOutlined />}
-            aria-label={`Открыть ${record.name}`}
-            onClick={() => setOpened(record)}
-          />
+          {/* Link (not Button) keeps the row at one text line = 30px. */}
+          <Link role="button" aria-label={`Открыть ${record.name}`} onClick={() => setOpened(record)}>
+            <ExportOutlined />
+          </Link>
         </Tooltip>
       ),
     },
   ];
 
-  const handleTableChange: TableProps<Contact>['onChange'] = (pagination, _filters, sorter) => {
-    setPage(pagination.current ?? 1);
+  const handleTableChange: TableProps<Contact>['onChange'] = (_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : sorter;
     setSort(s?.order && s.columnKey ? { field: s.columnKey as SortField, order: s.order } : null);
   };
@@ -151,12 +165,12 @@ export default function ContactsPage() {
     setData((prev) => [contact, ...prev]);
     setCreating(false);
     setSort(null);
-    setPage(1);
+    scrollToTop();
     message.success(`Контакт «${contact.name}» создан`);
   };
 
   return (
-    <Flex vertical gap="small">
+    <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
       <Breadcrumb
         items={[
           { title: <HomeOutlined />, href: '#' },
@@ -165,12 +179,16 @@ export default function ContactsPage() {
         ]}
       />
 
-      <Card size="small">
-        <Flex vertical gap="small">
-          <Flex justify="space-between" align="center" wrap gap="small">
-            <Space size="small" align="center">
-              <ContactsOutlined style={{ fontSize: 20 }} />
-              <Title level={4} style={{ margin: 0 }}>
+      {/* Card and its body stretch to the full remaining height. */}
+      <Card
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+        styles={{ body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
+      >
+        <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
+          <Flex justify="space-between" align="center" wrap gap="medium">
+            <Space size="medium" align="center">
+              <ContactsOutlined style={{ fontSize: 24 }} />
+              <Title level={3} style={{ margin: 0 }}>
                 Контакты
               </Title>
             </Space>
@@ -182,7 +200,7 @@ export default function ContactsPage() {
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
-                  setPage(1);
+                  scrollToTop();
                 }}
                 style={{ width: 280 }}
               />
@@ -199,21 +217,19 @@ export default function ContactsPage() {
             {filtered.length} {plural(filtered.length, ['запись', 'записи', 'записей'])} · Сортировка: {sortLabel}
           </Text>
 
-          <Table<Contact>
-            rowKey="id"
-            columns={columns}
-            dataSource={filtered}
-            loading={loading}
-            onChange={handleTableChange}
-            scroll={{ x: 900 }}
-            pagination={{
-              current: page,
-              pageSize: 10,
-              showSizeChanger: false,
-              simple: !screens.md,
-              showTotal: (total) => `${total} ${plural(total, ['контакт', 'контакта', 'контактов'])}`,
-            }}
-          />
+          {/* Fills the rest of the card body; the table header stays fixed, rows scroll. */}
+          <div ref={tableBoxRef} style={{ flex: 1, minHeight: 0 }}>
+            <Table<Contact>
+              ref={tableRef}
+              rowKey="id"
+              columns={columns}
+              dataSource={filtered}
+              loading={loading}
+              onChange={handleTableChange}
+              scroll={{ x: 900, y: scrollY }}
+              pagination={false}
+            />
+          </div>
         </Flex>
       </Card>
 

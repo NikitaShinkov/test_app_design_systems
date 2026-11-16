@@ -7,17 +7,27 @@ All visual customisation is done with design tokens in `src/theme.ts`.
 
 ## 0. Theme (src/theme.ts)
 ```ts
-algorithm: [theme.defaultAlgorithm, theme.compactAlgorithm],   // denser everything
 token: { colorPrimary: '#0084C9', colorLink: '#0084C9' },
 components: {
-  Layout: { headerHeight: 48, headerPadding: '0 16px', footerPadding: '12px 16px' },
-  Menu:   { horizontalLineHeight: '40px' },
-  Table:  { cellPaddingBlock: 4, cellPaddingInline: 12 },        // 4 + 22 + 4 = 30px rows
+  Table: { cellPaddingBlock: 3.5 },   // 3.5 + 22 + 3.5 + 1px border = 30px rows
 }
 ```
-Brand colour, density and row height took **one file, about 20 lines**, and no CSS. This is a strong point for
-the skill: it can ship a shared `theme.ts` to every app. Measured in Chrome: rows 30px, header 48px, menu
-40px, primary `rgb(0,132,201)`.
+Brand colour and row height take **one small file** and no CSS, so the skill can ship a shared `theme.ts` to every
+app. Density can be changed globally the same way: `algorithm: [theme.defaultAlgorithm, theme.compactAlgorithm]`
+was tried and then reverted at the user's request (too compressed). Measured in Chrome: rows 30px, primary
+`rgb(0,132,201)`.
+
+## 0.1 Full-height page with a fixed header and a scrolling list
+- `Layout style={{ height: '100dvh' }}` → `Content` (flex column, `minHeight: 0`) → `Card` (`flex: 1`) with
+  `styles.body` (`flex: 1`, flex column), so `ant-card-body` fills the remaining height.
+- `Table pagination={false}` shows every row. `scroll={{ x: 900, y }}` makes antd render a fixed column header
+  and a scrolling body.
+- antd needs a **number** for `scroll.y`, and there's no "fill parent" option. The table sits in a
+  `<div style={{ flex: 1, minHeight: 0 }}>`. A `ResizeObserver` sets `y = wrapper height − .ant-table-thead height`,
+  so it follows window resizes. `TableRef.scrollTo({ top: 0 })` resets the scroll after search, view change and
+  create.
+- This is the one place where antd needed glue code (about 15 lines). Skill note: it should become a shared
+  hook, e.g. `useTableScrollY()`.
 
 Screenshots: `../docs/screenshots/` (1440px, 390px, row drawer, create modal).
 
@@ -43,13 +53,13 @@ run that asserts **0 console warnings**. This trial passes it.
 | User menu | `Dropdown menu={{ items }}` + `Button icon={<Avatar/>}` + `Typography.Text ellipsis` |
 | Section navigation | `Menu mode="horizontal" items` (overflows into "…" automatically) |
 | View switcher ("Все: Контакты ›") | `Breadcrumb` item with `menu` |
-| Page container | `Card` |
+| Page container | `Card` (full height via `style` + `styles.body`) |
 | Page title | icon + `Typography.Title level={3}` |
 | Toolbar | `Input.Search`, `Button icon={<ReloadOutlined/>}`, `Button type="primary" icon={<PlusOutlined/>}` |
 | Count / sort line | `Typography.Text type="secondary"` |
-| Data grid | `Table` with column `sorter`, `sortOrder` (controlled), `ellipsis`, `scroll={{ x }}` |
-| Row link / open action | `Typography.Link`, `Button type="text" icon={<ExportOutlined/>}` |
-| Pagination + total | `Table pagination={{ showTotal, simple: !screens.md }}` |
+| Data grid | `Table` with column `sorter`, `sortOrder` (controlled), `ellipsis`, `scroll={{ x, y }}`, `pagination={false}` |
+| Row link / open action | `Typography.Link` (text and icon-only, so rows stay one line high) |
+| Total | the count line above the table (pagination removed by request) |
 | Record details | `Drawer` + `Descriptions items` |
 | Create form | `Modal` + `Form` (via `modalRender`), `Form.Item rules` |
 | Feedback | `App.useApp().message` |
@@ -70,17 +80,20 @@ run that asserts **0 console warnings**. This trial passes it.
   `NonNullable<NonNullable<BreadcrumbProps['items']>[number]['menu']>`.
 
 ## 4. Inline styles used (all layout or size, none for appearance)
-`minHeight: 100vh` on Layout. Header flex alignment and padding from tokens. Search `flex`/`maxWidth`/`width`.
-`marginInlineStart: auto` to push header actions right. `maxWidth` for the ellipsed user name.
-`margin: 0` on the page Title (Title has a default bottom margin). Icon `fontSize: 20` to match Title level 4.
+`height: 100dvh` on Layout, and `flex: 1` / `minHeight: 0` / flex-column on Content, Card, the card body and
+the table wrapper (full-height layout). Header flex alignment and padding from tokens. Search
+`flex`/`maxWidth`/`width`. `marginInlineStart: auto` to push header actions right. `maxWidth` for the ellipsed
+user name. `margin: 0` on the page Title (Title has a default bottom margin). Icon `fontSize: 24` to match Title
+level 3.
 
 ## 5. Differences from the original page (by design or by antd)
-- The brand colour and density come from `theme.ts`. Borders, radii and shapes are still antd defaults.
+- The brand colour comes from `theme.ts`. Borders, radii, shapes and spacing are antd defaults.
 - The header and the section menu are two standard rows (`Header` + horizontal `Menu`), not one custom bar.
 - "Created At ↓" is the default order, but there's no column for it (same as the original). Column sort
   replaces it, and the label updates.
 - Empty phone and position cells are blank (Table default). The drawer shows "—".
 - The original's column-header "›" affordances became antd sort indicators.
+- The original's pagination was replaced, on request, by one scrolling list under a fixed header.
 - Added standard behaviour the screenshot only implied: a create form with validation, a details drawer,
   views in the breadcrumb menu, and toasts for sections outside the demo.
 
@@ -91,16 +104,22 @@ run that asserts **0 console warnings**. This trial passes it.
   in the `.d.ts` files make it easy for an agent to generate correct code and check it.
 - Data-driven APIs (`items`, `columns`, `menu`) suit code generation well.
 - Built-in ru_RU locale, a responsive `Grid`, and form validation.
+- Theme tokens cover brand colour, density and component sizes with no CSS.
 
 **Cons / watch-outs**
 - Bundle size: ~520 kB minified JS (~170 kB gzip) for one page. Vite warns about it, and it needs code-splitting in
   larger apps.
 - Many v5 → v6 renames. LLM training data is full of v5 code, so the skill must enforce the v6 rules above.
+- A Table that fills its parent's height isn't built in. It needs a measured `scroll.y` (see 0.1).
 - The default look is recognisably "antd". Matching an existing brand needs theme tokens.
 
 ## 7. Verification performed
 - `npm run build` (`tsc -b && vite build`) passes.
-- Playwright + the local Chrome checks (14/14 pass): 10 rows on page 1 and a total of 37; search filters and
-  updates the count; sort asc/desc/clear updates the label; page 4 has 7 rows; the drawer opens; the create form
-  validates and then inserts the new row on top (total 38); the breadcrumb view filter works; 390px has no
-  horizontal page scroll; **0 console warnings or errors in dev mode**.
+- Playwright + the local Chrome checks (29/29 pass) at 1440×900 and 390×844:
+  - The page doesn't scroll. Card, card body and table fill the free height. All 37 rows show, with no pagination.
+  - When the list is scrolled to the end, the header, menu, breadcrumb, title and column header don't move
+    by even 1px, and the last row can be reached.
+  - Rows are 30px. The primary colour is `rgb(0,132,201)`. The table height follows window resizes.
+  - Search, sort with its label, the drawer, the create form (validation, then the row inserted on top and the
+    list scrolled back to the top) and the breadcrumb view filter all work. 390px has no horizontal scroll.
+  - **0 console warnings or errors in dev mode.**
