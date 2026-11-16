@@ -27,7 +27,9 @@ design/
 ├── CLAUDE.md            # this file
 ├── img_design_1.png     # reference screenshot (structure only)
 ├── logo.svg             # Dynamics Scientific logo (source file)
+├── docs/screenshots/    # rendered results of the antd trial (1440px, 390px, drawer, create modal)
 └── antd-contacts/       # Ant Design trial
+    ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
     ├── index.html
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
     └── src/
@@ -66,6 +68,7 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - 2026-11-16: Contacts page. Checked in Chrome through Playwright (search, sort, pagination, drawer, create
   form validation, view switch, 390px with no horizontal scroll). There are 0 antd console warnings in dev.
   Below `md`, the global search becomes an icon button and the pagination switches to `simple`.
+- 2026-11-16: Added `ANTD_NOTES.md` and `docs/screenshots/`. The Ant Design trial is complete.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
