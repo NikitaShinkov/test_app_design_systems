@@ -32,7 +32,9 @@ design/
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU) + antd App + reset.css
-        └── App.tsx      # page shell
+        ├── App.tsx      # page shell
+        └── data/
+            └── contacts.ts  # `Contact` type + 37 mock records (first 10 = screenshot), newest first
 ```
 
 ## Stack versions
@@ -51,3 +53,4 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - 2026-11-16: Repo initialised (`.gitignore`, `CLAUDE.md`, reference screenshot).
 - 2026-11-16: GitHub remote `origin` connected, first push.
 - 2026-11-16: Scaffolded `antd-contacts` (Vite react-ts template, demo files removed, antd + ruRU wired in).
+- 2026-11-16: Added typed mock data `src/data/contacts.ts` (37 contacts).
