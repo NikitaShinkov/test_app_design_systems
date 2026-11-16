@@ -26,12 +26,28 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
 design/
 ├── CLAUDE.md            # this file
 ├── img_design_1.png     # reference screenshot (structure only)
-└── antd-contacts/       # Ant Design trial (Vite + React + TS), not created yet
+├── logo.svg             # Dynamics Scientific logo (source file)
+└── antd-contacts/       # Ant Design trial
+    ├── index.html
+    ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
+    └── src/
+        ├── main.tsx     # ConfigProvider(locale=ruRU) + antd App + reset.css
+        └── App.tsx      # page shell
 ```
 
-## Commands
-None yet. They will be added when `antd-contacts/` is scaffolded.
+## Stack versions
+antd **6.x** (v6 API: use `orientation` not `direction`, `variant` not `bordered`, size `medium` not
+`middle`/`default`, `items` props for Menu/Breadcrumb, `menu` for Dropdown, `pagination.placement`).
+React 19 needs no compatibility patch for antd v6.
+
+## Commands (run in `antd-contacts/`)
+```bash
+npm install
+npm run dev     # http://localhost:5173
+npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expected)
+```
 
 ## Progress log
 - 2026-11-16: Repo initialised (`.gitignore`, `CLAUDE.md`, reference screenshot).
 - 2026-11-16: GitHub remote `origin` connected, first push.
+- 2026-11-16: Scaffolded `antd-contacts` (Vite react-ts template, demo files removed, antd + ruRU wired in).
