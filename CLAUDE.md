@@ -14,7 +14,10 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   spacing or styling.
 - Use **only standard Ant Design components** (`antd`, `@ant-design/icons`). No custom UI components and no
   custom CSS look.
-- Keep the **default antd theme**: no token or brand overrides. Use only `ConfigProvider locale={ruRU}`.
+- All visual customisation goes **only through antd design tokens** in `antd-contacts/src/theme.ts`
+  (`ConfigProvider theme={appTheme}`). Don't put colours or spacing overrides in components. Current theme:
+  `colorPrimary`/`colorLink` `#0084C9`, `defaultAlgorithm + compactAlgorithm`, Layout header 48px,
+  menu line 40px, Table cell padding 4px/12px (30px rows).
 - Frontend only, with typed mock data. There's no Express server in this trial.
 - Look up antd APIs in the machine-readable docs: https://ant.design/llms.txt and
   https://ant.design/llms-full.txt, plus the installed types in `node_modules/antd/es/**/*.d.ts`.
@@ -33,7 +36,8 @@ design/
     ├── index.html
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
     └── src/
-        ├── main.tsx     # ConfigProvider(locale=ruRU) + antd App + reset.css
+        ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
+        ├── theme.ts     # appTheme: the single place for tokens (colour, compact algorithm, component tokens)
         ├── App.tsx      # shell: Layout > Header (logo, global Input.Search, Badge bell, user Dropdown,
         │                #   settings/logout) + horizontal Menu (9 sections) + Content + Footer
         ├── assets/logo.svg
@@ -69,6 +73,9 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   form validation, view switch, 390px with no horizontal scroll). There are 0 antd console warnings in dev.
   Below `md`, the global search becomes an icon button and the pagination switches to `simple`.
 - 2026-11-16: Added `ANTD_NOTES.md` and `docs/screenshots/`. The Ant Design trial is complete.
+- 2026-11-16: Requested changes: primary colour `#0084C9`, 30px table rows, a compact layout (compact algorithm,
+  smaller header/menu/paddings/gaps, Card `size="small"`, Title level 4). Measured in Chrome: rows 30px,
+  header 48px, menu 40px, primary `rgb(0,132,201)`. 14/14 checks pass, 0 console warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -76,3 +83,6 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - `Divider` `type` is deprecated in v6. Use `orientation="vertical"`.
 - A Modal with a Form uses the `modalRender` + `okButtonProps.htmlType="submit"` pattern and `destroyOnHidden`.
 - Headless Chrome `--window-size` can't go below ~500px wide, so use Playwright viewports for mobile checks.
+- Row height = `cellPaddingBlock` × 2 + 22px line height. Buttons inside rows need `size="small"`, or they
+  stretch the row.
+- Stopping a background `npx vite` task can leave the node process running on its port. Check with `netstat`.

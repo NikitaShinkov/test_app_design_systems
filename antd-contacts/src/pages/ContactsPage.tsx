@@ -112,12 +112,13 @@ export default function ContactsPage() {
     sortableColumn('position'),
     {
       key: 'open',
-      width: 64,
+      width: 48,
       align: 'center',
       render: (_, record) => (
         <Tooltip title="Открыть карточку">
           <Button
             type="text"
+            size="small"
             icon={<ExportOutlined />}
             aria-label={`Открыть ${record.name}`}
             onClick={() => setOpened(record)}
@@ -155,7 +156,7 @@ export default function ContactsPage() {
   };
 
   return (
-    <Flex vertical gap="medium">
+    <Flex vertical gap="small">
       <Breadcrumb
         items={[
           { title: <HomeOutlined />, href: '#' },
@@ -164,12 +165,12 @@ export default function ContactsPage() {
         ]}
       />
 
-      <Card>
-        <Flex vertical gap="medium">
-          <Flex justify="space-between" align="center" wrap gap="medium">
-            <Space size="medium" align="center">
-              <ContactsOutlined style={{ fontSize: 24 }} />
-              <Title level={3} style={{ margin: 0 }}>
+      <Card size="small">
+        <Flex vertical gap="small">
+          <Flex justify="space-between" align="center" wrap gap="small">
+            <Space size="small" align="center">
+              <ContactsOutlined style={{ fontSize: 20 }} />
+              <Title level={4} style={{ margin: 0 }}>
                 Контакты
               </Title>
             </Space>

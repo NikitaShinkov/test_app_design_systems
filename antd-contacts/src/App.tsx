@@ -72,13 +72,12 @@ export default function App() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: token.marginLG,
+          gap: token.margin,
           background: token.colorBgContainer,
-          paddingInline: token.paddingLG,
         }}
       >
         <Space size="small" align="center">
-          <Image src={logo} alt="Dynamics Scientific" height={28} preview={false} />
+          <Image src={logo} alt="Dynamics Scientific" height={24} preview={false} />
           {screens.md && (
             <>
               <Divider orientation="vertical" />
@@ -143,14 +142,14 @@ export default function App() {
         mode="horizontal"
         selectedKeys={['contacts']}
         items={sections}
-        style={{ paddingInline: token.paddingLG }}
+        style={{ paddingInline: token.paddingXS }}
         onClick={({ key }) => {
           const section = sections.find((s) => s.key === key);
           if (key !== 'contacts' && section) notInDemo(`Раздел ${section.label}`);
         }}
       />
 
-      <Content style={{ padding: token.paddingLG }}>
+      <Content style={{ padding: token.padding }}>
         <ContactsPage />
       </Content>
 

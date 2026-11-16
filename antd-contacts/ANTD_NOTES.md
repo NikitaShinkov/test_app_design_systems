@@ -2,8 +2,22 @@
 
 Trial page: Dynamics.CRM "Контакты" list (`../img_design_1.png`), rebuilt with **antd 6.7.1** +
 `@ant-design/icons` 6.3.4, React 19, Vite 8, TypeScript 7.
-Rules: the screenshot shows structure only. The page uses the default antd theme, standard components only,
-no custom UI components and no CSS files.
+Rules: the screenshot shows structure only. Standard components only, no custom UI components and no CSS files.
+All visual customisation is done with design tokens in `src/theme.ts`.
+
+## 0. Theme (src/theme.ts)
+```ts
+algorithm: [theme.defaultAlgorithm, theme.compactAlgorithm],   // denser everything
+token: { colorPrimary: '#0084C9', colorLink: '#0084C9' },
+components: {
+  Layout: { headerHeight: 48, headerPadding: '0 16px', footerPadding: '12px 16px' },
+  Menu:   { horizontalLineHeight: '40px' },
+  Table:  { cellPaddingBlock: 4, cellPaddingInline: 12 },        // 4 + 22 + 4 = 30px rows
+}
+```
+Brand colour, density and row height took **one file, about 20 lines**, and no CSS. This is a strong point for
+the skill: it can ship a shared `theme.ts` to every app. Measured in Chrome: rows 30px, header 48px, menu
+40px, primary `rgb(0,132,201)`.
 
 Screenshots: `../docs/screenshots/` (1440px, 390px, row drawer, create modal).
 
@@ -58,11 +72,10 @@ run that asserts **0 console warnings**. This trial passes it.
 ## 4. Inline styles used (all layout or size, none for appearance)
 `minHeight: 100vh` on Layout. Header flex alignment and padding from tokens. Search `flex`/`maxWidth`/`width`.
 `marginInlineStart: auto` to push header actions right. `maxWidth` for the ellipsed user name.
-`margin: 0` on the page Title (Title has a default bottom margin). Icon `fontSize: 24` to match Title level 3.
+`margin: 0` on the page Title (Title has a default bottom margin). Icon `fontSize: 20` to match Title level 4.
 
 ## 5. Differences from the original page (by design or by antd)
-- The colours, density and borders come from the default antd theme, so the page looks like antd and not like the
-  original brand. A brand theme would be a single `ConfigProvider theme={{ token: { colorPrimary } }}` change.
+- The brand colour and density come from `theme.ts`. Borders, radii and shapes are still antd defaults.
 - The header and the section menu are two standard rows (`Header` + horizontal `Menu`), not one custom bar.
 - "Created At ↓" is the default order, but there's no column for it (same as the original). Column sort
   replaces it, and the label updates.
