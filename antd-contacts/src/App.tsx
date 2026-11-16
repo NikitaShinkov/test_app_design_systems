@@ -6,7 +6,6 @@ import {
   Button,
   Divider,
   Dropdown,
-  Empty,
   Flex,
   Grid,
   Image,
@@ -29,11 +28,13 @@ import {
   DollarOutlined,
   FileTextOutlined,
   LogoutOutlined,
+  SearchOutlined,
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import logo from './assets/logo.svg';
+import ContactsPage from './pages/ContactsPage';
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
@@ -86,12 +87,23 @@ export default function App() {
           )}
         </Space>
 
-        <Input.Search
-          placeholder="Поиск по всей CRM…"
-          allowClear
-          style={{ flex: 1, maxWidth: 520 }}
-          onSearch={(value) => value && notInDemo(`Глобальный поиск: ${value}`)}
-        />
+        {screens.md ? (
+          <Input.Search
+            placeholder="Поиск по всей CRM…"
+            allowClear
+            style={{ flex: 1, maxWidth: 520 }}
+            onSearch={(value) => value && notInDemo(`Глобальный поиск: ${value}`)}
+          />
+        ) : (
+          <Tooltip title="Поиск по всей CRM">
+            <Button
+              type="text"
+              icon={<SearchOutlined />}
+              aria-label="Поиск по всей CRM"
+              onClick={() => notInDemo('Глобальный поиск')}
+            />
+          </Tooltip>
+        )}
 
         <Space size="small" style={{ marginInlineStart: 'auto' }}>
           <Tooltip title="Уведомления">
@@ -139,7 +151,7 @@ export default function App() {
       />
 
       <Content style={{ padding: token.paddingLG }}>
-        <Empty description="Страница «Контакты» — в следующем коммите" />
+        <ContactsPage />
       </Content>
 
       <Footer>

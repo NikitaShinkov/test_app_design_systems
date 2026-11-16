@@ -35,6 +35,10 @@ design/
         ├── App.tsx      # shell: Layout > Header (logo, global Input.Search, Badge bell, user Dropdown,
         │                #   settings/logout) + horizontal Menu (9 sections) + Content + Footer
         ├── assets/logo.svg
+        ├── pages/
+        │   └── ContactsPage.tsx  # Breadcrumb (view switcher menu) + Card: title, Input.Search, reload,
+        │                         #   "Создать контакт" (Modal+Form), Table (sort/search/pagination),
+        │                         #   row open → Drawer+Descriptions
         └── data/
             └── contacts.ts  # `Contact` type + 37 mock records (first 10 = screenshot), newest first
 ```
@@ -59,3 +63,13 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - 2026-11-16: App layout shell. The light Header follows the antd docs pattern (`theme.useToken()` →
   `colorBgContainer`, no custom colours). Responsive parts use `Grid.useBreakpoint()`. Actions outside the demo
   show `App.useApp().message`.
+- 2026-11-16: Contacts page. Checked in Chrome through Playwright (search, sort, pagination, drawer, create
+  form validation, view switch, 390px with no horizontal scroll). There are 0 antd console warnings in dev.
+  Below `md`, the global search becomes an icon button and the pagination switches to `simple`.
+
+## Gotchas found
+- `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
+  `NonNullable<NonNullable<BreadcrumbProps['items']>[number]['menu']>`.
+- `Divider` `type` is deprecated in v6. Use `orientation="vertical"`.
+- A Modal with a Form uses the `modalRender` + `okButtonProps.htmlType="submit"` pattern and `destroyOnHidden`.
+- Headless Chrome `--window-size` can't go below ~500px wide, so use Playwright viewports for mobile checks.
