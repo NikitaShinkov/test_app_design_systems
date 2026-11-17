@@ -5,9 +5,12 @@ import type { FormItemProps } from 'antd';
 
 const { Text } = Typography;
 
+/** Label column width = widest label text in the form + this many px. */
+export const LABEL_EXTRA_WIDTH = 30;
+
 /**
  * Container for the fields of one form. Two-column grid:
- *   label column = width of the widest *label text* in this form (max-content),
+ *   label column = width of the widest *label text* in this form + LABEL_EXTRA_WIDTH (max-content),
  *   input column = the rest. All inputs therefore start on the same vertical line.
  * Error messages do not take part in the column width (see `contain: inline-size` below).
  */
@@ -64,7 +67,11 @@ export function FormField({ formName, name, label, rules, error, children }: For
   return (
     <>
       <label htmlFor={id} style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <Text style={{ whiteSpace: 'nowrap', ...(error ? { lineHeight } : null) }}>{label}</Text>
+        {/* Extra space after the text widens the label column to (widest label + LABEL_EXTRA_WIDTH);
+            the error below can use that full width. */}
+        <Text style={{ whiteSpace: 'nowrap', paddingInlineEnd: LABEL_EXTRA_WIDTH, ...(error ? { lineHeight } : null) }}>
+          {label}
+        </Text>
         {error && (
           <Text
             type="danger"

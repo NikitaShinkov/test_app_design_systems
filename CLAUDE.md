@@ -27,8 +27,8 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
 - **Forms (all forms follow these rules):**
   - Wrap a form's fields in `FormFields` (a CSS grid with `max-content | minmax(0, 1fr)`, an 8px column gap and
     `token.padding` row gap), and build every field with `FormField` (`components/FormField.tsx`). The label
-    column is **as wide as the widest label text in that form** (no fixed width), so all inputs start on one
-    vertical line. Error messages are excluded from that width by `contain: inline-size`, so they truncate
+    column is **the widest label text in that form + 30px** (`LABEL_EXTRA_WIDTH`, padding after the label text,
+    so the error line can use those 30px too), with no fixed width, so all inputs start on one vertical line. Error messages are excluded from that width by `contain: inline-size`, so they truncate
     with "…" and show a tooltip when longer than the column. The error sits
     **inside the `<label for=…>`**, directly under the label text. With an error the two-line block is exactly
     `token.controlHeight − 4` px high (32 → 28; each line is 14px line height, the error at `fontSizeSM`) and
@@ -182,6 +182,10 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   all inputs at one x, gap 8px, and showing errors doesn't change the column or move the inputs. Both standard
   messages now truncate with "…" plus a tooltip, block 28/32 centred. Geometry 28/28, forms 24/24,
   regression 29/29.
+- 2026-11-17: Requested: label column = widest label + 30px. Verified: column 108.45 = "Должность" 78.45 + 30 in
+  both forms at 1440 and 390, inputs aligned, and errors don't change it. "Заполните поле" (93px) now fits; only
+  "Введите корректное значение" truncates (with a tooltip). Columns 40/40, geometry 28/28, forms 24/24,
+  regression 29/29, 0 warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
