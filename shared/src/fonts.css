@@ -1,0 +1,15 @@
+/*
+ * Italic face for 'Inter Variable'.
+ *
+ * Upright text uses Inter 4 (@fontsource-variable/inter, Google Fonts v20). Inter 4's italics are *true italics*
+ * with redrawn letters (e.g. the "e" has a diagonal crossbar). The design files (Figma) use Inter 3.x, whose
+ * italic is the slanted roman (horizontal "e" crossbar). To match the designs, italics come from the official
+ * Inter 3.19 italic variable font (inter-ui@3.19.3; wght 100–900, Latin + Cyrillic; OFL licence in the package).
+ */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('inter-ui/Inter (web)/Inter-italic.var.woff2') format('woff2-variations');
+}

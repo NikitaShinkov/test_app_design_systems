@@ -54,9 +54,11 @@ logo, and a shared folder (not copies).
 - Contacts: one `components/ContactFormModal.tsx` (centered Modal + Form) is used for both "Новый контакт" (button
   "Создать") and "Редактирование контакта" (button "Сохранить"). Clicking a contact name or the row icon opens the
   edit popup pre-filled; there's no side panel. The phone field and column are labelled "Телефон".
-- Font: **Inter everywhere**. It's self-hosted via `@fontsource-variable/inter` (upright `wght.css` + true italic
-  `wght-italic.css`, imported in `shared/src/AppProviders.tsx`, Cyrillic included) and set as the `fontFamily`
-  token, so
+- Font: **Inter everywhere**, self-hosted and set as the `fontFamily` token. **Upright = Inter 4**
+  (`@fontsource-variable/inter/wght.css`). **Italic = Inter 3.19** (`inter-ui@3.19.3` → `Inter-italic.var.woff2`,
+  declared in `shared/src/fonts.css`), because the Figma designs use Inter 3, whose italic is the slanted roman
+  (horizontal "e" crossbar). Inter 4's true italic has redrawn letters (diagonal "e" bar). Both are imported in
+  `shared/src/AppProviders.tsx` and include Cyrillic, so
   `--ant-font-family` starts with `'Inter Variable'`.
 - **Screenshots: do not generate any** (not `docs/screenshots/`, not visual checks) unless the user explicitly asks.
   Verify with computed styles and DOM measurements instead. `docs/screenshots/` was last refreshed before the Inter
@@ -96,7 +98,8 @@ design/
 ├── favicon_logo.svg     # favicon source, 32×32 (copied to <app>/public/favicon.svg)
 ├── docs/screenshots/    # app 1 rendered results (last refreshed before the Inter change)
 ├── shared/              # @dynamics/ui-shared — the standard UI layer (TS source, consumed via workspace link)
-│   ├── package.json     # exports "." → src/index.ts; peer deps antd/react/icons; dep @fontsource-variable/inter
+│   ├── package.json     # exports "." → src/index.ts; peer deps antd/react/icons; deps @fontsource-variable/inter,
+│   │                    #   inter-ui@3.19.3 (pinned, italic only)
 │   ├── assets/logo.svg
 │   └── src/
 │       ├── index.ts           # public API
@@ -111,7 +114,8 @@ design/
 │       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
 │       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
 │       ├── useGlyphFit.ts     # 1..n lines: first cap top → last baseline = N px; line spacing = factor × normal
-│       └── antd-overrides.css # the only CSS (menu underline inset)
+│       ├── fonts.css          # italic @font-face → Inter 3.19 (matches Figma)
+│       └── antd-overrides.css # the only CSS besides fonts (menu underline, table Tags)
 ├── antd-contacts/       # app 1 (ru), port 5173
 │   ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
 │   ├── index.html, public/favicon.svg, package.json (antd 6.7.1, icons 6.3.4, React 19, Vite 8, TS 7)
@@ -255,6 +259,12 @@ npm run build -w antd-contacts   # one app
   11.95 vs 12, baseline 43.95 vs 44). App 2 50/50, app 1 regression 29/29, "CRM" unchanged.
 - 2026-11-17: Requested: bigger still. Line spacing factor 0.96 → 0.85: font 16.9 → 18.2px, line spacing 19.65 →
   18.72px, gap "p" → "R" 3.75 → 1.6px (lines touch at about 0.78), edges unchanged (11.95/43.95 vs 12/44). App 2 50/50.
+- 2026-11-17: The user noticed the italic "e" differs from Figma. Diagnosis without screenshots (canvas glyph → ASCII):
+  the app used Inter 4's *true* italic (diagonal "e" crossbar); Figma's "Semi Bold Italic" is Inter 3.x (slanted
+  roman, horizontal crossbar); and it wasn't a fake/synthesised italic. Italic now comes from Inter 3.19
+  (`inter-ui@3.19.3`, `fonts.css`) for both apps; upright stays Inter 4. The app's italic "e" now matches the
+  Inter 3.19 reference row for row. Fits unchanged: Register 11.95/43.95, CRM 11.88/43.88 vs 12/44.
+  App 2 50/50, app 1 regression 29/29, 0 warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -308,6 +318,9 @@ npm run build -w antd-contacts   # one app
   typed dates with Tab.
 - npm workspaces: `shared` is TS source linked into the root `node_modules`; Vite transpiles it and `tsc -b` in each
   app type-checks it. App-only deps (e.g. `dayjs` in app 2) go in that app's package.json.
+- Inter 4 (Google Fonts/Fontsource) italics are true italics with different letter shapes from Inter 3 (Figma);
+  for design parity, take the italic from Inter 3.19. To compare glyphs without screenshots, draw them on a canvas
+  and print the pixels as ASCII.
 - Canvas `measureText` snaps glyph bounds to whole pixels at small font sizes (e.g. 14px), so measure at 100px
   and scale.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

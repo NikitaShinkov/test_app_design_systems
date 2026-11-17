@@ -3,9 +3,10 @@ import { App as AntApp, ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
 import enUS from 'antd/locale/en_US';
 import 'antd/dist/reset.css';
-// Inter (self-hosted variable font): upright + true italic, all weights, Cyrillic included.
+// Inter (self-hosted variable fonts, all weights, Cyrillic included):
+// upright = Inter 4 (Fontsource); italic = Inter 3.19 to match the Figma designs (see fonts.css).
 import '@fontsource-variable/inter/wght.css';
-import '@fontsource-variable/inter/wght-italic.css';
+import './fonts.css';
 import './antd-overrides.css';
 import { appTheme } from './theme';
 import { createFormConfig } from './formConfig';
