@@ -39,7 +39,8 @@ import ContactsPage from './pages/ContactsPage';
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
 
-const CURRENT_USER = 'Responsive Audit Administrator With A Longer Display Name';
+const CURRENT_USER = 'Иван Петров';
+const CURRENT_USER_INITIALS = 'ИП';
 
 const sections: { key: string; label: string; icon: ReactNode }[] = [
   { key: 'overview', label: 'Обзор', icon: <AppstoreOutlined /> },
@@ -49,9 +50,7 @@ const sections: { key: string; label: string; icon: ReactNode }[] = [
   { key: 'deals', label: 'Сделки', icon: <DollarOutlined /> },
   { key: 'contracts', label: 'Договоры', icon: <FileTextOutlined /> },
   { key: 'reports', label: 'Отчёты', icon: <BarChartOutlined /> },
-  { key: 'users', label: 'Пользователи', icon: <TeamOutlined /> },
-  { key: 'settings', label: 'Настройки', icon: <SettingOutlined /> },
-];
+  { key: 'users', label: 'Пользователи', icon: <TeamOutlined /> },];
 
 const userMenu: MenuProps['items'] = [
   { key: 'profile', label: 'Профиль', icon: <UserOutlined /> },
@@ -78,11 +77,17 @@ export default function App() {
         }}
       >
         <Space size="small" align="center">
-          <Image src={logo} alt="Dynamics Scientific" height={28} preview={false} />
+          <Image src={logo} alt="Dynamics Scientific" height={32} preview={false}
+            styles={{ root: { display: 'block' }, image: { display: 'block' } }}
+          />
           {screens.md && (
             <>
               <Divider orientation="vertical" />
-              <Text strong>Dynamics.CRM</Text>
+              {/* Product name: italic, primary colour, same 32px height as the logo. */}
+              <Text strong italic style={{ color: token.colorPrimary, fontSize: 32, lineHeight: '32px', display: 'block' }}
+              >
+                CRM
+              </Text>
             </>
           )}
         </Space>
@@ -116,7 +121,7 @@ export default function App() {
             trigger={['click']}
             menu={{ items: userMenu, onClick: ({ key }) => notInDemo(key === 'logout' ? 'Выход' : 'Профиль') }}
           >
-            <Button type="text" icon={<Avatar size="small">RA</Avatar>} aria-label={CURRENT_USER}>
+            <Button type="text" icon={<Avatar size="small">{CURRENT_USER_INITIALS}</Avatar>} aria-label={CURRENT_USER}>
               {screens.lg && (
                 <Text ellipsis style={{ maxWidth: 240 }}>
                   {CURRENT_USER}
@@ -125,7 +130,8 @@ export default function App() {
             </Button>
           </Dropdown>
 
-          <Button type="text" icon={<SettingOutlined />} onClick={() => notInDemo('Настройки')}>
+          {/* Default (outlined) button so its border is clearly visible. */}
+          <Button icon={<SettingOutlined />} onClick={() => notInDemo('Настройки')}>
             Настройки
           </Button>
         </Space>

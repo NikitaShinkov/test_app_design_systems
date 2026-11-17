@@ -19,8 +19,11 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 16, Layout
   `footerPadding` `0px 24px 12px`, Menu `itemPaddingInline` 8, Table `cellPaddingBlock` 4.5px (32px rows).
   The one exception is the Content padding `16px 24px`, set inline in `App.tsx` because Layout has no token for it.
-- Header actions: notifications, user dropdown (which holds "Выйти"), and a text+icon "Настройки" button.
-  There's no separate logout button.
+- Header: logo `src/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the product name
+  "CRM" (italic, `token.colorPrimary`, 32px font/line height, hidden below `md`), both vertically centered.
+  Actions: notifications, user dropdown for "Иван Петров" (avatar "ИП", which holds "Выйти"), and an outlined
+  (default) icon+text "Настройки" button. There's no separate logout button. The section menu has 8 items, with no
+  "Настройки" item, because settings live in the header button.
 - Page layout: exactly one viewport high (`Layout` `100dvh`). Content → Card → `ant-card-body` stretch to the
   free height. The Table has **no pagination**. Only its body scrolls (`scroll.y` measured with a ResizeObserver),
   so the header, menu, breadcrumb, toolbar and table header stay fixed.
@@ -35,7 +38,7 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
 design/
 ├── CLAUDE.md            # this file
 ├── img_design_1.png     # reference screenshot (structure only)
-├── logo.svg             # Dynamics Scientific logo (source file)
+├── logo.svg             # Dynamics Scientific "D&" mark, 41×32 (source file)
 ├── docs/screenshots/    # rendered results (1440px, 1440px scrolled, 390px, drawer, create modal)
 └── antd-contacts/       # Ant Design trial
     ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
@@ -44,8 +47,8 @@ design/
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
         ├── theme.ts     # appTheme: the single place for tokens (colour, paddings, Table row height)
-        ├── App.tsx      # shell: Layout(100dvh) > Header (logo, global Input.Search, Badge bell, user Dropdown,
-        │                #   "Настройки" button) + horizontal Menu (9 sections) + Content (flex) + Footer
+        ├── App.tsx      # shell: Layout(100dvh) > Header (logo + "CRM", global Input.Search, Badge bell, user
+        │                #   Dropdown, "Настройки" button) + horizontal Menu (8 sections) + Content (flex) + Footer
         ├── assets/logo.svg
         ├── pages/
         │   └── ContactsPage.tsx  # Breadcrumb (view switcher menu) + full-height Card: title, Input.Search,
@@ -92,6 +95,10 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   `16px 24px`, 32px rows. The "Выйти" icon button was removed. "Настройки" is now icon + text. All CSS variables
   were verified with computed styles in Chrome. Side effect: `padding` 8 also shrinks the `gap="medium"` Flex
   gaps. Playwright 29/29, 0 console warnings.
+- 2026-11-17: Requested header changes: removed the "Настройки" menu item; the header "Настройки" button is now
+  outlined (1px solid border); the new 41×32 logo; "Dynamics.CRM" → italic "CRM" in `#0084C9` at 32px; user
+  "Иван Петров" (avatar "ИП"). Logo and text measured at the same 16–48px band in the 64px header.
+  Playwright 29/29, 0 console warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -104,3 +111,7 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - Table body scrolling needs a numeric `scroll.y`. Measure the wrapper (`flex: 1`, `minHeight: 0`) minus the
   `.ant-table-thead` height. Every flex ancestor needs `minHeight: 0`.
 - Stopping a background `npx vite` task can leave the node process running on its port. Check with `netstat`.
+- Inside `Layout.Header` (64px line height), inline content sits on the baseline of a 64px line box, so
+  `Space align="center"` doesn't center it. Make the items block-level: Image
+  `styles={{ root: { display: 'block' }, image: { display: 'block' } }}` and Text `display: 'block'`.
+- `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

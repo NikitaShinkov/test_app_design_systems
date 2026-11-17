@@ -54,11 +54,12 @@ run that asserts **0 console warnings**. This trial passes it.
 |---|---|
 | App shell | `Layout` > `Header` / `Content` / `Footer` |
 | Light header | `Header style={{ background: token.colorBgContainer }}` (antd docs pattern, via `theme.useToken()`) |
-| Logo | `Image preview={false}` |
+| Logo + product name | `Image preview={false}` (block via `styles.root`/`styles.image`) + `Typography.Text strong italic` coloured with `token.colorPrimary` |
 | Global search | `Input.Search` (≥ md), icon `Button` (< md) |
 | Notifications | `Badge count` + `Button type="text"` + `Tooltip` |
 | User menu | `Dropdown menu={{ items }}` + `Button icon={<Avatar/>}` + `Typography.Text ellipsis` |
-| Section navigation | `Menu mode="horizontal" items` (overflows into "…" automatically) |
+| Settings | `Button icon={<SettingOutlined/>}` with text (default variant = visible border) |
+| Section navigation | `Menu mode="horizontal" items` (8 sections; overflows into "…" automatically) |
 | View switcher ("Все: Контакты ›") | `Breadcrumb` item with `menu` |
 | Page container | `Card` (full height via `style` + `styles.body`) |
 | Page title | icon + `Typography.Title level={3}` |
@@ -90,7 +91,9 @@ run that asserts **0 console warnings**. This trial passes it.
 `height: 100dvh` on Layout, and `flex: 1` / `minHeight: 0` / flex-column on Content, Card, the card body and
 the table wrapper (full-height layout). Header flex alignment and padding from tokens. Search
 `flex`/`maxWidth`/`width`. `marginInlineStart: auto` to push header actions right. `maxWidth` for the ellipsed
-user name. `margin: 0` on the page Title (Title has a default bottom margin). Icon `fontSize: 24` to match Title
+user name. `display: block` on the logo Image and the "CRM" Text (vertical centering in the 64px Header), plus
+`fontSize`/`lineHeight` 32 and `color: token.colorPrimary` on "CRM" (a token value, not a hard-coded colour).
+`margin: 0` on the page Title (Title has a default bottom margin). Icon `fontSize: 24` to match Title
 level 3.
 
 ## 5. Differences from the original page (by design or by antd)
