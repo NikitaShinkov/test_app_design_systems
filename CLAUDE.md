@@ -134,14 +134,15 @@ design/
 │       ├── App.tsx      # AppShell: "Configurator" (500 italic, 160px wide), 3 sections (Быстрый расчёт /
 │       │                #   Архив предложений (28) / Прайс и цены), header Tag "Локальная демонстрация"
 │       ├── icons.ts     # one icon per section, shared by the tab and the page heading
-│       ├── pages/ArchivePage.tsx    # breadcrumb, info Alert, full-height Card: icon + title, search, reload,
+│       ├── pages/ArchivePage.tsx    # breadcrumb, full-height Card: icon + title, search, reload,
 │       │                            #   count + sort label (default "Обновлено ↓"), Table (28 rows, 32px; name +
 │       │                            #   grey customer, number, Вид Tag with ЗИП tooltip, version, updated, Открыть →);
 │       │                            #   a row click opens the offer card
-│       ├── components/OfferModal.tsx  # offer card: title + "Версия N" Tag, info Alert, "Данные предложения" form
-│       │                              #   (Название required; Заказчик, Номер optional; ≤300), save bar (status,
-│       │                              #   "Открыть сохранённую версию", "Сохранить"), Сохранённая запись,
-│       │                              #   История сохранений; each save = a new version
+│       ├── components/OfferModal.tsx  # offer card: title + "Версия N" Tag, "Данные предложения" form
+│       │                              #   (Название required; Заказчик, Номер optional; ≤300), Сохранённая запись,
+│       │                              #   История сохранений, then the save bar at the bottom (status,
+│       │                              #   "Открыть сохранённую версию", "Сохранить"); the Form wraps the whole body
+│       │                              #   so Save stays its submit button; each save = a new version
 │       └── data/offers.ts   # 28 offers (3 = screenshot, 25 more), versions/history, formatUtc
 └── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
     └── src/
@@ -286,6 +287,10 @@ npm run build -w antd-contacts   # one app
   "Обновлено ↓", offer page → popup (row click / name / "Открыть →"). App 3 suite 51/51 (shell parity, name width
   159.98px and centring, list, sort, search, tooltip, fixed parts, popup pre-fill, dirty/restore, validation incl.
   301 chars, save → version 2 + history + row on top, 390px). Apps 1/2 re-run: 29/29, 24/24, 50/50.
+- 2026-11-17: App 3 requested: removed the demo notice above the table and the notice in the popup; the popup's
+  save bar moved to the bottom (below "Сохранённая запись" / "История сохранений"; the Form now wraps the whole
+  body). Verified: no Alerts on the page or in the popup, the save bar is the last block (top 678 > cards bottom
+  661, nothing below it) and is still inside the form; save → version 2 still works. App 3 52/52, 0 warnings.
 - 2026-11-17: The user noticed the italic "e" differs from Figma. Diagnosis without screenshots (canvas glyph → ASCII):
   the app used Inter 4's *true* italic (diagonal "e" crossbar); Figma's "Semi Bold Italic" is Inter 3.x (slanted
   roman, horizontal crossbar); and it wasn't a fake/synthesised italic. Italic now comes from Inter 3.19

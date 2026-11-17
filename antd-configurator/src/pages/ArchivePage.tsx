@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, App as AntApp, Breadcrumb, Button, Card, Flex, Input, Space, Table, Tag, Tooltip, Typography } from 'antd';
+import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import type { TableProps } from 'antd';
 import { ArrowRightOutlined, HomeOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTableScrollY } from '@dynamics/ui-shared';
@@ -144,12 +144,6 @@ export default function ArchivePage() {
   return (
     <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
       <Breadcrumb items={[{ title: <HomeOutlined />, href: '#' }, { title: 'Коммерческий расчёт' }, { title: 'Архив предложений' }]} />
-
-      <Alert
-        type="info"
-        showIcon
-        title="Демонстрация коммерческого архива. Здесь можно изменить реквизиты вымышленных предложений. Инженерные расчёты и цены в демонстрацию не входят."
-      />
 
       {/* Card and its body stretch to the full remaining height; no border or shadow (body padding is a token). */}
       <Card
