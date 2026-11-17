@@ -30,7 +30,8 @@ logo, and a shared folder (not copies).
   (`ConfigProvider theme={appTheme}` inside `AppProviders`). Don't put colours or spacing overrides in components. Current theme:
   `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 0, Layout
   `bodyBg` `#ffffff`, `headerHeight` 56 and `footerPadding` `8px 24px 8px`, Menu `itemPaddingInline` 8 and
-  `horizontalLineHeight` `32px`, Table `cellPaddingBlock` 4.5px (32px rows). Exceptions with no token, set
+  `horizontalLineHeight` `32px`, Modal `motionDurationSlow` 0.15s / `motionDurationMid` 0.1s (popups open 2× faster;
+  Modal only), Table `cellPaddingBlock` 4.5px (32px rows). Exceptions with no token, set
   inline: Content padding `16px 24px` (`AppShell`) and the page Card `boxShadow: 'none'` (pages).
 - Page Card (list pages): `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content
   edges). Table rows are 32px, so cells are **single-line** (put secondary info inline as `Text type="secondary"`),
@@ -84,6 +85,7 @@ logo, and a shared folder (not copies).
   free height. Tables have **no pagination**. Only the body scrolls (`useTableScrollY()` measures `scroll.y` with a
   ResizeObserver), so the header, menu, breadcrumb, toolbar and table header stay fixed. Sorting is by column
   headers, with a "· Sort: …" label in the count line.
+- Browser tab titles: app 1 "CRM", app 2 "Replacement Register", app 3 "Configurator" (`<title>` in each `index.html`).
 - Frontend only, with typed mock data. There's no Express server in this trial.
 - Look up antd APIs in the machine-readable docs: https://ant.design/llms.txt and
   https://ant.design/llms-full.txt, plus the installed types in `node_modules/antd/es/**/*.d.ts`.
@@ -291,6 +293,11 @@ npm run build -w antd-contacts   # one app
   save bar moved to the bottom (below "Сохранённая запись" / "История сохранений"; the Form now wraps the whole
   body). Verified: no Alerts on the page or in the popup, the save bar is the last block (top 678 > cards bottom
   661, nothing below it) and is still inside the form; save → version 2 still works. App 3 52/52, 0 warnings.
+- 2026-11-17: Requested: tab titles CRM / Replacement Register / Configurator, and popups opening 50% faster.
+  Measured with `document.getAnimations()` (no screenshots): Modal zoom-in 300 → 150ms, mask fade 200 → 100ms in all
+  three apps, via Modal-only tokens (`motionDurationSlow` 0.15s, `motionDurationMid` 0.1s). The global motion tokens are
+  unchanged (menu underline still 0.3s). Titles verified in dev and dist. Suites: app 1 29/29 + 24/24, app 2 50/50,
+  app 3 52/52, 0 warnings.
 - 2026-11-17: The user noticed the italic "e" differs from Figma. Diagnosis without screenshots (canvas glyph → ASCII):
   the app used Inter 4's *true* italic (diagonal "e" crossbar); Figma's "Semi Bold Italic" is Inter 3.x (slanted
   roman, horizontal crossbar); and it wasn't a fake/synthesised italic. Italic now comes from Inter 3.19
@@ -353,6 +360,8 @@ npm run build -w antd-contacts   # one app
 - Inter 4 (Google Fonts/Fontsource) italics are true italics with different letter shapes from Inter 3 (Figma);
   for design parity, take the italic from Inter 3.19. To compare glyphs without screenshots, draw them on a canvas
   and print the pixels as ASCII.
+- Modal motion: the zoom uses `motionDurationSlow`, the mask fade `motionDurationMid`. Override them under
+  `components.Modal` (component-level alias tokens) to change popup speed only.
 - antd `Alert` has `role="alert"` too, so scope form-error queries to `label [role="alert"]`.
 - Canvas `measureText` snaps glyph bounds to whole pixels at small font sizes (e.g. 14px), so measure at 100px
   and scale.
