@@ -39,7 +39,8 @@ was tried and then reverted at the user's request (too compressed). Measured in 
 - This is the one place where antd needed glue code (about 15 lines). Skill note: it should become a shared
   hook, e.g. `useTableScrollY()`.
 
-Screenshots: `../docs/screenshots/` (1440px, 390px, row drawer, create modal).
+Screenshots: `../screenshots/` (desktop 1440×900, main pages + popups of all three apps). The complete, current
+handover for the skill is `../REDESIGN_SKILL_GUIDE.md`; this file keeps the trial notes.
 
 ## 1. Where the skill should get antd knowledge
 | Source | Use |

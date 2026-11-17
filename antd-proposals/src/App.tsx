@@ -45,9 +45,7 @@ export default function App() {
 
   return (
     <AppShell
-      productName={['Replacement', 'Register']}
-      productNameWeight={600}
-      productNameLineHeight={0.85}
+      productName="Replacement Register"
       sections={sections}
       activeSection="proposals"
       searchPlaceholder="Search proposal, part number, manufacturer…"

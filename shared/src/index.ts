@@ -10,6 +10,8 @@ export { useSubmitValidation } from './useSubmitValidation';
 export type { FieldErrors } from './useSubmitValidation';
 export { useTableScrollY } from './useTableScrollY';
 export { useGlyphFit } from './useGlyphFit';
+export { useProductNameFit, LOGO_HEIGHT, NAME_MAX_WIDTH, TWO_LINE_SPACING } from './useProductNameFit';
+export type { NameMode } from './useProductNameFit';
 export { appTheme } from './theme';
 export { createFormConfig } from './formConfig';
 export { strings, useSharedStrings } from './i18n';

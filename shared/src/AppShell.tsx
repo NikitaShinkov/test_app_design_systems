@@ -19,13 +19,11 @@ import {
 import type { MenuProps } from 'antd';
 import { BellOutlined, LogoutOutlined, SearchOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
 import defaultLogo from '../assets/logo.svg';
-import { useGlyphFit } from './useGlyphFit';
+import { LOGO_HEIGHT, useProductNameFit } from './useProductNameFit';
 import { useSharedStrings } from './i18n';
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
-
-const LOGO_HEIGHT = 32;
 
 export interface ShellSection {
   key: string;
@@ -37,19 +35,11 @@ export interface ShellSection {
 
 export interface AppShellProps {
   /**
-   * Product name next to the logo (italic, primary colour). One line, or several lines as an array:
-   * the cap top of the first line and the baseline of the last line align with the logo's top and bottom.
+   * Application name next to the logo (italic, primary colour). Its layout is chosen automatically by the
+   * standard algorithm (useProductNameFit): Regular one line if it fits 160px at 32px capitals; otherwise
+   * Semi Bold two lines (2+ words) or Medium one line fitted to 160px (one word).
    */
-  productName: string | string[];
-  /** Font weight of the product name (default 400 = Regular; 600 = Semi Bold). */
-  productNameWeight?: number;
-  /** Multi-line names: line spacing as a fraction of the font's natural line height (normal). Default 1. */
-  productNameLineHeight?: number;
-  /**
-   * Single-line names: fit the font size to this text width (px) instead of the logo height.
-   * The capital-letter band is then vertically centred on the logo.
-   */
-  productNameWidth?: number;
+  productName: string;
   /** Optional element in the header before the actions (e.g. a status Tag); shown from the md breakpoint up. */
   headerExtra?: ReactNode;
   logoSrc?: string;
@@ -77,9 +67,6 @@ export interface AppShellProps {
  */
 export function AppShell({
   productName,
-  productNameWeight = 400,
-  productNameLineHeight = 1,
-  productNameWidth,
   headerExtra,
   logoSrc = defaultLogo,
   logoAlt = 'Dynamics Scientific',
@@ -97,12 +84,7 @@ export function AppShell({
   const screens = Grid.useBreakpoint();
   const { message } = AntApp.useApp();
   const t = useSharedStrings();
-  const nameLines = Array.isArray(productName) ? productName : [productName];
-  const productNameFit = useGlyphFit(
-    LOGO_HEIGHT,
-    { family: token.fontFamily, style: 'italic', weight: productNameWeight },
-    { lines: nameLines.length, lineHeight: productNameLineHeight, width: productNameWidth, text: nameLines.join(' ') },
-  );
+  const { lines: nameLines, style: productNameFit, mode: nameMode } = useProductNameFit(productName, token.fontFamily);
 
   const notInDemo = (what: string) => message.info(t.notInDemo(what));
   const searchLabel = searchPlaceholder.replace(/[….]+$/, '');
@@ -149,8 +131,8 @@ export function AppShell({
             styles={{ root: { display: 'block' }, image: { display: 'block' } }}
           />
           {screens.md && (
-            // Italic; first-line cap top and last-line baseline on the logo top/bottom edges (useGlyphFit).
-            <Text italic style={{ ...productNameFit, color: token.colorPrimary, whiteSpace: 'nowrap' }}>
+            // Layout chosen by the logo/name algorithm (useProductNameFit); data-name-mode helps tests/inspection.
+            <Text italic data-name-mode={nameMode} style={{ ...productNameFit, color: token.colorPrimary, whiteSpace: 'nowrap' }}>
               {nameLines.map((line, i) => (
                 <span key={line}>
                   {i > 0 && <br />}

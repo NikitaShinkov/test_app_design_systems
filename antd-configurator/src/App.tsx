@@ -14,8 +14,6 @@ export default function App() {
   return (
     <AppShell
       productName="Configurator"
-      productNameWeight={500}
-      productNameWidth={160}
       sections={sections}
       activeSection="archive"
       searchPlaceholder="Поиск по COMPACS…"

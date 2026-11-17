@@ -7,6 +7,10 @@ design system, so we can judge how it looks and how well the skill can use it.
 
 Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, branch `main`).
 
+**Outcome:** Ant Design v6 + the shared layer in `shared/` was selected and adapted on three apps. The handover for
+the redesign-skill developer is **`REDESIGN_SKILL_GUIDE.md`** (procedure, rules, logo/name algorithm, mapping,
+verification, pitfalls). Keep it in sync with `shared/` whenever a rule changes. Results: `screenshots/`.
+
 Current trial: **Ant Design**, three apps on one shared UI layer (npm workspaces):
 - `antd-contacts`: the Dynamics.CRM "Контакты" list (`img_design_1.png`), in Russian.
 - `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English (product name "Replacement / Register" on two lines).
@@ -63,16 +67,19 @@ logo, and a shared folder (not copies).
   (horizontal "e" crossbar). Inter 4's true italic has redrawn letters (diagonal "e" bar). Both are imported in
   `shared/src/AppProviders.tsx` and include Cyrillic, so
   `--ant-font-family` starts with `'Inter Variable'`.
-- **Screenshots: do not generate any** (not `docs/screenshots/`, not visual checks) unless the user explicitly asks.
-  Verify with computed styles and DOM measurements instead. `docs/screenshots/` was last refreshed before the Inter
-  change.
+- **Screenshots: do not generate any** (not `screenshots/`, not visual checks) unless the user explicitly asks.
+  Verify with computed styles and DOM measurements instead. `screenshots/` holds the desktop (1440×900) main pages and
+  popups of the three apps, taken on 2026-11-17 at the user's request. The old `docs/` folder was deleted.
 - Shell = `AppShell` from `shared` (each app passes `productName`, `sections`, `activeSection`, search placeholder,
   user, footer texts; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
   Header (56px): logo `shared/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
-  product name ("Configurator" in app 3: one line, Medium Italic, font sized so the text is exactly 160px wide
-  (`productNameWidth`), capital-letter band centred on the logo; "CRM" in app 1: one line, Italic Regular; "Replacement" / "Register" in app 2: two lines, Semi Bold
-  Italic, line spacing 0.85 × the font's natural (`normal`) line height; `token.colorPrimary`, hidden below `md`). With several lines the cap top
-  of the first line and the baseline of the last line sit on the logo edges (descenders like "g" hang below). They're direct children of one
+  product name, laid out **automatically** by `useProductNameFit` (`AppShell productName="…"` only; the algorithm is in
+  REDESIGN_SKILL_GUIDE.md §5.2):
+  1. Regular Italic at a 32px cap height if ≤ 160px wide ("CRM").
+  2. Otherwise 2+ words → two lines, Semi Bold Italic, first cap top / last baseline on the logo edges, line spacing
+     0.85 × normal ("Replacement Register").
+  3. Otherwise one word → Medium Italic sized to 160px, cap band centred ("Configurator").
+  `data-name-mode` shows the chosen mode; `token.colorPrimary`, hidden below `md`. They're direct children of one
   `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
   `useGlyphFit(32, font)`, which measures the real font (re-measured after the web font loads) so the **cap height**
   (flat tops of R/M) equals the logo height. CSS `text-box: trim-both cap alphabetic` puts the cap top and the
@@ -112,7 +119,8 @@ design/
 ├── img_design_3_1.png, img_design_3_1 (updated).png, img_design_3_2 (updated).png  # app 3 references
 ├── logo.svg             # Dynamics Scientific "D&" mark, 41×32 (source; copy in shared/assets)
 ├── favicon_logo.svg     # favicon source, 32×32 (copied to <app>/public/favicon.svg)
-├── docs/screenshots/    # app 1 rendered results (last refreshed before the Inter change)
+├── REDESIGN_SKILL_GUIDE.md  # handover for the redesign-skill developer (read this first)
+├── screenshots/         # desktop 1440×900: 1-crm-*, 2-register-*, 3-configurator-* (main page + popups)
 ├── shared/              # @dynamics/ui-shared — the standard UI layer (TS source, consumed via workspace link)
 │   ├── package.json     # exports "." → src/index.ts; peer deps antd/react/icons; deps @fontsource-variable/inter,
 │   │                    #   inter-ui@3.19.3 (pinned, italic only)
@@ -129,6 +137,7 @@ design/
 │       ├── FormField.tsx      # FormFields grid (label col = widest label + 30) + FormField
 │       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
 │       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
+│       ├── useProductNameFit.ts  # logo/name algorithm (regular / two-lines / fit-width)
 │       ├── useGlyphFit.ts     # 1..n lines: first cap top → last baseline = N px; line spacing = factor × normal
 │       ├── fonts.css          # italic @font-face → Inter 3.19 (matches Figma)
 │       └── antd-overrides.css # the only CSS besides fonts (menu underline, table Tags)
@@ -321,6 +330,12 @@ npm run build -w antd-contacts   # one app
   default. Verified: every non-mail cell (CRM 4, Register 10, Configurator 6) opens one popup for the clicked row;
   row links open exactly one popup; an e-mail click opens no popup, keeps `mailto:` and isn't defaultPrevented.
   App 1 29/29 + 24/24, app 2 50/50, 0 warnings.
+- 2026-11-17: Handover: `REDESIGN_SKILL_GUIDE.md` written for the skill developer. The logo/name rules became an
+  automatic algorithm in `shared/src/useProductNameFit.ts` (apps pass only `productName`). It reproduces the tuned
+  results exactly (CRM regular 11.88/43.88; Register two-lines 600 18.2px 11.95/43.95; Configurator fit-width 500
+  159.98px) and was tried on ERP → regular, Warehouse → fit-width, "Audit Log" / "Warehouse Management System" /
+  "Quality Assurance Control Center" → two lines (balanced split). `docs/` deleted. `screenshots/` added with 7
+  desktop PNGs (main pages + popups), at the user's request. All suites pass (29/29, 24/24, 50/50, 53/53, row clicks 14/14).
 - 2026-11-17: The user noticed the italic "e" differs from Figma. Diagnosis without screenshots (canvas glyph → ASCII):
   the app used Inter 4's *true* italic (diagonal "e" crossbar); Figma's "Semi Bold Italic" is Inter 3.x (slanted
   roman, horizontal crossbar); and it wasn't a fake/synthesised italic. Italic now comes from Inter 3.19
