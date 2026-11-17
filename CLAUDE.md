@@ -13,7 +13,10 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
 - The screenshot is a reference for **page structure and element types only**. Do not copy its colours,
   spacing or styling.
 - Use **only standard Ant Design components** (`antd`, `@ant-design/icons`). No custom UI components and no
-  custom CSS look.
+  custom CSS look. The single exception is `antd-contacts/src/antd-overrides.css` (imported in `main.tsx`), which
+  is only for antd behaviour that has no token. Each rule must be commented and specific enough to beat antd's
+  selector. Current rule: the horizontal Menu underline (`::after`) uses `inset-inline: 0`, so it spans the tab's
+  padding and is continuous from tab to tab (antd insets it by `itemPaddingInline`).
 - All visual customisation goes **only through antd design tokens** in `antd-contacts/src/theme.ts`
   (`ConfigProvider theme={appTheme}`). Don't put colours or spacing overrides in components. Current theme:
   `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 0, Layout
@@ -64,6 +67,7 @@ design/
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
         ├── theme.ts     # appTheme: the single place for tokens (colour, paddings, heights, Table row height)
+        ├── antd-overrides.css  # the only CSS: fixes for antd behaviour with no token (menu underline inset)
         ├── useGlyphFit.ts  # hook: font size/line height so capital letters are exactly N px tall (canvas metrics)
         ├── App.tsx      # shell: Layout(100dvh) > Header (logo + "CRM", global Input.Search, Badge bell, user
         │                #   Dropdown, "Настройки" button) + horizontal Menu (8 sections) + Content (flex) + Footer
@@ -136,6 +140,11 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   identical path and a square viewBox. Verified that the dev server and `dist/` both serve it.
 - 2026-11-17: Favicon replaced again, with the user-supplied `favicon_logo.svg` (32×32, "D&" in a white circle with
   a `#0084C9` outline), copied byte-for-byte. Verified that the dev server and `dist/` both serve it.
+- 2026-11-17: Requested: menu tab underline covers the tab padding and stays continuous between tabs. There's no
+  token for it (antd uses `insetInline: itemPaddingInline` on `::after`), so it's added as the first rule in
+  `antd-overrides.css`; `--ant-menu-item-padding-inline` stays 8px. Verified without screenshots: every
+  underline = full item width, gaps between neighbouring items and underlines are 0px, and a cursor sweep finds
+  0 points without an underline once the 0.3s antd colour fade has run. Playwright 29/29, 0 warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -165,4 +174,8 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - antd Form's default required `*` uses `font-family: SimSun, sans-serif` (no token). Use `requiredMark` to render it.
 - `CSS.getPlatformFontsForNode` (CDP) is the reliable way to prove which font actually rendered the glyphs,
   because computed `font-family` only shows the requested stack.
+- Horizontal Menu: the underline is `::after` with `inset-inline: itemPaddingInline` and a `border-color`
+  transition of `motionDurationSlow`. There's no token for the inset; antd's selector is
+  `:where(.css-var-…).ant-menu-light.ant-menu-horizontal > .ant-menu-item::after` (the `:where` hash adds 0
+  specificity), so an override needs one more class.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

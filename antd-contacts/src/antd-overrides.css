@@ -1,0 +1,14 @@
+/*
+ * Overrides for antd behaviour that has no design token. Keep this file minimal and documented.
+ *
+ * Horizontal Menu underline: antd positions the item's ::after underline with
+ * `inset-inline: var(--ant-menu-item-padding-inline)`, i.e. inset by the item padding, which leaves
+ * gaps between neighbouring tabs. Stretch it over the full item width (including padding) so the
+ * underline is continuous when the cursor moves from tab to tab.
+ * Selector is one class more specific than antd's (`.ant-menu-light.ant-menu-horizontal > .ant-menu-item`),
+ * so it wins regardless of stylesheet order.
+ */
+.ant-menu.ant-menu-root.ant-menu-horizontal > .ant-menu-item::after,
+.ant-menu.ant-menu-root.ant-menu-horizontal > .ant-menu-submenu::after {
+  inset-inline: 0;
+}

@@ -90,6 +90,14 @@ run that asserts **0 console warnings**. This trial passes it.
 - TypeScript: the type of a `Breadcrumb` item's `menu` is not exported, so derive it with
   `NonNullable<NonNullable<BreadcrumbProps['items']>[number]['menu']>`.
 
+## 3.1 CSS overrides (`src/antd-overrides.css`), for behaviour with no token
+| What | Why | Rule |
+|---|---|---|
+| Continuous horizontal Menu underline | antd insets the `::after` underline by `itemPaddingInline`, which leaves gaps between tabs; the inset has no token of its own | `.ant-menu.ant-menu-root.ant-menu-horizontal > .ant-menu-item::after { inset-inline: 0 }` (one class more than antd's selector) |
+
+Skill note: keep one documented overrides file per app, and give each rule a reason. This is the only place
+where the trial needed real CSS.
+
 ## 4. Inline styles used (all layout or size, none for appearance)
 `height: 100dvh` on Layout, and `flex: 1` / `minHeight: 0` / flex-column on Content, Card, the card body and
 the table wrapper (full-height layout). Header flex alignment and padding from tokens. Search
