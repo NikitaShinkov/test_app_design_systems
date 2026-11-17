@@ -12,14 +12,16 @@ export const appTheme: ThemeConfig = {
   },
   components: {
     Card: {
-      bodyPadding: 16, // --ant-card-body-padding
+      bodyPadding: 0, // --ant-card-body-padding
     },
     Layout: {
       bodyBg: '#ffffff', // --ant-layout-body-bg
-      footerPadding: '0px 24px 12px', // --ant-layout-footer-padding
+      headerHeight: 56, // --ant-layout-header-height
+      footerPadding: '8px 24px 8px', // --ant-layout-footer-padding
     },
     Menu: {
       itemPaddingInline: 8, // --ant-menu-item-padding-inline
+      horizontalLineHeight: '32px', // --ant-menu-horizontal-line-height
     },
     Table: {
       // 4.5px + 22px line height + 4.5px + 1px row border = 32px row height

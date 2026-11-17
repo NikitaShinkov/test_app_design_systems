@@ -16,15 +16,18 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   custom CSS look.
 - All visual customisation goes **only through antd design tokens** in `antd-contacts/src/theme.ts`
   (`ConfigProvider theme={appTheme}`). Don't put colours or spacing overrides in components. Current theme:
-  `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 16, Layout
-  `bodyBg` `#ffffff` and `footerPadding` `0px 24px 12px`, Menu `itemPaddingInline` 8, Table `cellPaddingBlock`
-  4.5px (32px rows). Exceptions with no token, set inline: Content padding `16px 24px` (`App.tsx`), and on the
-  Contacts Card `boxShadow: 'none'` and body `paddingInline: 0` (`ContactsPage.tsx`).
-- Contacts Card: `variant="borderless"`, no shadow, no horizontal body padding (the table is flush with the
-  content edges).
-- Header: logo `src/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the product name
-  "CRM" (italic, `token.colorPrimary`, 32px font/line height, hidden below `md`). They're direct children of one
-  `Flex align="center" gap={8}`, with no Space wrappers and no Divider.
+  `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 0, Layout
+  `bodyBg` `#ffffff`, `headerHeight` 56 and `footerPadding` `8px 24px 8px`, Menu `itemPaddingInline` 8 and
+  `horizontalLineHeight` `32px`, Table `cellPaddingBlock` 4.5px (32px rows). Exceptions with no token, set
+  inline: Content padding `16px 24px` (`App.tsx`) and Contacts Card `boxShadow: 'none'` (`ContactsPage.tsx`).
+- Contacts Card: `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content edges).
+- The create-contact Modal is `centered` (vertically and horizontally).
+- Header (56px): logo `src/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
+  product name "CRM" (Italic Regular, `token.colorPrimary`, hidden below `md`). They're direct children of one
+  `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
+  `useGlyphFit(32, font)`, which measures the real font so the **cap height** (flat tops of R/M) equals the logo
+  height and the baseline sits on the logo's bottom edge. The round "C" overshoots by about 0.5px, as round
+  glyphs normally do. Verified on screen pixels at 1× and 2×.
   Actions: notifications, user dropdown for "Иван Петров" (avatar "ИП", which holds "Выйти"), and an outlined
   (default) icon+text "Настройки" button. There's no separate logout button. The section menu has 8 items, with no
   "Настройки" item, because settings live in the header button.
@@ -50,7 +53,8 @@ design/
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
-        ├── theme.ts     # appTheme: the single place for tokens (colour, paddings, Table row height)
+        ├── theme.ts     # appTheme: the single place for tokens (colour, paddings, heights, Table row height)
+        ├── useGlyphFit.ts  # hook: font size/line height so capital letters are exactly N px tall (canvas metrics)
         ├── App.tsx      # shell: Layout(100dvh) > Header (logo + "CRM", global Input.Search, Badge bell, user
         │                #   Dropdown, "Настройки" button) + horizontal Menu (8 sections) + Content (flex) + Footer
         ├── assets/logo.svg
@@ -107,6 +111,12 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   divs between them); `--ant-layout-body-bg: #ffffff`; Contacts Card with no border (`borderless`, shadow
   removed too) and no horizontal body padding. Verified in Chrome: gap 8px, `--ant-layout-body-bg` `#ffffff`,
   card border 0, shadow none, body padding `16px 0px`, table flush with the card. Playwright 29/29, 0 warnings.
+- 2026-11-17: Requested: `--ant-card-body-padding: 0`, `--ant-layout-footer-padding: 8px 24px 8px`,
+  `--ant-menu-horizontal-line-height: 32px`, header 56px, centered create Modal, and "CRM" in Italic Regular with
+  its letter height (cap height, measured on glyphs) equal to the logo height. Verified: all CSS variables, header
+  56px, menu items 32px; modal gaps equal on all sides at 1440×900, 1280×720 and 390×844; pixel rows of R/M =
+  logo rows (12→44px). The resize check now measures the table's `max-height` (scroll limit), not its content
+  height. Playwright 29/29, 0 warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -125,4 +135,8 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - `Space` wraps every child in `div.ant-space-item`, while `Flex` doesn't. Use `Flex` when the DOM should stay flat.
 - `Card variant="borderless"` replaces the border with a `boxShadowTertiary` shadow, which still reads as an
   outline on a white background. Add `boxShadow: 'none'` for a truly borderless block.
+- Font size ≠ letter height: capital letters are only about 70% of the font size. To match letters to an icon,
+  measure `measureText('H').actualBoundingBoxAscent` and solve for the font size and the line height
+  (baseline = (L − ascent − descent)/2 + ascent, with ascent/descent rounded like browser line layout).
+  Fit the cap height, not the ink box of the whole word: round letters overshoot and would shrink the flat ones.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

@@ -179,11 +179,11 @@ export default function ContactsPage() {
         ]}
       />
 
-      {/* Card and its body stretch to the full remaining height; no border, no horizontal body padding. */}
+      {/* Card and its body stretch to the full remaining height; no border or shadow (body padding is a token). */}
       <Card
         variant="borderless"
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', boxShadow: 'none' }}
-        styles={{ body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', paddingInline: 0 } }}
+        styles={{ body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
       >
         <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
           <Flex justify="space-between" align="center" wrap gap="medium">
@@ -251,6 +251,7 @@ export default function ContactsPage() {
 
       <Modal
         title="Новый контакт"
+        centered
         open={creating}
         okText="Создать"
         okButtonProps={{ htmlType: 'submit' }}

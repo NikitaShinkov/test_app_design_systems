@@ -34,10 +34,12 @@ import {
 } from '@ant-design/icons';
 import logo from './assets/logo.svg';
 import ContactsPage from './pages/ContactsPage';
+import { useGlyphFit } from './useGlyphFit';
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
 
+const LOGO_HEIGHT = 32;
 const CURRENT_USER = 'Иван Петров';
 const CURRENT_USER_INITIALS = 'ИП';
 
@@ -62,6 +64,7 @@ export default function App() {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
   const { message } = AntApp.useApp();
+  const productNameFit = useGlyphFit(LOGO_HEIGHT, { family: token.fontFamily, style: 'italic', weight: 400 });
 
   const notInDemo = (what: string) => message.info(`«${what}» не входит в демо-страницу`);
 
@@ -81,17 +84,13 @@ export default function App() {
           <Image
             src={logo}
             alt="Dynamics Scientific"
-            height={32}
+            height={LOGO_HEIGHT}
             preview={false}
             styles={{ root: { display: 'block' }, image: { display: 'block' } }}
           />
           {screens.md && (
-            // Product name: italic, primary colour, same 32px height as the logo.
-            <Text
-              strong
-              italic
-              style={{ color: token.colorPrimary, fontSize: 32, lineHeight: '32px', display: 'block' }}
-            >
+            // Italic Regular; letters (ink) exactly as tall as the logo and aligned to its top and bottom.
+            <Text italic style={{ ...productNameFit, color: token.colorPrimary }}>
               CRM
             </Text>
           )}
