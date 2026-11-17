@@ -12,3 +12,12 @@
 .ant-menu.ant-menu-root.ant-menu-horizontal > .ant-menu-submenu::after {
   inset-inline: 0;
 }
+
+/*
+ * Table rows are a fixed single line (32px = cellPaddingBlock 4.5 × 2 + 22px line + 1px border).
+ * Tag is an inline-block (22px) sitting on the text baseline, which adds ~1px to the line box and
+ * makes rows 33px. Align it to the top of the line box instead. No token controls this.
+ */
+.ant-table-wrapper .ant-table-tbody > tr > td .ant-tag {
+  vertical-align: top;
+}

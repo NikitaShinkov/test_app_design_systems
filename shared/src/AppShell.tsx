@@ -180,16 +180,27 @@ export function AppShell({
         </Space>
       </Header>
 
-      <Menu
-        mode="horizontal"
-        selectedKeys={[activeSection]}
-        items={menuItems}
-        style={{ paddingInline: token.paddingLG }}
-        onClick={({ key }) => {
-          const section = sections.find((s) => s.key === key);
-          if (key !== activeSection && section) notInDemo(t.section(section.label));
+      {/* Side padding lives on a wrapper, not on the Menu: antd's overflow ("…") logic measures the Menu
+          without subtracting its own padding and would push items past the right edge on narrow screens.
+          The wrapper also draws the full-width bottom line (same colorSplit as the Menu's own border). */}
+      <div
+        style={{
+          paddingInline: token.paddingLG,
+          background: token.colorBgContainer,
+          borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`,
         }}
-      />
+      >
+        <Menu
+          mode="horizontal"
+          selectedKeys={[activeSection]}
+          items={menuItems}
+          style={{ borderBottom: 'none' }}
+          onClick={({ key }) => {
+            const section = sections.find((s) => s.key === key);
+            if (key !== activeSection && section) notInDemo(t.section(section.label));
+          }}
+        />
+      </div>
 
       {/* Content fills the space between the menu and the footer; pages scroll their own lists. */}
       <Content style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>

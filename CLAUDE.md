@@ -9,7 +9,7 @@ Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, br
 
 Current trial: **Ant Design**, two apps on one shared UI layer (npm workspaces):
 - `antd-contacts`: the Dynamics.CRM "Контакты" list (`img_design_1.png`), in Russian.
-- `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English.
+- `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English (product name "Register").
 - `shared` (`@dynamics/ui-shared`): everything standard (theme, providers, shell, form rules, hooks, CSS overrides).
   **Every rule below lives in `shared` and applies to both apps.** The apps only contain pages, domain forms and data.
 
@@ -119,9 +119,24 @@ design/
 │       ├── pages/ContactsPage.tsx         # breadcrumb view switcher + full-height Card + Table
 │       ├── components/ContactFormModal.tsx  # create/edit contact popup
 │       └── data/contacts.ts  # 37 mock records (first 10 = screenshot)
-└── antd-proposals/      # app 2 (en), port 5174
-    └── src/ …           # (see below once added)
+└── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
+    └── src/
+        ├── main.tsx     # <AppProviders lang="en"><App/></AppProviders>
+        ├── App.tsx      # AppShell config: "Register", 9 sections (counts 211 / 75), user Local administrator
+        │                #   with a "Preview as" role submenu
+        ├── pages/ProposalsPage.tsx  # breadcrumb + full-height Card: eyebrow + title + Review next / Review
+        │                            #   proposal, description + local-review status, filter row (search,
+        │                            #   order, decision, product, exact supplier, Clear), count + sort label,
+        │                            #   Table (211 rows, 32px single-line, Tags, Review link), help note
+        ├── components/ReviewProposalModal.tsx  # Proposal / Decision / Responsible / Decision date / Comment;
+        │                                       #   responsible + date required unless Pending
+        └── data/proposals.ts  # 211 proposals (QA-0201…0211 = screenshot), workflowOf() stage labels
 ```
+
+App 2 mapping from `img_design_2.png` (structure only): the left sidebar became the shared top shell, with counts as
+menu badges; the "Local administrator · Preview as" block became the user menu; the "Local review" card became a
+status line; the sort selects became column sorting + a label; two-line cells became one line with grey secondary
+text; the pager became one scrolling list; "Review" opens the review popup.
 
 ## Stack versions
 antd **6.x** (v6 API: use `orientation` not `direction`, `variant` not `bordered`, size `medium` not
@@ -217,6 +232,15 @@ npm run build -w antd-contacts   # one app
   shell. Re-verified app 1 unchanged: regression 29/29, forms 24/24, columns 40/40, geometry 28/28, menu 6/6,
   CSS vars identical, Inter everywhere, "CRM" fit 11.89/43.89 vs 12/44, 0 warnings. `antd-proposals` is
   scaffolded with a placeholder.
+- 2026-11-17: Step 2: the `antd-proposals` Replacement proposals page. Two shared fixes were found by its tests and
+  apply to both apps: (1) the Menu's side padding moved to a wrapper (antd's "…" overflow ignored the Menu's own
+  padding, giving 411px of content at a 390px width); the wrapper draws the same 1px colorSplit line, and the
+  underline still covers it at y=88. (2) A shared CSS rule sets `vertical-align: top` on Tags in table rows (they
+  made rows 33px). App 2 suite 50/50: shell parity with app 1 (all CSS vars, 56px header, 32px rows, Settings
+  outlined), product-name fit 11.9/43.9 vs 12/44, menu counts, one-viewport layout, 211 rows all 32px, fixed parts
+  while scrolling, filters (Cyrillic fragment, part number, order, decision, product, exact supplier, Clear),
+  sort label, review popup (pre-fill, English messages, submit-only timing, label column = widest + 30,
+  28/32 block), Review next, 390px with no scroll, Inter rendered. App 1 re-run: 29/29, 24/24, 40/40, 28/28, menu 6/6.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -262,4 +286,12 @@ npm run build -w antd-contacts   # one app
   transition of `motionDurationSlow`. There's no token for the inset; antd's selector is
   `:where(.css-var-…).ant-menu-light.ant-menu-horizontal > .ant-menu-item::after` (the `:where` hash adds 0
   specificity), so an override needs one more class.
+- Horizontal Menu `…` overflow ignores the Menu's own `padding-inline`: put side padding on a wrapper.
+- `Tag` inside a 32px table row adds 1px (inline-block on the baseline). The shared CSS rule fixes it for all tables.
+- `Typography.Link` with only `onClick` renders `<a>` without `href`, which isn't a link role and isn't focusable.
+  Give row actions `role="button"` and an `aria-label`.
+- Pressing Enter in a DatePicker inside a Form submits the form (standard form behaviour); tests should commit
+  typed dates with Tab.
+- npm workspaces: `shared` is TS source linked into the root `node_modules`; Vite transpiles it and `tsc -b` in each
+  app type-checks it. App-only deps (e.g. `dayjs` in app 2) go in that app's package.json.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

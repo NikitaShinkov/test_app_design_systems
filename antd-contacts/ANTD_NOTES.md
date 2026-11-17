@@ -145,6 +145,29 @@ level 3.
   `font-family`.
 - Any code that measures text on a canvas must wait for `document.fonts.load()`.
 
+## 5.3 Second app on the same standard (`antd-proposals`, `img_design_2.png`)
+The standard layer now lives in `shared/` (`@dynamics/ui-shared`, npm workspace). A new app needs only:
+`<AppProviders lang>` + `<AppShell productName sections activeSection searchPlaceholder user footer>` + pages
+built from antd, plus `FormFields`/`FormField` + `useSubmitValidation` for forms and `useTableScrollY` for lists.
+That's what the skill should install.
+
+How a differently-designed app (dark sidebar, two-line table cells, pager, sort dropdowns) was brought onto the
+standard:
+| Original element | Standard result |
+|---|---|
+| Left sidebar nav with counts | shared horizontal Menu; counts as `Badge` in the item label (`ShellSection.count`) |
+| User block with "Preview as" select | user Dropdown with a submenu (`userMenuExtra`) |
+| Context card ("Local review · changes saved") | `Badge status="success"` + secondary text line |
+| Sort dropdowns | column-header sorting + "· Sort: …" label |
+| Two-line cells (part + maker) | one line: main text + `Text type="secondary"` (32px rows) |
+| Status pills | `Tag` (colour by status) |
+| Pager | none: full-height list, fixed header, body scroll |
+| Review action | `Typography.Link role="button"` → review Modal with the shared form rules |
+
+Fixes the second app surfaced (now in `shared`, so they apply to both apps): Menu side padding on a wrapper
+(the "…" overflow ignored the Menu's padding), and Tags in table rows aligned to the top (they made rows 33px).
+This is the value of a second trial: issues that one page happened not to hit.
+
 ## 6. Observations for choosing a design system
 **Pros**
 - Every element on the page had a direct standard component. Nothing custom was needed.
