@@ -53,12 +53,13 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
 design/
 ├── CLAUDE.md            # this file
 ├── img_design_1.png     # reference screenshot (structure only)
-├── logo.svg             # Dynamics Scientific "D&" mark, 41×32 (source file)
+├── logo.svg             # Dynamics Scientific "D&" mark, 41×32 (source file for the header logo)
+├── favicon_logo.svg     # favicon source, 32×32 (copied to antd-contacts/public/favicon.svg)
 ├── docs/screenshots/    # rendered results (1440px, 1440px scrolled, 390px, drawer, create modal)
 └── antd-contacts/       # Ant Design trial
     ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
     ├── index.html       # <link rel="icon" href="/favicon.svg">
-    ├── public/favicon.svg  # the logo.svg artwork with a square viewBox (0 -4.5 41 41), centered
+    ├── public/favicon.svg  # exact copy of the root favicon_logo.svg (32×32: "D&" mark in a white circle)
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, @fontsource-variable/inter 5.3.0, React 19, Vite 8, TS 7
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
@@ -133,6 +134,8 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   11.89/43.89 vs logo 12/44 (sub-pixel). Playwright 29/29, 0 warnings.
 - 2026-11-17: Favicon replaced. Vite's default `public/favicon.svg` is now the `logo.svg` "D&" mark, with an
   identical path and a square viewBox. Verified that the dev server and `dist/` both serve it.
+- 2026-11-17: Favicon replaced again, with the user-supplied `favicon_logo.svg` (32×32, "D&" in a white circle with
+  a `#0084C9` outline), copied byte-for-byte. Verified that the dev server and `dist/` both serve it.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
