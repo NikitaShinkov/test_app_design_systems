@@ -10,7 +10,10 @@ interface FontSpec {
 interface FitOptions {
   /** Number of text lines in the block (default 1). */
   lines?: number;
-  /** Line height as a multiple of the font size (used between lines when `lines > 1`). */
+  /**
+   * Line spacing between lines (when `lines > 1`) as a fraction of the font's natural line height
+   * (`line-height: normal` = ascent + descent from the font metrics). E.g. 0.96 = 96% of normal.
+   */
   lineHeight?: number;
 }
 
@@ -31,7 +34,7 @@ const supportsTextBox = () =>
  */
 export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOptions = {}): CSSProperties {
   const { family, style = 'normal', weight = 400 } = font;
-  const { lines = 1, lineHeight: lhRatio = 1.2 } = options;
+  const { lines = 1, lineHeight: lhFactor = 1 } = options;
 
   // Web fonts load asynchronously; canvas would measure the fallback font until then.
   // Re-measure once the exact face (family + style + weight) is available.
@@ -58,6 +61,8 @@ export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOption
     const m = ctx.measureText('H'); // flat glyph: top = cap height, bottom = baseline
     const capRatio = m.actualBoundingBoxAscent / base;
     if (!capRatio || !m.fontBoundingBoxAscent) return fallback;
+    // Natural ("normal") line height of this font, as a multiple of the font size.
+    const lhRatio = lhFactor * ((m.fontBoundingBoxAscent + m.fontBoundingBoxDescent) / base);
 
     const fontSize = heightPx / (capRatio + (lines - 1) * lhRatio);
     const k = fontSize / base;
@@ -88,5 +93,5 @@ export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOption
     return { ...common, lineHeight: `${lineHeight}px`, marginTop: capHeight - firstBaseline };
     // fontVersion: recompute after the web font has loaded
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heightPx, family, style, weight, lines, lhRatio, fontVersion]);
+  }, [heightPx, family, style, weight, lines, lhFactor, fontVersion]);
 }

@@ -65,7 +65,7 @@ logo, and a shared folder (not copies).
   user, footer texts; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
   Header (56px): logo `shared/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
   product name ("CRM" in app 1: one line, Italic Regular; "Replacement" / "Register" in app 2: two lines, Semi Bold
-  Italic, line height 0.96 × `token.lineHeight`; `token.colorPrimary`, hidden below `md`). With several lines the cap top
+  Italic, line spacing 0.96 × the font's natural (`normal`) line height; `token.colorPrimary`, hidden below `md`). With several lines the cap top
   of the first line and the baseline of the last line sit on the logo edges (descenders like "g" hang below). They're direct children of one
   `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
   `useGlyphFit(32, font)`, which measures the real font (re-measured after the web font loads) so the **cap height**
@@ -110,7 +110,7 @@ design/
 │       ├── FormField.tsx      # FormFields grid (label col = widest label + 30) + FormField
 │       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
 │       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
-│       ├── useGlyphFit.ts     # 1..n lines: first cap top → last baseline = N px (product name)
+│       ├── useGlyphFit.ts     # 1..n lines: first cap top → last baseline = N px; line spacing = factor × normal
 │       └── antd-overrides.css # the only CSS (menu underline inset)
 ├── antd-contacts/       # app 1 (ru), port 5173
 │   ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
@@ -124,7 +124,7 @@ design/
 └── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
     └── src/
         ├── main.tsx     # <AppProviders lang="en"><App/></AppProviders>
-        ├── App.tsx      # AppShell config: "Replacement / Register" (600 italic, LH 0.96), 9 sections (counts 211 / 75), user Local administrator
+        ├── App.tsx      # AppShell config: "Replacement / Register" (600 italic, 0.96 × normal LH), 9 sections (counts 211 / 75), user Local administrator
         │                #   with a "Preview as" role submenu
         ├── pages/ProposalsPage.tsx  # breadcrumb + full-height Card: icon + title + Review next / Review
         │                            #   proposal, description, filter row (search,
@@ -249,6 +249,10 @@ npm run build -w antd-contacts   # one app
   the heading's icon (shared `ProposalsIcon` = SwapOutlined). Removed "WORKING REGISTER", the local-review status line
   and the footer help note. Verified: R top 11.96 vs 12, baseline 43.95 vs 44 (the "g" descender 3.1px below), 600
   italic Inter web font, same icon, texts gone. App 2 50/50; app 1 "CRM" unchanged 11.89/43.89, regression 29/29.
+- 2026-11-17: Requested: larger "Replacement Register" and tighter line spacing. The 96% now applies to the font's
+  natural line height (`normal`, Inter 1.21) instead of antd's 1.5714: font 14.3 → 16.9px, line spacing 21.6 →
+  19.65px, visible gap between the lines ("p" descender → "R" cap) about 8 → 3.75px. Edges still on the logo (R top
+  11.95 vs 12, baseline 43.95 vs 44). App 2 50/50, app 1 regression 29/29, "CRM" unchanged.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:

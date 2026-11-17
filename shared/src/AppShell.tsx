@@ -43,7 +43,7 @@ export interface AppShellProps {
   productName: string | string[];
   /** Font weight of the product name (default 400 = Regular; 600 = Semi Bold). */
   productNameWeight?: number;
-  /** Multi-line names: line height as a fraction of the default line height (token.lineHeight). Default 1. */
+  /** Multi-line names: line spacing as a fraction of the font's natural line height (normal). Default 1. */
   productNameLineHeight?: number;
   logoSrc?: string;
   logoAlt?: string;
@@ -92,7 +92,7 @@ export function AppShell({
   const productNameFit = useGlyphFit(
     LOGO_HEIGHT,
     { family: token.fontFamily, style: 'italic', weight: productNameWeight },
-    { lines: nameLines.length, lineHeight: productNameLineHeight * token.lineHeight },
+    { lines: nameLines.length, lineHeight: productNameLineHeight },
   );
 
   const notInDemo = (what: string) => message.info(t.notInDemo(what));
