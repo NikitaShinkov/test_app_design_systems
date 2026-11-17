@@ -25,10 +25,13 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   inline: Content padding `16px 24px` (`App.tsx`) and Contacts Card `boxShadow: 'none'` (`ContactsPage.tsx`).
 - Contacts Card: `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content edges).
 - **Forms (all forms follow these rules):**
-  - Build every field with `components/FormField.tsx`: the label and the input on one line (label column
-    `FORM_LABEL_WIDTH` = 96px), and the error under the label on one line across the full field width, using
-    `Typography.Text ellipsis={{ tooltip }}` (full text in a tooltip only when truncated). Inputs are bound with
-    `Form.Item noStyle`, so antd's own error list (which is always under the input) isn't used.
+  - Build every field with `components/FormField.tsx`: the label column on the left (`FORM_LABEL_WIDTH` = 184px,
+    which fits "Введите корректное значение" at 178.7px in Inter 12px) and the input on the right. The error sits
+    **inside the `<label for=…>`**, directly under the label text. With an error the two-line block is exactly
+    `token.controlHeight − 4` px high (32 → 28; each line is 14px line height, the error at `fontSizeSM`) and
+    vertically centred on the input. The error is one line, using `Typography.Text ellipsis={{ tooltip }}` (the
+    full text shows in a tooltip only when truncated). Inputs are bound with `Form.Item noStyle`, so antd's own
+    error list (which is always under the input) isn't used.
   - Messages come only from `formConfig.ts` (ConfigProvider `form.validateMessages`): required or whitespace →
     "Заполните поле", any other rule → "Введите корректное значение". Don't put `message` on rules.
   - No required "*": ConfigProvider `form.requiredMark: false`.
@@ -88,7 +91,7 @@ design/
         │                         #   reload, "Создать контакт", Table (sort/search, no pagination, body scroll);
         │                         #   create + edit via ContactFormModal
         ├── components/
-        │   ├── FormField.tsx        # standard field: label + input on one line, error line under the label
+        │   ├── FormField.tsx        # standard field: <label>(text + error, 28px block) | input
         │   └── ContactFormModal.tsx # create/edit contact popup (validation timing rules)
         ├── formConfig.ts  # ConfigProvider `form`: the 2 standard messages, requiredMark false
         └── data/
@@ -165,6 +168,11 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   only after submit, cleared by any change; no "*"; the contact side panel replaced by a pre-filled editable popup.
   Added `FormField`, `ContactFormModal` and `formConfig`. Verified without screenshots (30 form checks): layout
   geometry, timing, messages, ellipsis + tooltip, edit pre-fill + save + reopen. Regression 29/29, 0 warnings.
+- 2026-11-17: Requested: the error moves inside the `<label>`, under the label text, to the left of the input;
+  the label+error block is the input height − 4px (28px) and vertically centred. The label column was widened
+  from 96px to 184px so both standard messages fit on one line. Verified at 1440 and 390 (30 geometry checks):
+  error inside `label[for]`, block 28 vs input 32, gaps 2/2, one line, no ellipsis needed, and no antd error list.
+  Form suite 24/24, regression 29/29, 0 warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
