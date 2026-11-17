@@ -22,12 +22,20 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   inline: Content padding `16px 24px` (`App.tsx`) and Contacts Card `boxShadow: 'none'` (`ContactsPage.tsx`).
 - Contacts Card: `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content edges).
 - The create-contact Modal is `centered` (vertically and horizontally).
+- Font: **Inter everywhere**. It's self-hosted via `@fontsource-variable/inter` (upright `wght.css` + true italic
+  `wght-italic.css`, imported in `main.tsx`, Cyrillic included) and set as the `fontFamily` token, so
+  `--ant-font-family` starts with `'Inter Variable'`. Form required marks use a custom `requiredMark` render,
+  because antd's default `*` hard-codes `SimSun, sans-serif`.
+- **Screenshots: do not generate any** (not `docs/screenshots/`, not visual checks) unless the user explicitly asks.
+  Verify with computed styles and DOM measurements instead. `docs/screenshots/` was last refreshed before the Inter
+  change.
 - Header (56px): logo `src/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
   product name "CRM" (Italic Regular, `token.colorPrimary`, hidden below `md`). They're direct children of one
   `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
-  `useGlyphFit(32, font)`, which measures the real font so the **cap height** (flat tops of R/M) equals the logo
-  height and the baseline sits on the logo's bottom edge. The round "C" overshoots by about 0.5px, as round
-  glyphs normally do. Verified on screen pixels at 1× and 2×.
+  `useGlyphFit(32, font)`, which measures the real font (re-measured after the web font loads) so the **cap height**
+  (flat tops of R/M) equals the logo height. CSS `text-box: trim-both cap alphabetic` puts the cap top and the
+  baseline on the logo's edges, with a line-height formula as the fallback. The round "C" overshoots by about
+  0.5px, as round glyphs normally do.
   Actions: notifications, user dropdown for "Иван Петров" (avatar "ИП", which holds "Выйти"), and an outlined
   (default) icon+text "Настройки" button. There's no separate logout button. The section menu has 8 items, with no
   "Настройки" item, because settings live in the header button.
@@ -50,7 +58,7 @@ design/
 └── antd-contacts/       # Ant Design trial
     ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
     ├── index.html
-    ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, React 19, Vite 8, TS 7
+    ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, @fontsource-variable/inter 5.3.0, React 19, Vite 8, TS 7
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
         ├── theme.ts     # appTheme: the single place for tokens (colour, paddings, heights, Table row height)
@@ -117,6 +125,11 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   56px, menu items 32px; modal gaps equal on all sides at 1440×900, 1280×720 and 390×844; pixel rows of R/M =
   logo rows (12→44px). The resize check now measures the table's `max-height` (scroll limit), not its content
   height. Playwright 29/29, 0 warnings.
+- 2026-11-17: Requested: Inter as the font for the whole app, and no screenshots unless explicitly asked.
+  Verified without screenshots: all 160 text-bearing elements compute to `"Inter Variable"`. Chrome's
+  `CSS.getPlatformFontsForNode` shows Inter (web font) actually rendering the header, menu, breadcrumb, title,
+  buttons, table, modal, form labels, required marks and footer. "CRM" re-fitted for Inter: cap top/baseline
+  11.89/43.89 vs logo 12/44 (sub-pixel). Playwright 29/29, 0 warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -139,4 +152,11 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   measure `measureText('H').actualBoundingBoxAscent` and solve for the font size and the line height
   (baseline = (L − ascent − descent)/2 + ascent, with ascent/descent rounded like browser line layout).
   Fit the cap height, not the ink box of the whole word: round letters overshoot and would shrink the flat ones.
+- Line-height maths for baseline placement depends on how the browser rounds font metrics, and it came out
+  1px off with Inter. Prefer `text-box: trim-both cap alphabetic` for exact cap/baseline alignment.
+- Canvas `measureText` measures the fallback font until a web font has loaded. Wait for
+  `document.fonts.load(...)` and re-measure.
+- antd Form's default required `*` uses `font-family: SimSun, sans-serif` (no token). Use `requiredMark` to render it.
+- `CSS.getPlatformFontsForNode` (CDP) is the reliable way to prove which font actually rendered the glyphs,
+  because computed `font-family` only shows the requested stack.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

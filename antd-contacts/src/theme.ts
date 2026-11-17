@@ -9,6 +9,9 @@ export const appTheme: ThemeConfig = {
     colorPrimary: '#0084C9',
     colorLink: '#0084C9',
     padding: 8, // --ant-padding
+    // --ant-font-family: Inter everywhere (self-hosted via @fontsource-variable/inter, see main.tsx)
+    fontFamily:
+      "'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
   },
   components: {
     Card: {

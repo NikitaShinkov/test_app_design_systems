@@ -7,7 +7,10 @@ All visual customisation is done with design tokens in `src/theme.ts`.
 
 ## 0. Theme (src/theme.ts)
 ```ts
-token: { colorPrimary: '#0084C9', colorLink: '#0084C9', padding: 8 },   // --ant-padding
+token: {
+  colorPrimary: '#0084C9', colorLink: '#0084C9', padding: 8,           // --ant-padding
+  fontFamily: "'Inter Variable', Inter, -apple-system, …",             // --ant-font-family
+},
 components: {
   Card:   { bodyPadding: 0 },                  // --ant-card-body-padding
   Layout: { bodyBg: '#ffffff', headerHeight: 56, footerPadding: '8px 24px 8px' },  // --ant-layout-*
@@ -69,7 +72,7 @@ run that asserts **0 console warnings**. This trial passes it.
 | Row link / open action | `Typography.Link` (text and icon-only, so rows stay one line high) |
 | Total | the count line above the table (pagination removed by request) |
 | Record details | `Drawer` + `Descriptions items` |
-| Create form | `Modal centered` + `Form` (via `modalRender`), `Form.Item rules` |
+| Create form | `Modal centered` + `Form` (via `modalRender`), `Form.Item rules`, `requiredMark` render (keeps `*` in the app font) |
 | Feedback | `App.useApp().message` |
 | Responsiveness | `Grid.useBreakpoint()` |
 | Localisation | `ConfigProvider locale={ruRU}` (`antd/locale/ru_RU`) |
@@ -106,6 +109,16 @@ level 3.
 - The original's pagination was replaced, on request, by one scrolling list under a fixed header.
 - Added standard behaviour the screenshot only implied: a create form with validation, a details drawer,
   views in the breadcrumb menu, and toasts for sections outside the demo.
+
+## 5.1 Custom font (Inter)
+- Self-host it: `npm i @fontsource-variable/inter`, then in `main.tsx` import `@fontsource-variable/inter/wght.css`
+  and `/wght-italic.css` (a true italic, not a synthetic slant). Vite bundles the woff2 subsets, including Cyrillic.
+- Set the `fontFamily` token. Every antd component reads `--ant-font-family`.
+- One leak: Form's default required `*` hard-codes `font-family: SimSun, sans-serif`. Override it with
+  `requiredMark={(label, { required }) => …}`.
+- Prove it with CDP `CSS.getPlatformFontsForNode` (the font that actually rendered), not just computed
+  `font-family`.
+- Any code that measures text on a canvas must wait for `document.fonts.load()`.
 
 ## 6. Observations for choosing a design system
 **Pros**

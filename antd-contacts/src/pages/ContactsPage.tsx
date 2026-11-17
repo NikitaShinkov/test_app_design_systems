@@ -15,7 +15,7 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
-import type { BreadcrumbProps, TableProps, TableRef } from 'antd';
+import type { BreadcrumbProps, FormProps, TableProps, TableRef } from 'antd';
 import { ContactsOutlined, ExportOutlined, HomeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { contacts as initialContacts } from '../data/contacts';
 import type { Contact } from '../data/contacts';
@@ -53,7 +53,22 @@ function plural(n: number, [one, few, many]: [string, string, string]) {
 const compareBy = (field: SortField) => (a: Contact, b: Contact) =>
   (a[field] ?? '').localeCompare(b[field] ?? '', 'ru');
 
-const formatDate = (iso: string) =>
+/**
+ * antd draws the default required "*" in a ::before with a hard-coded `font-family: SimSun, sans-serif`
+ * (no token), so render it ourselves as Typography text, which uses the app font (Inter).
+ */
+const renderRequiredMark: FormProps['requiredMark'] = (label, { required }) => (
+  <>
+    {required && (
+      <Text type="danger" style={{ marginInlineEnd: 4 }}>
+        *
+      </Text>
+    )}
+    {label}
+  </>
+);
+
+const formatDate =(iso: string) =>
   new Date(iso).toLocaleString('ru-RU', { dateStyle: 'medium', timeStyle: 'short' });
 
 export default function ContactsPage() {
@@ -258,7 +273,13 @@ export default function ContactsPage() {
         onCancel={() => setCreating(false)}
         destroyOnHidden
         modalRender={(dom) => (
-          <Form<ContactForm> layout="vertical" name="createContact" clearOnDestroy onFinish={createContact}>
+          <Form<ContactForm>
+            layout="vertical"
+            name="createContact"
+            clearOnDestroy
+            onFinish={createContact}
+            requiredMark={renderRequiredMark}
+          >
             {dom}
           </Form>
         )}
