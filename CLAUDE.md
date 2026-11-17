@@ -24,11 +24,22 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   `horizontalLineHeight` `32px`, Table `cellPaddingBlock` 4.5px (32px rows). Exceptions with no token, set
   inline: Content padding `16px 24px` (`App.tsx`) and Contacts Card `boxShadow: 'none'` (`ContactsPage.tsx`).
 - Contacts Card: `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content edges).
-- The create-contact Modal is `centered` (vertically and horizontally).
+- **Forms (all forms follow these rules):**
+  - Build every field with `components/FormField.tsx`: the label and the input on one line (label column
+    `FORM_LABEL_WIDTH` = 96px), and the error under the label on one line across the full field width, using
+    `Typography.Text ellipsis={{ tooltip }}` (full text in a tooltip only when truncated). Inputs are bound with
+    `Form.Item noStyle`, so antd's own error list (which is always under the input) isn't used.
+  - Messages come only from `formConfig.ts` (ConfigProvider `form.validateMessages`): required or whitespace →
+    "Заполните поле", any other rule → "Введите корректное значение". Don't put `message` on rules.
+  - No required "*": ConfigProvider `form.requiredMark: false`.
+  - Timing: `validateTrigger={[]}` means nothing is validated while typing. Errors are shown only after the submit
+    button (`onFinishFailed`), and any value change (`onValuesChange`) clears all errors until the next submit.
+- Contacts: one `components/ContactFormModal.tsx` (centered Modal + Form) is used for both "Новый контакт" (button
+  "Создать") and "Редактирование контакта" (button "Сохранить"). Clicking a contact name or the row icon opens the
+  edit popup pre-filled; there's no side panel. The phone field and column are labelled "Телефон".
 - Font: **Inter everywhere**. It's self-hosted via `@fontsource-variable/inter` (upright `wght.css` + true italic
   `wght-italic.css`, imported in `main.tsx`, Cyrillic included) and set as the `fontFamily` token, so
-  `--ant-font-family` starts with `'Inter Variable'`. Form required marks use a custom `requiredMark` render,
-  because antd's default `*` hard-codes `SimSun, sans-serif`.
+  `--ant-font-family` starts with `'Inter Variable'`.
 - **Screenshots: do not generate any** (not `docs/screenshots/`, not visual checks) unless the user explicitly asks.
   Verify with computed styles and DOM measurements instead. `docs/screenshots/` was last refreshed before the Inter
   change.
@@ -74,8 +85,12 @@ design/
         ├── assets/logo.svg
         ├── pages/
         │   └── ContactsPage.tsx  # Breadcrumb (view switcher menu) + full-height Card: title, Input.Search,
-        │                         #   reload, "Создать контакт" (Modal+Form), Table (sort/search, no pagination,
-        │                         #   body scroll), row open → Drawer+Descriptions
+        │                         #   reload, "Создать контакт", Table (sort/search, no pagination, body scroll);
+        │                         #   create + edit via ContactFormModal
+        ├── components/
+        │   ├── FormField.tsx        # standard field: label + input on one line, error line under the label
+        │   └── ContactFormModal.tsx # create/edit contact popup (validation timing rules)
+        ├── formConfig.ts  # ConfigProvider `form`: the 2 standard messages, requiredMark false
         └── data/
             └── contacts.ts  # `Contact` type + 37 mock records (first 10 = screenshot), newest first
 ```
@@ -145,6 +160,11 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   `antd-overrides.css`; `--ant-menu-item-padding-inline` stays 8px. Verified without screenshots: every
   underline = full item width, gaps between neighbouring items and underlines are 0px, and a cursor sweep finds
   0 points without an underline once the 0.3s antd colour fade has run. Playwright 29/29, 0 warnings.
+- 2026-11-17: Requested form changes: "Телефон с кодом страны" → "Телефон"; inline labels; a one-line error under
+  the label with ellipsis + tooltip; the standard messages "Заполните поле" / "Введите корректное значение"; errors
+  only after submit, cleared by any change; no "*"; the contact side panel replaced by a pre-filled editable popup.
+  Added `FormField`, `ContactFormModal` and `formConfig`. Verified without screenshots (30 form checks): layout
+  geometry, timing, messages, ellipsis + tooltip, edit pre-fill + save + reopen. Regression 29/29, 0 warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -171,7 +191,15 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   1px off with Inter. Prefer `text-box: trim-both cap alphabetic` for exact cap/baseline alignment.
 - Canvas `measureText` measures the fallback font until a web font has loaded. Wait for
   `document.fonts.load(...)` and re-measure.
-- antd Form's default required `*` uses `font-family: SimSun, sans-serif` (no token). Use `requiredMark` to render it.
+- antd Form's default required `*` uses `font-family: SimSun, sans-serif` (no token). It's now hidden entirely
+  (`requiredMark: false`).
+- antd always renders a Form.Item's errors in the wrapper column (under the input). To put them elsewhere, bind
+  the input with `Form.Item noStyle` and render the errors yourself.
+- **Don't combine `clearOnDestroy` with `initialValues`** in dev: React StrictMode's simulated unmount clears the
+  store and the remount doesn't re-apply initialValues. The inputs still show values, but the form submits empty
+  ("Заполните поле" on pre-filled fields). `destroyOnHidden` on the Modal already discards the form.
+- Escape on a Modal first closes a still-open Tooltip from the trigger element, so tests should wait about 400ms
+  after opening.
 - `CSS.getPlatformFontsForNode` (CDP) is the reliable way to prove which font actually rendered the glyphs,
   because computed `font-family` only shows the requested stack.
 - Horizontal Menu: the underline is `::after` with `inset-inline: itemPaddingInline` and a `border-color`

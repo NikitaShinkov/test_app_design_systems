@@ -4,21 +4,19 @@ import {
   Breadcrumb,
   Button,
   Card,
-  Descriptions,
-  Drawer,
   Flex,
-  Form,
   Input,
-  Modal,
   Space,
   Table,
   Tooltip,
   Typography,
 } from 'antd';
-import type { BreadcrumbProps, FormProps, TableProps, TableRef } from 'antd';
+import type { BreadcrumbProps, TableProps, TableRef } from 'antd';
 import { ContactsOutlined, ExportOutlined, HomeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { contacts as initialContacts } from '../data/contacts';
 import type { Contact } from '../data/contacts';
+import { ContactFormModal } from '../components/ContactFormModal';
+import type { ContactFormValues } from '../components/ContactFormModal';
 
 const { Title, Text, Link } = Typography;
 
@@ -26,7 +24,6 @@ type BreadcrumbItemMenu = NonNullable<NonNullable<BreadcrumbProps['items']>[numb
 type ViewKey = 'all' | 'withPhone' | 'withPosition';
 type SortField = 'name' | 'email' | 'phone' | 'position';
 type SortState = { field: SortField; order: 'ascend' | 'descend' } | null;
-type ContactForm = Pick<Contact, 'name' | 'email' | 'phone' | 'position'>;
 
 const views: Record<ViewKey, { label: string; test: (c: Contact) => boolean }> = {
   all: { label: 'Все', test: () => true },
@@ -37,7 +34,7 @@ const views: Record<ViewKey, { label: string; test: (c: Contact) => boolean }> =
 const fieldTitles: Record<SortField, string> = {
   name: 'Имя',
   email: 'Эл. почта',
-  phone: 'Телефон с кодом страны',
+  phone: 'Телефон',
   position: 'Должность',
 };
 
@@ -53,23 +50,13 @@ function plural(n: number, [one, few, many]: [string, string, string]) {
 const compareBy = (field: SortField) => (a: Contact, b: Contact) =>
   (a[field] ?? '').localeCompare(b[field] ?? '', 'ru');
 
-/**
- * antd draws the default required "*" in a ::before with a hard-coded `font-family: SimSun, sans-serif`
- * (no token), so render it ourselves as Typography text, which uses the app font (Inter).
- */
-const renderRequiredMark: FormProps['requiredMark'] = (label, { required }) => (
-  <>
-    {required && (
-      <Text type="danger" style={{ marginInlineEnd: 4 }}>
-        *
-      </Text>
-    )}
-    {label}
-  </>
-);
-
-const formatDate =(iso: string) =>
-  new Date(iso).toLocaleString('ru-RU', { dateStyle: 'medium', timeStyle: 'short' });
+/** Trim strings; empty optional fields become undefined. */
+const normalize = (v: ContactFormValues): ContactFormValues => ({
+  name: v.name.trim(),
+  email: v.email.trim(),
+  phone: v.phone?.trim() || undefined,
+  position: v.position?.trim() || undefined,
+});
 
 export default function ContactsPage() {
   const { message } = AntApp.useApp();
@@ -78,7 +65,7 @@ export default function ContactsPage() {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortState>(null);
   const [loading, setLoading] = useState(false);
-  const [opened, setOpened] = useState<Contact | null>(null);
+  const [editing, setEditing] = useState<Contact | null>(null);
   const [creating, setCreating] = useState(false);
 
   // Table body height = free space in the card body minus the sticky column header.
@@ -135,7 +122,7 @@ export default function ContactsPage() {
   const columns: TableProps<Contact>['columns'] = [
     {
       ...sortableColumn('name'),
-      render: (name: string, record) => <Link onClick={() => setOpened(record)}>{name}</Link>,
+      render: (name: string, record) => <Link onClick={() => setEditing(record)}>{name}</Link>,
     },
     {
       ...sortableColumn('email'),
@@ -150,7 +137,7 @@ export default function ContactsPage() {
       render: (_, record) => (
         <Tooltip title="Открыть карточку">
           {/* Link (not Button) keeps the row at one text line = 30px. */}
-          <Link role="button" aria-label={`Открыть ${record.name}`} onClick={() => setOpened(record)}>
+          <Link role="button" aria-label={`Открыть ${record.name}`} onClick={() => setEditing(record)}>
             <ExportOutlined />
           </Link>
         </Tooltip>
@@ -171,9 +158,9 @@ export default function ContactsPage() {
     }, 600);
   };
 
-  const createContact = (values: ContactForm) => {
+  const createContact = (values: ContactFormValues) => {
     const contact: Contact = {
-      ...values,
+      ...normalize(values),
       id: `c-${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
@@ -182,6 +169,14 @@ export default function ContactsPage() {
     setSort(null);
     scrollToTop();
     message.success(`Контакт «${contact.name}» создан`);
+  };
+
+  const saveContact = (values: ContactFormValues) => {
+    if (!editing) return;
+    const updated: Contact = { ...editing, ...normalize(values) };
+    setData((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    setEditing(null);
+    message.success(`Контакт «${updated.name}» сохранён`);
   };
 
   return (
@@ -249,61 +244,25 @@ export default function ContactsPage() {
         </Flex>
       </Card>
 
-      <Drawer title={opened?.name} open={opened !== null} onClose={() => setOpened(null)}>
-        {opened && (
-          <Descriptions
-            column={1}
-            bordered
-            items={[
-              { key: 'email', label: 'Эл. почта', children: <Link href={`mailto:${opened.email}`}>{opened.email}</Link> },
-              { key: 'phone', label: 'Телефон', children: opened.phone ?? '—' },
-              { key: 'position', label: 'Должность', children: opened.position ?? '—' },
-              { key: 'createdAt', label: 'Создан', children: formatDate(opened.createdAt) },
-            ]}
-          />
-        )}
-      </Drawer>
-
-      <Modal
+      <ContactFormModal
+        formName="createContact"
         title="Новый контакт"
-        centered
-        open={creating}
         okText="Создать"
-        okButtonProps={{ htmlType: 'submit' }}
+        open={creating}
+        onSubmit={createContact}
         onCancel={() => setCreating(false)}
-        destroyOnHidden
-        modalRender={(dom) => (
-          <Form<ContactForm>
-            layout="vertical"
-            name="createContact"
-            clearOnDestroy
-            onFinish={createContact}
-            requiredMark={renderRequiredMark}
-          >
-            {dom}
-          </Form>
-        )}
-      >
-        <Form.Item name="name" label="Имя" rules={[{ required: true, message: 'Введите имя' }]}>
-          <Input autoFocus />
-        </Form.Item>
-        <Form.Item
-          name="email"
-          label="Эл. почта"
-          rules={[
-            { required: true, message: 'Введите эл. почту' },
-            { type: 'email', message: 'Некорректный адрес' },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item name="phone" label="Телефон с кодом страны">
-          <Input placeholder="+7 900 000-00-00" />
-        </Form.Item>
-        <Form.Item name="position" label="Должность">
-          <Input />
-        </Form.Item>
-      </Modal>
+      />
+
+      {/* Clicking a contact opens the same form, pre-filled and editable. */}
+      <ContactFormModal
+        formName="editContact"
+        title="Редактирование контакта"
+        okText="Сохранить"
+        open={editing !== null}
+        initialValues={editing ?? undefined}
+        onSubmit={saveContact}
+        onCancel={() => setEditing(null)}
+      />
     </Flex>
   );
 }

@@ -9,10 +9,11 @@ import '@fontsource-variable/inter/wght-italic.css';
 import './antd-overrides.css';
 import App from './App.tsx';
 import { appTheme } from './theme';
+import { formConfig } from './formConfig';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ConfigProvider locale={ruRU} theme={appTheme}>
+    <ConfigProvider locale={ruRU} theme={appTheme} form={formConfig}>
       <AntApp>
         <App />
       </AntApp>

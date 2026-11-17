@@ -71,8 +71,9 @@ run that asserts **0 console warnings**. This trial passes it.
 | Data grid | `Table` with column `sorter`, `sortOrder` (controlled), `ellipsis`, `scroll={{ x, y }}`, `pagination={false}` |
 | Row link / open action | `Typography.Link` (text and icon-only, so rows stay one line high) |
 | Total | the count line above the table (pagination removed by request) |
-| Record details | `Drawer` + `Descriptions items` |
-| Create form | `Modal centered` + `Form` (via `modalRender`), `Form.Item rules`, `requiredMark` render (keeps `*` in the app font) |
+| Create / edit contact | One `ContactFormModal`: `Modal centered` + `Form` (via `modalRender`, `validateTrigger={[]}`), fields from `FormField` |
+| Form field | `FormField`: `Flex` row (`<label>` + `Form.Item noStyle` input) + `Typography.Text type="danger" ellipsis={{ tooltip }}` error line under the label |
+| Form messages / required mark | `ConfigProvider form={{ validateMessages, requiredMark: false }}` (`formConfig.ts`) |
 | Feedback | `App.useApp().message` |
 | Responsiveness | `Grid.useBreakpoint()` |
 | Localisation | `ConfigProvider locale={ruRU}` (`antd/locale/ru_RU`) |
@@ -122,8 +123,20 @@ level 3.
 - Self-host it: `npm i @fontsource-variable/inter`, then in `main.tsx` import `@fontsource-variable/inter/wght.css`
   and `/wght-italic.css` (a true italic, not a synthetic slant). Vite bundles the woff2 subsets, including Cyrillic.
 - Set the `fontFamily` token. Every antd component reads `--ant-font-family`.
-- One leak: Form's default required `*` hard-codes `font-family: SimSun, sans-serif`. Override it with
-  `requiredMark={(label, { required }) => …}`.
+- One leak: Form's default required `*` hard-codes `font-family: SimSun, sans-serif`. This app hides the mark
+  (`requiredMark: false`); if you keep it, render it with `requiredMark={(label, { required }) => …}`.
+
+## 5.2 Forms standard (for the skill)
+- **Global, in one place:** `ConfigProvider form={{ validateMessages, requiredMark: false }}`. Two messages:
+  required/whitespace → "Заполните поле", every other rule → "Введите корректное значение". Rules carry no
+  `message`.
+- **Layout:** antd puts errors under the input (wrapper column) and offers no option to move them. For "label +
+  input on one line, error under the label, full width, one line with ellipsis + tooltip", a thin `FormField`
+  composition is needed: `Flex` + `<label htmlFor>` + `Form.Item noStyle` + `Typography.Text ellipsis={{ tooltip }}`.
+- **Timing:** `validateTrigger={[]}` on the Form; show `errorFields` from `onFinishFailed`; clear them in
+  `onValuesChange`.
+- **Pitfall:** `clearOnDestroy` + `initialValues` + React StrictMode (dev) means pre-filled forms submit as empty.
+  Rely on `Modal destroyOnHidden` instead.
 - Prove it with CDP `CSS.getPlatformFontsForNode` (the font that actually rendered), not just computed
   `font-family`.
 - Any code that measures text on a canvas must wait for `document.fonts.load()`.
