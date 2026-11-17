@@ -77,7 +77,8 @@ logo, and a shared folder (not copies).
   REDESIGN_SKILL_GUIDE.md §5.2):
   1. Regular Italic at a 32px cap height if ≤ 160px wide ("CRM").
   2. Otherwise 2+ words → two lines, Semi Bold Italic, first cap top / last baseline on the logo edges, line spacing
-     0.85 × normal ("Replacement Register").
+     0.85 × normal ("Replacement Register"). If the wider line is then > 160px, the font is reduced until it's exactly
+     160px and the block is centred on the logo.
   3. Otherwise one word → Medium Italic sized to 160px, cap band centred ("Configurator").
   `data-name-mode` shows the chosen mode; `token.colorPrimary`, hidden below `md`. They're direct children of one
   `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
@@ -330,6 +331,11 @@ npm run build -w antd-contacts   # one app
   default. Verified: every non-mail cell (CRM 4, Register 10, Configurator 6) opens one popup for the clicked row;
   row links open exactly one popup; an e-mail click opens no popup, keeps `mailto:` and isn't defaultPrevented.
   App 1 29/29 + 24/24, app 2 50/50, 0 warnings.
+- 2026-11-17: The user resolved the open point: two-line names whose wider line exceeds 160px get a smaller font
+  (that line exactly 160px, same spacing ratio, block centred on the logo). `useGlyphFit` `maxWidth`/`lineTexts`.
+  Tried: "Warehouse / Management System" 15.61px (159.95), "Quality Assurance / Control Center" 18.07px (159.94),
+  "International Procurement / Coordination" 12.66px (159.97), all centred (mid 27.95 vs 28); real apps unchanged.
+  Suites: name 13/13, app 2 50/50, app 3 53/53.
 - 2026-11-17: Handover: `REDESIGN_SKILL_GUIDE.md` written for the skill developer. The logo/name rules became an
   automatic algorithm in `shared/src/useProductNameFit.ts` (apps pass only `productName`). It reproduces the tuned
   results exactly (CRM regular 11.88/43.88; Register two-lines 600 18.2px 11.95/43.95; Configurator fit-width 500

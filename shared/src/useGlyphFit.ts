@@ -23,6 +23,13 @@ interface FitOptions {
   width?: number;
   /** Text to measure in width mode. */
   text?: string;
+  /**
+   * Multi-line: maximum width (px) of the widest line. After sizing by height, if the widest of `lineTexts` is wider,
+   * the font is reduced until it fits; the (now shorter) block is then vertically centred by its flex parent.
+   */
+  maxWidth?: number;
+  /** Multi-line: the line texts, measured for `maxWidth`. */
+  lineTexts?: string[];
 }
 
 const supportsTextBox = () =>
@@ -42,7 +49,8 @@ const supportsTextBox = () =>
  */
 export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOptions = {}): CSSProperties {
   const { family, style = 'normal', weight = 400 } = font;
-  const { lines = 1, lineHeight: lhFactor = 1, width, text } = options;
+  const { lines = 1, lineHeight: lhFactor = 1, width, text, maxWidth, lineTexts } = options;
+  const lineKey = lineTexts?.join('|');
 
   // Web fonts load asynchronously; canvas would measure the fallback font until then.
   // Re-measure once the exact face (family + style + weight) is available.
@@ -73,13 +81,22 @@ export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOption
     const lhRatio = lhFactor * ((m.fontBoundingBoxAscent + m.fontBoundingBoxDescent) / base);
 
     const widthMode = Boolean(width && text);
-    const fontSize = widthMode
+    let fontSize = widthMode
       ? (width! / ctx.measureText(text!).width) * base
       : heightPx / (capRatio + (lines - 1) * lhRatio);
+    // Multi-line: first fit the height (tight line spacing), then shrink if the widest line exceeds maxWidth.
+    let shrunk = false;
+    if (!widthMode && lines > 1 && maxWidth && lineTexts?.length) {
+      const widest = Math.max(...lineTexts.map((t) => ctx.measureText(t).width)) * (fontSize / base);
+      if (widest > maxWidth) {
+        fontSize *= maxWidth / widest;
+        shrunk = true;
+      }
+    }
     const k = fontSize / base;
     const capHeight = capRatio * fontSize;
-    // Block height: given height, or (width mode) the cap height of the fitted text.
-    const blockHeight = widthMode ? capHeight : heightPx;
+    // Block height: given height; (width mode) the cap height; (shrunk multi-line) cap height + line spacing.
+    const blockHeight = widthMode ? capHeight : shrunk ? capHeight + (lines - 1) * lhRatio * fontSize : heightPx;
     // Font metrics used for the line box; browsers round them to whole pixels during line layout.
     const fontAscent = Math.round(m.fontBoundingBoxAscent * k);
     const fontDescent = Math.round(m.fontBoundingBoxDescent * k);
@@ -106,5 +123,5 @@ export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOption
     return { ...common, lineHeight: `${lineHeight}px`, marginTop: capHeight - firstBaseline };
     // fontVersion: recompute after the web font has loaded
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heightPx, family, style, weight, lines, lhFactor, width, text, fontVersion]);
+  }, [heightPx, family, style, weight, lines, lhFactor, width, text, maxWidth, lineKey, fontVersion]);
 }

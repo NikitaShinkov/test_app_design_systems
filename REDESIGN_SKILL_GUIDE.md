@@ -171,6 +171,11 @@ name in italic, `colorPrimary`, hidden below `md`. The logo and the name are dir
    - **More than two words:** split into two lines anyway, at the word break that makes the longer line as short as
      possible. Examples: "Warehouse Management System" → "Warehouse" / "Management System"; "Quality Assurance
      Control Center" → "Quality Assurance" / "Control Center".
+   - **Then check the width:** first the font is sized up to fill the logo height with small gaps between the lines.
+     If the wider line is then **more than 160px**, the font is **reduced until that line is exactly 160px**. The line
+     spacing ratio stays the same, and the (now shorter) two-line block is **vertically centred on the logo**.
+     Examples: "Warehouse" / "Management System" → 15.6px font (widest line 159.95px); "International Procurement" /
+     "Coordination" → 12.7px. "Replacement" / "Register" (115.6px) and "Audit" / "Log" need no reduction.
 4. **If it doesn't fit and is a single word:** adjust the font size so that the text is exactly **160px** wide. Use
    **Medium Italic** (500), with the capital-letter band vertically centred on the logo. Example: **"Configurator"**
    (26.4px font, 159.98px wide).
@@ -345,7 +350,8 @@ Run against the dev server **and** the production build (`npm run build` + `vite
 - **Name block:**
   - `data-name-mode` matches the algorithm.
   - Edges (via baseline probes + canvas cap height measured at 100px and scaled) are within 0.5px of the logo's top
-    and bottom. Width mode: 160 ± 0.5px.
+    and bottom. Width mode: 160 ± 0.5px. Two lines: every line ≤ 160px; if the font was reduced, the block's
+    midpoint is within 0.5px of the logo's midpoint.
   - The right weight and italic.
   - CDP `CSS.getPlatformFontsForNode` reports Inter.
 - **Page:**
@@ -398,8 +404,6 @@ Run against the dev server **and** the production build (`npm run build` + `vite
 
 ## 12. Open points for the skill developer
 
-- **Two-line names:** the algorithm fixes the block height. A long two-line name can be wider than 160px (e.g.
-  "Management System" ≈ 186px). Decide whether to shrink the text in that case.
 - **Very small screens:** below `md` the name is hidden and only the logo shows (as agreed for the header). Revisit
   if a mobile layout is required.
 - **Bundle size:** ~520 kB JS (antd). Consider code-splitting per page in larger apps.
