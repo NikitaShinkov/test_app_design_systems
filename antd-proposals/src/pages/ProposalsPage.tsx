@@ -174,11 +174,13 @@ export default function ProposalsPage() {
         columns={columns}
         dataSource={filtered}
         onChange={handleTableChange}
+        // Click anywhere on a row → review popup (same as the other apps).
+        onRow={(p) => ({ onClick: () => openReview(p), style: { cursor: 'pointer' } })}
         scroll={{ x: 1670, y: scrollY }}
         pagination={false}
       />
     ),
-    [tableRef, columns, filtered, handleTableChange, scrollY],
+    [tableRef, columns, filtered, handleTableChange, openReview, scrollY],
   );
 
   const reviewNext = () => {

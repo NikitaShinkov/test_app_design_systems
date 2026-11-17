@@ -111,7 +111,12 @@ export default function ContactsPage() {
       },
       {
         ...sortableColumn('email'),
-        render: (email: string) => <Link href={`mailto:${email}`}>{email}</Link>,
+        // Exception to "click a row → popup": the address opens the default mail app, so stop the row click.
+        render: (email: string) => (
+          <Link href={`mailto:${email}`} onClick={(e) => e.stopPropagation()}>
+            {email}
+          </Link>
+        ),
       },
       sortableColumn('phone'),
       sortableColumn('position'),
@@ -145,6 +150,8 @@ export default function ContactsPage() {
         dataSource={filtered}
         loading={loading}
         onChange={handleTableChange}
+        // Click anywhere on a row → edit popup (same as the other apps).
+        onRow={(record) => ({ onClick: () => setEditing(record), style: { cursor: 'pointer' } })}
         scroll={{ x: 900, y: scrollY }}
         pagination={false}
       />

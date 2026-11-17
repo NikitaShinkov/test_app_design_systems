@@ -85,6 +85,8 @@ logo, and a shared folder (not copies).
   free height. Tables have **no pagination**. Only the body scrolls (`useTableScrollY()` measures `scroll.y` with a
   ResizeObserver), so the header, menu, breadcrumb, toolbar and table header stay fixed. Sorting is by column
   headers, with a "· Sort: …" label in the count line.
+- Tables: **clicking anywhere on a row opens the row's popup** (`onRow` onClick + pointer cursor) in all apps.
+  Exception: links with their own action stop the row click, e.g. CRM e-mail addresses (`mailto:`, opens the mail app).
 - Popups: the **first form field gets focus** on open (`autoFocus` on the first control), never the X button. Opening
   a popup must not re-render the page's table: memoize `columns` and the `<Table>` element (stable callbacks), or
   the click → animation delay grows with the row count (it was ~550 ms with 211 rows).
@@ -314,6 +316,11 @@ npm run build -w antd-contacts   # one app
   (duplicate React since the workspace refactor), fixed with `resolve.dedupe` (one React in the bundle; prod renders
   211 rows). Antd's Menu renders all items for one measure pass before collapsing into "…" (about 20–130 ms at 390 px);
   the mobile check waits 1 s. Suites dev + prod: app 1 29/29 + 24/24, app 2 50/50, app 3 53/53, 0 warnings.
+- 2026-11-17: Requested: CRM and Register rows open their popup on a click anywhere in the row (like Configurator);
+  CRM e-mail links keep opening the mail app. `onRow` added; the e-mail link calls `stopPropagation` and keeps its
+  default. Verified: every non-mail cell (CRM 4, Register 10, Configurator 6) opens one popup for the clicked row;
+  row links open exactly one popup; an e-mail click opens no popup, keeps `mailto:` and isn't defaultPrevented.
+  App 1 29/29 + 24/24, app 2 50/50, 0 warnings.
 - 2026-11-17: The user noticed the italic "e" differs from Figma. Diagnosis without screenshots (canvas glyph → ASCII):
   the app used Inter 4's *true* italic (diagonal "e" crossbar); Figma's "Semi Bold Italic" is Inter 3.x (slanted
   roman, horizontal crossbar); and it wasn't a fake/synthesised italic. Italic now comes from Inter 3.19
