@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   App as AntApp,
   Breadcrumb,
@@ -11,7 +11,8 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
-import type { BreadcrumbProps, TableProps, TableRef } from 'antd';
+import type { BreadcrumbProps, TableProps } from 'antd';
+import { useTableScrollY } from '@dynamics/ui-shared';
 import { ContactsOutlined, ExportOutlined, HomeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { contacts as initialContacts } from '../data/contacts';
 import type { Contact } from '../data/contacts';
@@ -68,26 +69,8 @@ export default function ContactsPage() {
   const [editing, setEditing] = useState<Contact | null>(null);
   const [creating, setCreating] = useState(false);
 
-  // Table body height = free space in the card body minus the sticky column header.
-  // antd Table scrolls its body only with a fixed `scroll.y`, so measure the available space.
-  const tableBoxRef = useRef<HTMLDivElement>(null);
-  const tableRef = useRef<TableRef>(null);
-  const [scrollY, setScrollY] = useState<number>();
-
-  useEffect(() => {
-    const box = tableBoxRef.current;
-    if (!box) return;
-    const update = () => {
-      const headerHeight = box.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 0;
-      setScrollY(Math.max(0, Math.floor(box.clientHeight - headerHeight)));
-    };
-    const observer = new ResizeObserver(update);
-    observer.observe(box);
-    update();
-    return () => observer.disconnect();
-  }, []);
-
-  const scrollToTop = () => tableRef.current?.scrollTo({ top: 0 });
+  // Full-height table: fixed column header, only the body scrolls (shared hook).
+  const { boxRef: tableBoxRef, tableRef, scrollY, scrollToTop } = useTableScrollY();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

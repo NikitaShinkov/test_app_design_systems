@@ -7,26 +7,35 @@ design system, so we can judge how it looks and how well the skill can use it.
 
 Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, branch `main`).
 
-Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" list (`img_design_1.png`).
+Current trial: **Ant Design**, two apps on one shared UI layer (npm workspaces):
+- `antd-contacts`: the Dynamics.CRM "Контакты" list (`img_design_1.png`), in Russian.
+- `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English.
+- `shared` (`@dynamics/ui-shared`): everything standard (theme, providers, shell, form rules, hooks, CSS overrides).
+  **Every rule below lives in `shared` and applies to both apps.** The apps only contain pages, domain forms and data.
+
+User decisions for app 2: the same shell as app 1 (not the screenshot's left sidebar), English UI, the same Dynamics
+logo, and a shared folder (not copies).
 
 ## Rules (must follow)
 - The screenshot is a reference for **page structure and element types only**. Do not copy its colours,
   spacing or styling.
 - Use **only standard Ant Design components** (`antd`, `@ant-design/icons`). No custom UI components and no
-  custom CSS look. The single exception is `antd-contacts/src/antd-overrides.css` (imported in `main.tsx`), which
+  custom CSS look. The single exception is `shared/src/antd-overrides.css` (imported by `AppProviders`), which
   is only for antd behaviour that has no token. Each rule must be commented and specific enough to beat antd's
   selector. Current rule: the horizontal Menu underline (`::after`) uses `inset-inline: 0`, so it spans the tab's
   padding and is continuous from tab to tab (antd insets it by `itemPaddingInline`).
-- All visual customisation goes **only through antd design tokens** in `antd-contacts/src/theme.ts`
-  (`ConfigProvider theme={appTheme}`). Don't put colours or spacing overrides in components. Current theme:
+- All visual customisation goes **only through antd design tokens** in `shared/src/theme.ts`
+  (`ConfigProvider theme={appTheme}` inside `AppProviders`). Don't put colours or spacing overrides in components. Current theme:
   `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 0, Layout
   `bodyBg` `#ffffff`, `headerHeight` 56 and `footerPadding` `8px 24px 8px`, Menu `itemPaddingInline` 8 and
   `horizontalLineHeight` `32px`, Table `cellPaddingBlock` 4.5px (32px rows). Exceptions with no token, set
-  inline: Content padding `16px 24px` (`App.tsx`) and Contacts Card `boxShadow: 'none'` (`ContactsPage.tsx`).
-- Contacts Card: `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content edges).
+  inline: Content padding `16px 24px` (`AppShell`) and the page Card `boxShadow: 'none'` (pages).
+- Page Card (list pages): `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content
+  edges). Table rows are 32px, so cells are **single-line** (put secondary info inline as `Text type="secondary"`),
+  and row actions are `Typography.Link`, never Buttons.
 - **Forms (all forms follow these rules):**
   - Wrap a form's fields in `FormFields` (a CSS grid with `max-content | minmax(0, 1fr)`, an 8px column gap and
-    `token.padding` row gap), and build every field with `FormField` (`components/FormField.tsx`). The label
+    `token.padding` row gap), and build every field with `FormField` (`shared/src/FormField.tsx`). The label
     column is **the widest label text in that form + 30px** (`LABEL_EXTRA_WIDTH`, padding after the label text,
     so the error line can use those 30px too), with no fixed width, so all inputs start on one vertical line. Error messages are excluded from that width by `contain: inline-size`, so they truncate
     with "…" and show a tooltip when longer than the column. The error sits
@@ -35,22 +44,27 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
     vertically centred on the input. The error is one line, using `Typography.Text ellipsis={{ tooltip }}` (the
     full text shows in a tooltip only when truncated). Inputs are bound with `Form.Item noStyle`, so antd's own
     error list (which is always under the input) isn't used.
-  - Messages come only from `formConfig.ts` (ConfigProvider `form.validateMessages`): required or whitespace →
-    "Заполните поле", any other rule → "Введите корректное значение". Don't put `message` on rules.
+  - Messages come only from `shared/src/formConfig.ts` (`createFormConfig(lang)`, ConfigProvider
+    `form.validateMessages`): required or whitespace → "Заполните поле" / "Fill in the field", any other rule →
+    "Введите корректное значение" / "Enter a valid value". Don't put `message` on rules.
   - No required "*": ConfigProvider `form.requiredMark: false`.
-  - Timing: `validateTrigger={[]}` means nothing is validated while typing. Errors are shown only after the submit
-    button (`onFinishFailed`), and any value change (`onValuesChange`) clears all errors until the next submit.
+  - Timing (`useSubmitValidation()`, spread its `formProps` on the Form): `validateTrigger={[]}` means nothing is
+    validated while typing. Errors are shown only after the submit button (`onFinishFailed`), and any value change
+    (`onValuesChange`) clears all errors until the next submit.
 - Contacts: one `components/ContactFormModal.tsx` (centered Modal + Form) is used for both "Новый контакт" (button
   "Создать") and "Редактирование контакта" (button "Сохранить"). Clicking a contact name or the row icon opens the
   edit popup pre-filled; there's no side panel. The phone field and column are labelled "Телефон".
 - Font: **Inter everywhere**. It's self-hosted via `@fontsource-variable/inter` (upright `wght.css` + true italic
-  `wght-italic.css`, imported in `main.tsx`, Cyrillic included) and set as the `fontFamily` token, so
+  `wght-italic.css`, imported in `shared/src/AppProviders.tsx`, Cyrillic included) and set as the `fontFamily`
+  token, so
   `--ant-font-family` starts with `'Inter Variable'`.
 - **Screenshots: do not generate any** (not `docs/screenshots/`, not visual checks) unless the user explicitly asks.
   Verify with computed styles and DOM measurements instead. `docs/screenshots/` was last refreshed before the Inter
   change.
-- Header (56px): logo `src/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
-  product name "CRM" (Italic Regular, `token.colorPrimary`, hidden below `md`). They're direct children of one
+- Shell = `AppShell` from `shared` (each app passes `productName`, `sections`, `activeSection`, search placeholder,
+  user, footer texts; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
+  Header (56px): logo `shared/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
+  product name ("CRM" in app 1, "Register" in app 2; Italic Regular, `token.colorPrimary`, hidden below `md`). They're direct children of one
   `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
   `useGlyphFit(32, font)`, which measures the real font (re-measured after the web font loads) so the **cap height**
   (flat tops of R/M) equals the logo height. CSS `text-box: trim-both cap alphabetic` puts the cap top and the
@@ -60,8 +74,9 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   (default) icon+text "Настройки" button. There's no separate logout button. The section menu has 8 items, with no
   "Настройки" item, because settings live in the header button.
 - Page layout: exactly one viewport high (`Layout` `100dvh`). Content → Card → `ant-card-body` stretch to the
-  free height. The Table has **no pagination**. Only its body scrolls (`scroll.y` measured with a ResizeObserver),
-  so the header, menu, breadcrumb, toolbar and table header stay fixed.
+  free height. Tables have **no pagination**. Only the body scrolls (`useTableScrollY()` measures `scroll.y` with a
+  ResizeObserver), so the header, menu, breadcrumb, toolbar and table header stay fixed. Sorting is by column
+  headers, with a "· Sort: …" label in the count line.
 - Frontend only, with typed mock data. There's no Express server in this trial.
 - Look up antd APIs in the machine-readable docs: https://ant.design/llms.txt and
   https://ant.design/llms-full.txt, plus the installed types in `node_modules/antd/es/**/*.d.ts`.
@@ -72,33 +87,40 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
 ```
 design/
 ├── CLAUDE.md            # this file
-├── img_design_1.png     # reference screenshot (structure only)
-├── logo.svg             # Dynamics Scientific "D&" mark, 41×32 (source file for the header logo)
-├── favicon_logo.svg     # favicon source, 32×32 (copied to antd-contacts/public/favicon.svg)
-├── docs/screenshots/    # rendered results (1440px, 1440px scrolled, 390px, drawer, create modal)
-└── antd-contacts/       # Ant Design trial
-    ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
-    ├── index.html       # <link rel="icon" href="/favicon.svg">
-    ├── public/favicon.svg  # exact copy of the root favicon_logo.svg (32×32: "D&" mark in a white circle)
-    ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, @fontsource-variable/inter 5.3.0, React 19, Vite 8, TS 7
-    └── src/
-        ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
-        ├── theme.ts     # appTheme: the single place for tokens (colour, paddings, heights, Table row height)
-        ├── antd-overrides.css  # the only CSS: fixes for antd behaviour with no token (menu underline inset)
-        ├── useGlyphFit.ts  # hook: font size/line height so capital letters are exactly N px tall (canvas metrics)
-        ├── App.tsx      # shell: Layout(100dvh) > Header (logo + "CRM", global Input.Search, Badge bell, user
-        │                #   Dropdown, "Настройки" button) + horizontal Menu (8 sections) + Content (flex) + Footer
-        ├── assets/logo.svg
-        ├── pages/
-        │   └── ContactsPage.tsx  # Breadcrumb (view switcher menu) + full-height Card: title, Input.Search,
-        │                         #   reload, "Создать контакт", Table (sort/search, no pagination, body scroll);
-        │                         #   create + edit via ContactFormModal
-        ├── components/
-        │   ├── FormField.tsx        # FormFields grid (label col = widest label) + FormField: <label>(text+error) | input
-        │   └── ContactFormModal.tsx # create/edit contact popup (validation timing rules)
-        ├── formConfig.ts  # ConfigProvider `form`: the 2 standard messages, requiredMark false
-        └── data/
-            └── contacts.ts  # `Contact` type + 37 mock records (first 10 = screenshot), newest first
+├── package.json         # npm workspaces: shared, antd-contacts, antd-proposals (one root node_modules + lock)
+├── img_design_1.png     # reference screenshot, app 1 (structure only)
+├── img_design_2.png     # reference screenshot, app 2 (structure only)
+├── logo.svg             # Dynamics Scientific "D&" mark, 41×32 (source; copy in shared/assets)
+├── favicon_logo.svg     # favicon source, 32×32 (copied to <app>/public/favicon.svg)
+├── docs/screenshots/    # app 1 rendered results (last refreshed before the Inter change)
+├── shared/              # @dynamics/ui-shared — the standard UI layer (TS source, consumed via workspace link)
+│   ├── package.json     # exports "." → src/index.ts; peer deps antd/react/icons; dep @fontsource-variable/inter
+│   ├── assets/logo.svg
+│   └── src/
+│       ├── index.ts           # public API
+│       ├── AppProviders.tsx   # ConfigProvider(locale by lang, appTheme, createFormConfig(lang)) + antd App +
+│       │                      #   reset.css + Inter + antd-overrides.css + LangContext
+│       ├── AppShell.tsx       # Layout(100dvh) > Header (logo + product name, global search, bell, user menu,
+│       │                      #   Settings) + horizontal Menu (sections, optional counts) + Content + Footer
+│       ├── theme.ts           # appTheme: the single place for tokens
+│       ├── formConfig.ts      # createFormConfig(lang): 2 standard messages, requiredMark false
+│       ├── i18n.ts            # shared strings ru/en (shell + messages), useSharedStrings()
+│       ├── FormField.tsx      # FormFields grid (label col = widest label + 30) + FormField
+│       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
+│       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
+│       ├── useGlyphFit.ts     # cap height = N px (product name next to the logo)
+│       └── antd-overrides.css # the only CSS (menu underline inset)
+├── antd-contacts/       # app 1 (ru), port 5173
+│   ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
+│   ├── index.html, public/favicon.svg, package.json (antd 6.7.1, icons 6.3.4, React 19, Vite 8, TS 7)
+│   └── src/
+│       ├── main.tsx     # <AppProviders lang="ru"><App/></AppProviders>
+│       ├── App.tsx      # AppShell config: "CRM", 8 sections, user Иван Петров
+│       ├── pages/ContactsPage.tsx         # breadcrumb view switcher + full-height Card + Table
+│       ├── components/ContactFormModal.tsx  # create/edit contact popup
+│       └── data/contacts.ts  # 37 mock records (first 10 = screenshot)
+└── antd-proposals/      # app 2 (en), port 5174
+    └── src/ …           # (see below once added)
 ```
 
 ## Stack versions
@@ -106,11 +128,13 @@ antd **6.x** (v6 API: use `orientation` not `direction`, `variant` not `bordered
 `middle`/`default`, `items` props for Menu/Breadcrumb, `menu` for Dropdown, `pagination.placement`).
 React 19 needs no compatibility patch for antd v6.
 
-## Commands (run in `antd-contacts/`)
+## Commands (run in the repo root)
 ```bash
-npm install
-npm run dev     # http://localhost:5173
-npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expected)
+npm install                 # installs all workspaces into the root node_modules
+npm run dev:contacts        # app 1 → http://localhost:5173
+npm run dev:proposals       # app 2 → http://localhost:5174
+npm run build               # tsc -b + vite build for every app (a >500 kB chunk warning from antd is expected)
+npm run build -w antd-contacts   # one app
 ```
 
 ## Progress log
@@ -186,6 +210,13 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   both forms at 1440 and 390, inputs aligned, and errors don't change it. "Заполните поле" (93px) now fits; only
   "Введите корректное значение" truncates (with a tooltip). Columns 40/40, geometry 28/28, forms 24/24,
   regression 29/29, 0 warnings.
+- 2026-11-17: Second app requested (`img_design_2.png`), with all page-1 rules applied. Step 1: the repo became npm
+  workspaces, and the standard layer moved to `shared/` (`git mv` for theme, overrides, FormField, formConfig,
+  useGlyphFit, logo, and App → AppShell). New in shared: `AppProviders`, configurable `AppShell` (section counts,
+  extra user-menu items), ru/en strings, `useSubmitValidation`, `useTableScrollY`. App 1 now only configures the
+  shell. Re-verified app 1 unchanged: regression 29/29, forms 24/24, columns 40/40, geometry 28/28, menu 6/6,
+  CSS vars identical, Inter everywhere, "CRM" fit 11.89/43.89 vs 12/44, 0 warnings. `antd-proposals` is
+  scaffolded with a placeholder.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:

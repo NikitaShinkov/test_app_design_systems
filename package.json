@@ -1,0 +1,14 @@
+{
+  "name": "test-app-design-systems",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "antd-contacts",
+    "antd-proposals"
+  ],
+  "scripts": {
+    "dev:contacts": "npm run dev -w antd-contacts",
+    "dev:proposals": "npm run dev -w antd-proposals",
+    "build": "npm run build --workspaces --if-present"
+  }
+}

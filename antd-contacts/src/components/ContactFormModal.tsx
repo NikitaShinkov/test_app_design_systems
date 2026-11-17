@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { Form, Input, Modal } from 'antd';
-import type { FormProps } from 'antd';
+import { FormField, FormFields, useSubmitValidation } from '@dynamics/ui-shared';
 import type { Contact } from '../data/contacts';
-import { FormField, FormFields } from './FormField';
 
 export type ContactFormValues = Pick<Contact, 'name' | 'email' | 'phone' | 'position'>;
 
@@ -17,21 +15,12 @@ interface ContactFormModalProps {
   onCancel: () => void;
 }
 
-type FieldErrors = Partial<Record<keyof ContactFormValues, string>>;
-
 /**
- * Create / edit contact popup.
- * Validation rules for all forms: nothing is validated while typing; errors appear only after the
- * submit button is clicked; any change clears all errors until the next submit.
- * Messages and the hidden required mark come from ConfigProvider `form` (main.tsx).
+ * Create / edit contact popup. Layout (FormFields/FormField), validation timing (useSubmitValidation),
+ * messages and the hidden required mark all come from @dynamics/ui-shared.
  */
 export function ContactFormModal({ open, formName, title, okText, initialValues, onSubmit, onCancel }: ContactFormModalProps) {
-  const [errors, setErrors] = useState<FieldErrors>({});
-
-  const showErrors: FormProps<ContactFormValues>['onFinishFailed'] = ({ errorFields }) =>
-    setErrors(Object.fromEntries(errorFields.map((f) => [f.name[0], f.errors[0]])));
-
-  const clearErrors = () => setErrors((prev) => (Object.keys(prev).length ? {} : prev));
+  const { errors, reset, formProps } = useSubmitValidation<ContactFormValues>();
 
   return (
     <Modal
@@ -41,7 +30,7 @@ export function ContactFormModal({ open, formName, title, okText, initialValues,
       okText={okText}
       okButtonProps={{ htmlType: 'submit' }}
       onCancel={onCancel}
-      afterClose={() => setErrors({})}
+      afterClose={reset}
       destroyOnHidden
       modalRender={(dom) => (
         <Form<ContactFormValues>
@@ -49,10 +38,8 @@ export function ContactFormModal({ open, formName, title, okText, initialValues,
           initialValues={initialValues}
           // No `clearOnDestroy`: destroyOnHidden already discards the Form (and its store) on close, and
           // clearOnDestroy wipes initialValues during React StrictMode's dev remount.
-          validateTrigger={[]}
-          onValuesChange={clearErrors}
+          {...formProps}
           onFinish={onSubmit}
-          onFinishFailed={showErrors}
         >
           {dom}
         </Form>
