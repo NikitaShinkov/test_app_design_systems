@@ -4,7 +4,6 @@ import {
   Avatar,
   Badge,
   Button,
-  Divider,
   Dropdown,
   Flex,
   Grid,
@@ -50,7 +49,8 @@ const sections: { key: string; label: string; icon: ReactNode }[] = [
   { key: 'deals', label: 'Сделки', icon: <DollarOutlined /> },
   { key: 'contracts', label: 'Договоры', icon: <FileTextOutlined /> },
   { key: 'reports', label: 'Отчёты', icon: <BarChartOutlined /> },
-  { key: 'users', label: 'Пользователи', icon: <TeamOutlined /> },];
+  { key: 'users', label: 'Пользователи', icon: <TeamOutlined /> },
+];
 
 const userMenu: MenuProps['items'] = [
   { key: 'profile', label: 'Профиль', icon: <UserOutlined /> },
@@ -76,21 +76,26 @@ export default function App() {
           paddingInline: token.paddingLG,
         }}
       >
-        <Space size="small" align="center">
-          <Image src={logo} alt="Dynamics Scientific" height={32} preview={false}
+        {/* Flex (not Space) so the logo and the name sit side by side without wrapper divs. */}
+        <Flex align="center" gap={8}>
+          <Image
+            src={logo}
+            alt="Dynamics Scientific"
+            height={32}
+            preview={false}
             styles={{ root: { display: 'block' }, image: { display: 'block' } }}
           />
           {screens.md && (
-            <>
-              <Divider orientation="vertical" />
-              {/* Product name: italic, primary colour, same 32px height as the logo. */}
-              <Text strong italic style={{ color: token.colorPrimary, fontSize: 32, lineHeight: '32px', display: 'block' }}
-              >
-                CRM
-              </Text>
-            </>
+            // Product name: italic, primary colour, same 32px height as the logo.
+            <Text
+              strong
+              italic
+              style={{ color: token.colorPrimary, fontSize: 32, lineHeight: '32px', display: 'block' }}
+            >
+              CRM
+            </Text>
           )}
-        </Space>
+        </Flex>
 
         {screens.md ? (
           <Input.Search

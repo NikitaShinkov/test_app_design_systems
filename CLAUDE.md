@@ -17,10 +17,14 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
 - All visual customisation goes **only through antd design tokens** in `antd-contacts/src/theme.ts`
   (`ConfigProvider theme={appTheme}`). Don't put colours or spacing overrides in components. Current theme:
   `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 16, Layout
-  `footerPadding` `0px 24px 12px`, Menu `itemPaddingInline` 8, Table `cellPaddingBlock` 4.5px (32px rows).
-  The one exception is the Content padding `16px 24px`, set inline in `App.tsx` because Layout has no token for it.
+  `bodyBg` `#ffffff` and `footerPadding` `0px 24px 12px`, Menu `itemPaddingInline` 8, Table `cellPaddingBlock`
+  4.5px (32px rows). Exceptions with no token, set inline: Content padding `16px 24px` (`App.tsx`), and on the
+  Contacts Card `boxShadow: 'none'` and body `paddingInline: 0` (`ContactsPage.tsx`).
+- Contacts Card: `variant="borderless"`, no shadow, no horizontal body padding (the table is flush with the
+  content edges).
 - Header: logo `src/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the product name
-  "CRM" (italic, `token.colorPrimary`, 32px font/line height, hidden below `md`), both vertically centered.
+  "CRM" (italic, `token.colorPrimary`, 32px font/line height, hidden below `md`). They're direct children of one
+  `Flex align="center" gap={8}`, with no Space wrappers and no Divider.
   Actions: notifications, user dropdown for "Иван Петров" (avatar "ИП", which holds "Выйти"), and an outlined
   (default) icon+text "Настройки" button. There's no separate logout button. The section menu has 8 items, with no
   "Настройки" item, because settings live in the header button.
@@ -99,6 +103,10 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   outlined (1px solid border); the new 41×32 logo; "Dynamics.CRM" → italic "CRM" in `#0084C9` at 32px; user
   "Иван Петров" (avatar "ИП"). Logo and text measured at the same 16–48px band in the 64px header.
   Playwright 29/29, 0 console warnings.
+- 2026-11-17: Requested: 8px between logo and "CRM" (`Space` + `Divider` replaced by `Flex gap={8}`, no wrapper
+  divs between them); `--ant-layout-body-bg: #ffffff`; Contacts Card with no border (`borderless`, shadow
+  removed too) and no horizontal body padding. Verified in Chrome: gap 8px, `--ant-layout-body-bg` `#ffffff`,
+  card border 0, shadow none, body padding `16px 0px`, table flush with the card. Playwright 29/29, 0 warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -114,4 +122,7 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - Inside `Layout.Header` (64px line height), inline content sits on the baseline of a 64px line box, so
   `Space align="center"` doesn't center it. Make the items block-level: Image
   `styles={{ root: { display: 'block' }, image: { display: 'block' } }}` and Text `display: 'block'`.
+- `Space` wraps every child in `div.ant-space-item`, while `Flex` doesn't. Use `Flex` when the DOM should stay flat.
+- `Card variant="borderless"` replaces the border with a `boxShadowTertiary` shadow, which still reads as an
+  outline on a white background. Add `boxShadow: 'none'` for a truly borderless block.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

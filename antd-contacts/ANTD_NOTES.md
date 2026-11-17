@@ -10,7 +10,7 @@ All visual customisation is done with design tokens in `src/theme.ts`.
 token: { colorPrimary: '#0084C9', colorLink: '#0084C9', padding: 8 },   // --ant-padding
 components: {
   Card:   { bodyPadding: 16 },                 // --ant-card-body-padding
-  Layout: { footerPadding: '0px 24px 12px' },  // --ant-layout-footer-padding
+  Layout: { bodyBg: '#ffffff', footerPadding: '0px 24px 12px' },  // --ant-layout-body-bg, --ant-layout-footer-padding
   Menu:   { itemPaddingInline: 8 },            // --ant-menu-item-padding-inline
   Table:  { cellPaddingBlock: 4.5 },           // 4.5 + 22 + 4.5 + 1px border = 32px rows
 }
@@ -54,14 +54,14 @@ run that asserts **0 console warnings**. This trial passes it.
 |---|---|
 | App shell | `Layout` > `Header` / `Content` / `Footer` |
 | Light header | `Header style={{ background: token.colorBgContainer }}` (antd docs pattern, via `theme.useToken()`) |
-| Logo + product name | `Image preview={false}` (block via `styles.root`/`styles.image`) + `Typography.Text strong italic` coloured with `token.colorPrimary` |
+| Logo + product name | `Flex align="center" gap={8}` > `Image preview={false}` (block via `styles.root`/`styles.image`) + `Typography.Text strong italic` coloured with `token.colorPrimary` |
 | Global search | `Input.Search` (≥ md), icon `Button` (< md) |
 | Notifications | `Badge count` + `Button type="text"` + `Tooltip` |
 | User menu | `Dropdown menu={{ items }}` + `Button icon={<Avatar/>}` + `Typography.Text ellipsis` |
 | Settings | `Button icon={<SettingOutlined/>}` with text (default variant = visible border) |
 | Section navigation | `Menu mode="horizontal" items` (8 sections; overflows into "…" automatically) |
 | View switcher ("Все: Контакты ›") | `Breadcrumb` item with `menu` |
-| Page container | `Card` (full height via `style` + `styles.body`) |
+| Page container | `Card variant="borderless"` (full height via `style` + `styles.body`; `boxShadow: 'none'`, body `paddingInline: 0`) |
 | Page title | icon + `Typography.Title level={3}` |
 | Toolbar | `Input.Search`, `Button icon={<ReloadOutlined/>}`, `Button type="primary" icon={<PlusOutlined/>}` |
 | Count / sort line | `Typography.Text type="secondary"` |

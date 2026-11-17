@@ -15,6 +15,7 @@ export const appTheme: ThemeConfig = {
       bodyPadding: 16, // --ant-card-body-padding
     },
     Layout: {
+      bodyBg: '#ffffff', // --ant-layout-body-bg
       footerPadding: '0px 24px 12px', // --ant-layout-footer-padding
     },
     Menu: {
