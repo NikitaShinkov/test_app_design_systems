@@ -25,8 +25,11 @@ Current trial: **Ant Design**. The page is the Dynamics.CRM "Контакты" l
   inline: Content padding `16px 24px` (`App.tsx`) and Contacts Card `boxShadow: 'none'` (`ContactsPage.tsx`).
 - Contacts Card: `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content edges).
 - **Forms (all forms follow these rules):**
-  - Build every field with `components/FormField.tsx`: the label column on the left (`FORM_LABEL_WIDTH` = 184px,
-    which fits "Введите корректное значение" at 178.7px in Inter 12px) and the input on the right. The error sits
+  - Wrap a form's fields in `FormFields` (a CSS grid with `max-content | minmax(0, 1fr)`, an 8px column gap and
+    `token.padding` row gap), and build every field with `FormField` (`components/FormField.tsx`). The label
+    column is **as wide as the widest label text in that form** (no fixed width), so all inputs start on one
+    vertical line. Error messages are excluded from that width by `contain: inline-size`, so they truncate
+    with "…" and show a tooltip when longer than the column. The error sits
     **inside the `<label for=…>`**, directly under the label text. With an error the two-line block is exactly
     `token.controlHeight − 4` px high (32 → 28; each line is 14px line height, the error at `fontSizeSM`) and
     vertically centred on the input. The error is one line, using `Typography.Text ellipsis={{ tooltip }}` (the
@@ -91,7 +94,7 @@ design/
         │                         #   reload, "Создать контакт", Table (sort/search, no pagination, body scroll);
         │                         #   create + edit via ContactFormModal
         ├── components/
-        │   ├── FormField.tsx        # standard field: <label>(text + error, 28px block) | input
+        │   ├── FormField.tsx        # FormFields grid (label col = widest label) + FormField: <label>(text+error) | input
         │   └── ContactFormModal.tsx # create/edit contact popup (validation timing rules)
         ├── formConfig.ts  # ConfigProvider `form`: the 2 standard messages, requiredMark false
         └── data/
@@ -173,6 +176,12 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   from 96px to 184px so both standard messages fit on one line. Verified at 1440 and 390 (30 geometry checks):
   error inside `label[for]`, block 28 vs input 32, gaps 2/2, one line, no ellipsis needed, and no antd error list.
   Form suite 24/24, regression 29/29, 0 warnings.
+- 2026-11-17: Requested: the label column = the widest label text per form, all inputs aligned, error messages
+  excluded from the width. A CSS grid `max-content | 1fr` with the error at `contain: inline-size` replaced the
+  fixed 184px. Verified (40 column checks, create and edit forms, 1440 and 390): column = "Должность" 78.45px,
+  all inputs at one x, gap 8px, and showing errors doesn't change the column or move the inputs. Both standard
+  messages now truncate with "…" plus a tooltip, block 28/32 centred. Geometry 28/28, forms 24/24,
+  regression 29/29.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -206,6 +215,10 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
 - **Don't combine `clearOnDestroy` with `initialValues`** in dev: React StrictMode's simulated unmount clears the
   store and the remount doesn't re-apply initialValues. The inputs still show values, but the form submits empty
   ("Заполните поле" on pre-filled fields). `destroyOnHidden` on the Modal already discards the form.
+- To size a grid column by some content only, give the excluded content `contain: inline-size`. Its intrinsic
+  width becomes 0, so it fills the column and truncates instead of widening it.
+- Measure Modal contents only after the open (zoom) animation has finished, ~700ms; the transform skews rects by
+  fractions of a pixel.
 - Escape on a Modal first closes a still-open Tooltip from the trigger element, so tests should wait about 400ms
   after opening.
 - `CSS.getPlatformFontsForNode` (CDP) is the reliable way to prove which font actually rendered the glyphs,

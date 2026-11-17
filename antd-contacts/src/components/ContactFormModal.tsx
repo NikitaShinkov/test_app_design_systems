@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Flex, Form, Input, Modal } from 'antd';
+import { Form, Input, Modal } from 'antd';
 import type { FormProps } from 'antd';
 import type { Contact } from '../data/contacts';
-import { FormField } from './FormField';
+import { FormField, FormFields } from './FormField';
 
 export type ContactFormValues = Pick<Contact, 'name' | 'email' | 'phone' | 'position'>;
 
@@ -58,7 +58,7 @@ export function ContactFormModal({ open, formName, title, okText, initialValues,
         </Form>
       )}
     >
-      <Flex vertical gap="medium">
+      <FormFields>
         <FormField formName={formName} name="name" label="Имя" rules={[{ required: true, whitespace: true }]} error={errors.name}>
           <Input autoFocus />
         </FormField>
@@ -77,7 +77,7 @@ export function ContactFormModal({ open, formName, title, okText, initialValues,
         <FormField formName={formName} name="position" label="Должность" error={errors.position}>
           <Input />
         </FormField>
-      </Flex>
+      </FormFields>
     </Modal>
   );
 }

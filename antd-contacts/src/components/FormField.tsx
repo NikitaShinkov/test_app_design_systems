@@ -1,15 +1,32 @@
 import { cloneElement, isValidElement } from 'react';
-import type { ReactElement } from 'react';
-import { Flex, Form, Typography, theme } from 'antd';
+import type { ReactElement, ReactNode } from 'react';
+import { Form, Typography, theme } from 'antd';
 import type { FormItemProps } from 'antd';
 
 const { Text } = Typography;
 
 /**
- * Label column width: fits the longest standard message in one line
- * ("Введите корректное значение" = 178.7px in Inter 12px; see formConfig.ts).
+ * Container for the fields of one form. Two-column grid:
+ *   label column = width of the widest *label text* in this form (max-content),
+ *   input column = the rest. All inputs therefore start on the same vertical line.
+ * Error messages do not take part in the column width (see `contain: inline-size` below).
  */
-export const FORM_LABEL_WIDTH = 184;
+export function FormFields({ children }: { children: ReactNode }) {
+  const { token } = theme.useToken();
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'max-content minmax(0, 1fr)',
+        alignItems: 'center',
+        columnGap: token.marginXS,
+        rowGap: token.padding,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 interface FormFieldProps {
   /** Form `name` prop, used to build the input id (`<form>_<field>`) for the label's htmlFor. */
@@ -24,16 +41,14 @@ interface FormFieldProps {
 }
 
 /**
- * Standard form field layout for all forms:
+ * Standard form field (must be a direct child of `FormFields`):
  *
- *   ┌ <label> ───────────┐
- *   │ Имя                │  [Input ...........................]
- *   │ Заполните поле     │
- *   └────────────────────┘
+ *   <label> Имя             [Input ...........................]
+ *           Заполните поле
  *
  * The error sits inside the <label>, under the label text. With an error the two-line block is
  * exactly `controlHeight − 4` px high (2 × half of it per line) and vertically centred on the input.
- * The error is one line; if it does not fit the label column it ends with "…" and shows a tooltip.
+ * The error is one line within the label column; if it does not fit it ends with "…" and shows a tooltip.
  *
  * Composed only of antd primitives. The field is bound with `Form.Item noStyle`, so antd's own
  * error list (which always sits under the input) is not rendered.
@@ -47,28 +62,27 @@ export function FormField({ formName, name, label, rules, error, children }: For
   const lineHeight = `${(token.controlHeight - 4) / 2}px`;
 
   return (
-    <Flex align="center" gap="small">
-      <label
-        htmlFor={id}
-        style={{ flex: `0 0 ${FORM_LABEL_WIDTH}px`, minWidth: 0, display: 'flex', flexDirection: 'column' }}
-      >
-        <Text style={error ? { lineHeight } : undefined}>{label}</Text>
+    <>
+      <label htmlFor={id} style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <Text style={{ whiteSpace: 'nowrap', ...(error ? { lineHeight } : null) }}>{label}</Text>
         {error && (
           <Text
             type="danger"
             role="alert"
             ellipsis={{ tooltip: error }}
-            style={{ display: 'block', fontSize: token.fontSizeSM, lineHeight }}
+            // inline-size containment: the message's own width is ignored when sizing the label column,
+            // so the column is as wide as the widest label text only.
+            style={{ display: 'block', contain: 'inline-size', fontSize: token.fontSizeSM, lineHeight }}
           >
             {error}
           </Text>
         )}
       </label>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ minWidth: 0 }}>
         <Form.Item noStyle name={name} rules={rules}>
           {control}
         </Form.Item>
       </div>
-    </Flex>
+    </>
   );
 }

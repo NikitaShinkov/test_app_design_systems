@@ -72,7 +72,7 @@ run that asserts **0 console warnings**. This trial passes it.
 | Row link / open action | `Typography.Link` (text and icon-only, so rows stay one line high) |
 | Total | the count line above the table (pagination removed by request) |
 | Create / edit contact | One `ContactFormModal`: `Modal centered` + `Form` (via `modalRender`, `validateTrigger={[]}`), fields from `FormField` |
-| Form field | `FormField`: `Flex align="center"` row: `<label>` (label `Text` + error `Text type="danger" ellipsis={{ tooltip }}`, 28px block) + `Form.Item noStyle` input |
+| Form fields | `FormFields` grid (`max-content | minmax(0,1fr)`: label column = widest label) > `FormField` = `<label>` (label `Text` + error `Text type="danger" ellipsis={{ tooltip }}` with `contain: inline-size`, 28px block) + `Form.Item noStyle` input |
 | Form messages / required mark | `ConfigProvider form={{ validateMessages, requiredMark: false }}` (`formConfig.ts`) |
 | Feedback | `App.useApp().message` |
 | Responsiveness | `Grid.useBreakpoint()` |
@@ -134,8 +134,9 @@ level 3.
   standard here is "`<label>` (label text + error under it) on the left, the input on the right": the error is
   inside the `<label for>`, and the two-line block is `controlHeight − 4` (28px for a 32px input; 14px per line,
   error at `fontSizeSM`) and centred on the input. It's one line with `ellipsis={{ tooltip }}`. The label column is
-  184px so "Введите корректное значение" fits. It needs a thin `FormField` composition: `Flex align="center"` +
-  `<label htmlFor>` (flex column) + `Form.Item noStyle`.
+  exactly as wide as the widest label text (CSS grid `max-content`). The error is excluded from that width with
+  `contain: inline-size`, so long messages truncate and show a tooltip. It needs a thin composition:
+  `FormFields` (grid) + `FormField` (`<label htmlFor>` flex column + `Form.Item noStyle`).
 - **Timing:** `validateTrigger={[]}` on the Form; show `errorFields` from `onFinishFailed`; clear them in
   `onValuesChange`.
 - **Pitfall:** `clearOnDestroy` + `initialValues` + React StrictMode (dev) means pre-filled forms submit as empty.
