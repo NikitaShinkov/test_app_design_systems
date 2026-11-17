@@ -30,8 +30,8 @@ logo, and a shared folder (not copies).
   (`ConfigProvider theme={appTheme}` inside `AppProviders`). Don't put colours or spacing overrides in components. Current theme:
   `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 0, Layout
   `bodyBg` `#ffffff`, `headerHeight` 56 and `footerPadding` `8px 24px 8px`, Menu `itemPaddingInline` 8 and
-  `horizontalLineHeight` `32px`, Modal `motionDurationSlow` 0.15s / `motionDurationMid` 0.1s (popups open 2× faster;
-  Modal only), Table `cellPaddingBlock` 4.5px (32px rows). Exceptions with no token, set
+  `horizontalLineHeight` `32px`, Modal `motionDurationSlow` 0.225s / `motionDurationMid` 0.15s (popup animations at 75% of
+  antd's defaults; Modal only), Table `cellPaddingBlock` 4.5px (32px rows). Exceptions with no token, set
   inline: Content padding `16px 24px` (`AppShell`) and the page Card `boxShadow: 'none'` (pages).
 - Page Card (list pages): `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content
   edges). Table rows are 32px, so cells are **single-line** (put secondary info inline as `Text type="secondary"`),
@@ -85,6 +85,14 @@ logo, and a shared folder (not copies).
   free height. Tables have **no pagination**. Only the body scrolls (`useTableScrollY()` measures `scroll.y` with a
   ResizeObserver), so the header, menu, breadcrumb, toolbar and table header stay fixed. Sorting is by column
   headers, with a "· Sort: …" label in the count line.
+- Popups: the **first form field gets focus** on open (`autoFocus` on the first control), never the X button. Opening
+  a popup must not re-render the page's table: memoize `columns` and the `<Table>` element (stable callbacks), or
+  the click → animation delay grows with the row count (it was ~550 ms with 211 rows).
+- Each app's `vite.config.ts` has `resolve.dedupe` for react/react-dom/antd/icons/dayjs. Without it, the production
+  bundle got two React instances through the linked `shared` package ("reading 'useContext'", a blank page).
+  **Always smoke-test production builds** (`vite preview`), not only the dev server.
+- Footers: left text only ("Dynamics.CRM © 2026", "Dynamics Register © 2026", "Dynamics Configurator © 2026");
+  `footer.right` is optional and unused. App 3 has no header Tag.
 - Browser tab titles: app 1 "CRM", app 2 "Replacement Register", app 3 "Configurator" (`<title>` in each `index.html`).
 - Frontend only, with typed mock data. There's no Express server in this trial.
 - Look up antd APIs in the machine-readable docs: https://ant.design/llms.txt and
@@ -134,7 +142,7 @@ design/
 ├── antd-configurator/   # app 3 (ru), port 5175
 │   └── src/
 │       ├── App.tsx      # AppShell: "Configurator" (500 italic, 160px wide), 3 sections (Быстрый расчёт /
-│       │                #   Архив предложений (28) / Прайс и цены), header Tag "Локальная демонстрация"
+│       │                #   Архив предложений (28) / Прайс и цены), footer "Dynamics Configurator © 2026"
 │       ├── icons.ts     # one icon per section, shared by the tab and the page heading
 │       ├── pages/ArchivePage.tsx    # breadcrumb, full-height Card: icon + title, search, reload,
 │       │                            #   count + sort label (default "Обновлено ↓"), Table (28 rows, 32px; name +
@@ -298,6 +306,14 @@ npm run build -w antd-contacts   # one app
   three apps, via Modal-only tokens (`motionDurationSlow` 0.15s, `motionDurationMid` 0.1s). The global motion tokens are
   unchanged (menu underline still 0.3s). Titles verified in dev and dist. Suites: app 1 29/29 + 24/24, app 2 50/50,
   app 3 52/52, 0 warnings.
+- 2026-11-17: Requested: popup animations at 75% of the defaults (zoom 225 ms, mask 150 ms); first field focused
+  instead of the X button in all popups (Register and Configurator were wrong); no delay before a popup opens;
+  Configurator: no "Локальная демонстрация" tag, footer "Dynamics Configurator © 2026"; CRM and Register: slogan
+  removed. The delay was the page table re-rendering on open (Register: click → animation ~550 ms with 211 rows); with
+  memoized columns/tables: dev 42–91 ms, prod 26–61 ms. A production smoke test found a pre-existing blank page
+  (duplicate React since the workspace refactor), fixed with `resolve.dedupe` (one React in the bundle; prod renders
+  211 rows). Antd's Menu renders all items for one measure pass before collapsing into "…" (about 20–130 ms at 390 px);
+  the mobile check waits 1 s. Suites dev + prod: app 1 29/29 + 24/24, app 2 50/50, app 3 53/53, 0 warnings.
 - 2026-11-17: The user noticed the italic "e" differs from Figma. Diagnosis without screenshots (canvas glyph → ASCII):
   the app used Inter 4's *true* italic (diagonal "e" crossbar); Figma's "Semi Bold Italic" is Inter 3.x (slanted
   roman, horizontal crossbar); and it wasn't a fake/synthesised italic. Italic now comes from Inter 3.19

@@ -15,10 +15,10 @@ export const appTheme: ThemeConfig = {
   },
   components: {
     Modal: {
-      // Popups open 50% faster than antd's defaults (zoom 0.3s → 0.15s, mask fade 0.2s → 0.1s).
+      // Popup animations at 75% of antd's defaults (zoom 0.3s → 0.225s, mask fade 0.2s → 0.15s).
       // Overridden for Modal only, so other components keep their normal motion.
-      motionDurationSlow: '0.15s',
-      motionDurationMid: '0.1s',
+      motionDurationSlow: '0.225s',
+      motionDurationMid: '0.15s',
     },
     Card: {
       bodyPadding: 0, // --ant-card-body-padding

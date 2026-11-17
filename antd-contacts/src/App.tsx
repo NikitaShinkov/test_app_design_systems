@@ -32,7 +32,7 @@ export default function App() {
       searchPlaceholder="Поиск по всей CRM…"
       user={{ name: 'Иван Петров', initials: 'ИП' }}
       notificationCount={2}
-      footer={{ left: `Dynamics.CRM © ${new Date().getFullYear()}`, right: 'Больше порядка. Больше возможностей.' }}
+      footer={{ left: `Dynamics.CRM © ${new Date().getFullYear()}` }}
     >
       <ContactsPage />
     </AppShell>

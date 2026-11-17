@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
 import type { TableProps, TagProps } from 'antd';
 import { CheckOutlined, HomeOutlined, PlusOutlined } from '@ant-design/icons';
@@ -108,60 +108,78 @@ export default function ProposalsPage() {
 
   const sortLabel = sort ? `${sortTitles[sort.field]} ${sort.order === 'ascend' ? '↑' : '↓'}` : 'Proposal ↑';
 
-  const sortable = (field: SortField) => ({
-    key: field,
-    title: sortTitles[field],
-    ellipsis: true,
-    sorter: (a: Proposal, b: Proposal) => sortValue[field](a).localeCompare(sortValue[field](b), 'en'),
-    sortOrder: sort?.field === field ? sort.order : null,
-  });
+  // Stable callback + memoized columns/table: opening a popup must not re-render the 211 rows
+  // (that re-render delayed the popup by ~0.5s).
+  const openReview = useCallback((proposal: Proposal | null) => setReview({ open: true, proposal }), []);
 
-  const openReview = (proposal: Proposal | null) => setReview({ open: true, proposal });
-
-  const columns: TableProps<Proposal>['columns'] = [
-    { ...sortable('id'), width: 110, render: (_, p) => <Link onClick={() => openReview(p)}>{p.id}</Link> },
-    { ...sortable('order'), width: 150, dataIndex: 'order' },
-    { ...sortable('productDecimal'), width: 210, render: (_, p) => <TwoPart main={p.productDecimal} sub={p.product} /> },
-    { key: 'position', title: 'Position', width: 90, ellipsis: true, render: (_, p) => p.position ?? '—' },
-    { ...sortable('original'), width: 200, render: (_, p) => <TwoPart main={p.original.part} sub={p.original.maker} /> },
-    { ...sortable('alternative'), width: 260, render: (_, p) => <TwoPart main={p.alternative.part} sub={p.alternative.maker} /> },
-    { ...sortable('supplier'), width: 170, dataIndex: 'supplier' },
-    {
-      ...sortable('decision'),
-      width: 120,
-      render: (_, p) => <Tag color={decisionColor[p.decision]}>{decisionLabels[p.decision]}</Tag>,
-    },
-    {
-      key: 'workflow',
-      title: 'Workflow',
-      width: 280,
-      ellipsis: { showTitle: false },
-      render: (_, p) => {
-        const w = workflowOf(p);
-        return (
-          <Tag color={stageColor[w.stage]} title={w.label}>
-            {w.label}
-          </Tag>
-        );
+  const columns = useMemo<TableProps<Proposal>['columns']>(() => {
+    const sortable = (field: SortField) => ({
+      key: field,
+      title: sortTitles[field],
+      ellipsis: true,
+      sorter: (a: Proposal, b: Proposal) => sortValue[field](a).localeCompare(sortValue[field](b), 'en'),
+      sortOrder: sort?.field === field ? sort.order : null,
+    });
+    return [
+      { ...sortable('id'), width: 110, render: (_, p) => <Link onClick={() => openReview(p)}>{p.id}</Link> },
+      { ...sortable('order'), width: 150, dataIndex: 'order' },
+      { ...sortable('productDecimal'), width: 210, render: (_, p) => <TwoPart main={p.productDecimal} sub={p.product} /> },
+      { key: 'position', title: 'Position', width: 90, ellipsis: true, render: (_, p) => p.position ?? '—' },
+      { ...sortable('original'), width: 200, render: (_, p) => <TwoPart main={p.original.part} sub={p.original.maker} /> },
+      { ...sortable('alternative'), width: 260, render: (_, p) => <TwoPart main={p.alternative.part} sub={p.alternative.maker} /> },
+      { ...sortable('supplier'), width: 170, dataIndex: 'supplier' },
+      {
+        ...sortable('decision'),
+        width: 120,
+        render: (_, p) => <Tag color={decisionColor[p.decision]}>{decisionLabels[p.decision]}</Tag>,
       },
-    },
-    {
-      key: 'review',
-      width: 80,
-      align: 'center',
-      // Link (not Button) keeps the row at one text line = 32px.
-      render: (_, p) => (
-        <Link role="button" onClick={() => openReview(p)} aria-label={`Review ${p.id}`}>
-          Review
-        </Link>
-      ),
-    },
-  ];
+      {
+        key: 'workflow',
+        title: 'Workflow',
+        width: 280,
+        ellipsis: { showTitle: false },
+        render: (_, p) => {
+          const w = workflowOf(p);
+          return (
+            <Tag color={stageColor[w.stage]} title={w.label}>
+              {w.label}
+            </Tag>
+          );
+        },
+      },
+      {
+        key: 'review',
+        width: 80,
+        align: 'center',
+        // Link (not Button) keeps the row at one text line = 32px.
+        render: (_, p) => (
+          <Link role="button" onClick={() => openReview(p)} aria-label={`Review ${p.id}`}>
+            Review
+          </Link>
+        ),
+      },
+    ];
+  }, [sort, openReview]);
 
-  const handleTableChange: TableProps<Proposal>['onChange'] = (_pagination, _filters, sorter) => {
+  const handleTableChange = useCallback<NonNullable<TableProps<Proposal>['onChange']>>((_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : sorter;
     setSort(s?.order && s.columnKey ? { field: s.columnKey as SortField, order: s.order } : null);
-  };
+  }, []);
+
+  const table = useMemo(
+    () => (
+      <Table<Proposal>
+        ref={tableRef}
+        rowKey="id"
+        columns={columns}
+        dataSource={filtered}
+        onChange={handleTableChange}
+        scroll={{ x: 1670, y: scrollY }}
+        pagination={false}
+      />
+    ),
+    [tableRef, columns, filtered, handleTableChange, scrollY],
+  );
 
   const reviewNext = () => {
     const next = visible.find((p) => p.decision === 'pending');
@@ -255,15 +273,7 @@ export default function ProposalsPage() {
 
           {/* Fills the rest of the card body; the table header stays fixed, rows scroll. */}
           <div ref={boxRef} style={{ flex: 1, minHeight: 0 }}>
-            <Table<Proposal>
-              ref={tableRef}
-              rowKey="id"
-              columns={columns}
-              dataSource={filtered}
-              onChange={handleTableChange}
-              scroll={{ x: 1670, y: scrollY }}
-              pagination={false}
-            />
+            {table}
           </div>
         </Flex>
       </Card>

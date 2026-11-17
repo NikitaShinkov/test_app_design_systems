@@ -59,7 +59,7 @@ export default function App() {
         message.info(`Previewing as ${key.slice(5)}`);
       }}
       notificationCount={1}
-      footer={{ left: `Dynamics Register © ${new Date().getFullYear()}`, right: 'More order. More possibilities.' }}
+      footer={{ left: `Dynamics Register © ${new Date().getFullYear()}` }}
     >
       <ProposalsPage />
     </AppShell>

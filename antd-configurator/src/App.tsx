@@ -1,4 +1,3 @@
-import { Tag } from 'antd';
 import { AppShell } from '@dynamics/ui-shared';
 import type { ShellSection } from '@dynamics/ui-shared';
 import ArchivePage from './pages/ArchivePage';
@@ -20,9 +19,8 @@ export default function App() {
       sections={sections}
       activeSection="archive"
       searchPlaceholder="Поиск по COMPACS…"
-      headerExtra={<Tag>Локальная демонстрация</Tag>}
       user={{ name: 'Демо-пользователь', initials: 'ДП' }}
-      footer={{ left: 'COMPACS · Реквизиты предложений', right: 'Только вымышленные данные' }}
+      footer={{ left: `Dynamics Configurator © ${new Date().getFullYear()}` }}
     >
       <ArchivePage />
     </AppShell>

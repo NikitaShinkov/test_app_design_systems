@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { DatePicker, Form, Input, Modal, Select } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -38,6 +39,7 @@ const requiredUnlessPending =
  */
 export function ReviewProposalModal({ open, proposal, proposals, onSubmit, onCancel }: ReviewProposalModalProps) {
   const { errors, reset, formProps } = useSubmitValidation<ReviewValues>();
+  const proposalOptions = useMemo(() => proposals.map((p) => ({ value: p.id, label: `${p.id} · ${p.alternative.part}` })), [proposals]);
 
   const initialValues: Partial<ReviewValues> = proposal
     ? {
@@ -77,9 +79,10 @@ export function ReviewProposalModal({ open, proposal, proposals, onSubmit, onCan
       <FormFields>
         <FormField formName={FORM} name="proposalId" label="Proposal" rules={[{ required: true }]} error={errors.proposalId}>
           <Select
+            autoFocus
             showSearch
             placeholder="Select a proposal"
-            options={proposals.map((p) => ({ value: p.id, label: `${p.id} · ${p.alternative.part}` }))}
+            options={proposalOptions}
           />
         </FormField>
         <FormField formName={FORM} name="decision" label="Decision" rules={[{ required: true }]} error={errors.decision}>

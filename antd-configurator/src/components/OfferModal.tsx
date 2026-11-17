@@ -125,7 +125,7 @@ export function OfferModal({ offer, open, onSave, onClose }: OfferModalProps) {
               rules={[{ required: true, whitespace: true }, { max: MAX }]}
               error={errors.name}
             >
-              <Input />
+              <Input autoFocus />
             </FormField>
             <FormField formName={FORM} name="customer" label="Заказчик" rules={[{ max: MAX }]} error={errors.customer}>
               <Input placeholder="Не указан" />

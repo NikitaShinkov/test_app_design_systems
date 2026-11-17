@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import type { TableProps } from 'antd';
 import { ArrowRightOutlined, HomeOutlined, ReloadOutlined } from '@ant-design/icons';
@@ -60,63 +60,83 @@ export default function ArchivePage() {
   // Default order: latest change first ("Последние изменения сверху").
   const sortLabel = sort ? `${titles[sort.field]} ${sort.order === 'ascend' ? '↑' : '↓'}` : `${titles.updatedAt} ↓`;
   const opened = data.find((o) => o.id === openedId) ?? null;
-  const open = (o: Offer) => {
+  const open = useCallback((o: Offer) => {
     setOpenedId(o.id);
     setModalOpen(true);
-  };
+  }, []);
 
-  const sortable = (field: SortField) => ({
-    key: field,
-    title: titles[field],
-    ellipsis: true,
-    sorter: compare[field],
-    sortOrder: sort?.field === field ? sort.order : null,
-  });
+  // Memoized columns/table: opening a popup must not re-render the whole list.
+  const columns = useMemo<TableProps<Offer>['columns']>(() => {
+    const sortable = (field: SortField) => ({
+      key: field,
+      title: titles[field],
+      ellipsis: true,
+      sorter: compare[field],
+      sortOrder: sort?.field === field ? sort.order : null,
+    });
 
-  const columns: TableProps<Offer>['columns'] = [
-    {
-      ...sortable('name'),
-      // One line (32px rows): offer name + grey customer.
-      render: (_, o) => (
-        <>
-          <Link onClick={() => open(o)}>{o.name}</Link>{' '}
-          <Text type="secondary">{o.customer ?? 'Заказчик не указан'}</Text>
-        </>
-      ),
-    },
-    {
-      ...sortable('number'),
-      width: 200,
-      render: (_, o) => o.number ?? <Text type="secondary">Не указан</Text>,
-    },
-    {
-      ...sortable('kind'),
-      width: 110,
-      render: (_, o) => (
-        <Tooltip title={kindHints[o.kind]}>
-          <Tag>{kindLabels[o.kind]}</Tag>
-        </Tooltip>
-      ),
-    },
-    { ...sortable('version'), width: 100, dataIndex: 'version' },
-    { ...sortable('updatedAt'), width: 230, render: (_, o) => formatUtc(o.updatedAt) },
-    {
-      key: 'open',
-      width: 110,
-      align: 'right',
-      // Link (not Button) keeps the row at one text line = 32px.
-      render: (_, o) => (
-        <Link role="button" aria-label={`Открыть ${o.name}`} onClick={() => open(o)}>
-          Открыть <ArrowRightOutlined />
-        </Link>
-      ),
-    },
-  ];
+    return [
+      {
+        ...sortable('name'),
+        // One line (32px rows): offer name + grey customer.
+        render: (_, o) => (
+          <>
+            <Link onClick={() => open(o)}>{o.name}</Link>{' '}
+            <Text type="secondary">{o.customer ?? 'Заказчик не указан'}</Text>
+          </>
+        ),
+      },
+      {
+        ...sortable('number'),
+        width: 200,
+        render: (_, o) => o.number ?? <Text type="secondary">Не указан</Text>,
+      },
+      {
+        ...sortable('kind'),
+        width: 110,
+        render: (_, o) => (
+          <Tooltip title={kindHints[o.kind]}>
+            <Tag>{kindLabels[o.kind]}</Tag>
+          </Tooltip>
+        ),
+      },
+      { ...sortable('version'), width: 100, dataIndex: 'version' },
+      { ...sortable('updatedAt'), width: 230, render: (_, o) => formatUtc(o.updatedAt) },
+      {
+        key: 'open',
+        width: 110,
+        align: 'right',
+        // Link (not Button) keeps the row at one text line = 32px.
+        render: (_, o) => (
+          <Link role="button" aria-label={`Открыть ${o.name}`} onClick={() => open(o)}>
+            Открыть <ArrowRightOutlined />
+          </Link>
+        ),
+      },
+    ];
+  }, [sort, open]);
 
-  const handleTableChange: TableProps<Offer>['onChange'] = (_p, _f, sorter) => {
+  const handleTableChange = useCallback<NonNullable<TableProps<Offer>['onChange']>>((_p, _f, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : sorter;
     setSort(s?.order && s.columnKey ? { field: s.columnKey as SortField, order: s.order } : null);
-  };
+  }, []);
+
+  const table = useMemo(
+    () => (
+      <Table<Offer>
+        ref={tableRef}
+        rowKey="id"
+        columns={columns}
+        dataSource={filtered}
+        loading={loading}
+        onChange={handleTableChange}
+        onRow={(o) => ({ onClick: () => open(o), style: { cursor: 'pointer' } })}
+        scroll={{ x: 1100, y: scrollY }}
+        pagination={false}
+      />
+    ),
+    [tableRef, columns, filtered, loading, handleTableChange, open, scrollY],
+  );
 
   const reload = () => {
     setLoading(true);
@@ -184,17 +204,7 @@ export default function ArchivePage() {
 
           {/* Fills the rest of the card body; the table header stays fixed, rows scroll. */}
           <div ref={boxRef} style={{ flex: 1, minHeight: 0 }}>
-            <Table<Offer>
-              ref={tableRef}
-              rowKey="id"
-              columns={columns}
-              dataSource={filtered}
-              loading={loading}
-              onChange={handleTableChange}
-              onRow={(o) => ({ onClick: () => open(o), style: { cursor: 'pointer' } })}
-              scroll={{ x: 1100, y: scrollY }}
-              pagination={false}
-            />
+            {table}
           </div>
         </Flex>
       </Card>

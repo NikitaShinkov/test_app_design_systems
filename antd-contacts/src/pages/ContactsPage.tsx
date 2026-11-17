@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   App as AntApp,
   Breadcrumb,
@@ -93,45 +93,64 @@ export default function ContactsPage() {
     },
   };
 
-  const sortableColumn = (field: SortField) => ({
-    title: fieldTitles[field],
-    dataIndex: field,
-    key: field,
-    ellipsis: true,
-    sorter: compareBy(field),
-    sortOrder: sort?.field === field ? sort.order : null,
-  });
+  // Memoized columns/table: opening a popup must not re-render the whole list.
+  const columns = useMemo<TableProps<Contact>['columns']>(() => {
+    const sortableColumn = (field: SortField) => ({
+      title: fieldTitles[field],
+      dataIndex: field,
+      key: field,
+      ellipsis: true,
+      sorter: compareBy(field),
+      sortOrder: sort?.field === field ? sort.order : null,
+    });
 
-  const columns: TableProps<Contact>['columns'] = [
-    {
-      ...sortableColumn('name'),
-      render: (name: string, record) => <Link onClick={() => setEditing(record)}>{name}</Link>,
-    },
-    {
-      ...sortableColumn('email'),
-      render: (email: string) => <Link href={`mailto:${email}`}>{email}</Link>,
-    },
-    sortableColumn('phone'),
-    sortableColumn('position'),
-    {
-      key: 'open',
-      width: 48,
-      align: 'center',
-      render: (_, record) => (
-        <Tooltip title="Открыть карточку">
-          {/* Link (not Button) keeps the row at one text line = 30px. */}
-          <Link role="button" aria-label={`Открыть ${record.name}`} onClick={() => setEditing(record)}>
-            <ExportOutlined />
-          </Link>
-        </Tooltip>
-      ),
-    },
-  ];
+    return [
+      {
+        ...sortableColumn('name'),
+        render: (name: string, record) => <Link onClick={() => setEditing(record)}>{name}</Link>,
+      },
+      {
+        ...sortableColumn('email'),
+        render: (email: string) => <Link href={`mailto:${email}`}>{email}</Link>,
+      },
+      sortableColumn('phone'),
+      sortableColumn('position'),
+      {
+        key: 'open',
+        width: 48,
+        align: 'center',
+        render: (_, record) => (
+          <Tooltip title="Открыть карточку">
+            {/* Link (not Button) keeps the row at one text line = 30px. */}
+            <Link role="button" aria-label={`Открыть ${record.name}`} onClick={() => setEditing(record)}>
+              <ExportOutlined />
+            </Link>
+          </Tooltip>
+        ),
+      },
+    ];
+  }, [sort]);
 
-  const handleTableChange: TableProps<Contact>['onChange'] = (_pagination, _filters, sorter) => {
+  const handleTableChange = useCallback<NonNullable<TableProps<Contact>['onChange']>>((_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : sorter;
     setSort(s?.order && s.columnKey ? { field: s.columnKey as SortField, order: s.order } : null);
-  };
+  }, []);
+
+  const table = useMemo(
+    () => (
+      <Table<Contact>
+        ref={tableRef}
+        rowKey="id"
+        columns={columns}
+        dataSource={filtered}
+        loading={loading}
+        onChange={handleTableChange}
+        scroll={{ x: 900, y: scrollY }}
+        pagination={false}
+      />
+    ),
+    [tableRef, columns, filtered, loading, handleTableChange, scrollY],
+  );
 
   const reload = () => {
     setLoading(true);
@@ -213,16 +232,7 @@ export default function ContactsPage() {
 
           {/* Fills the rest of the card body; the table header stays fixed, rows scroll. */}
           <div ref={tableBoxRef} style={{ flex: 1, minHeight: 0 }}>
-            <Table<Contact>
-              ref={tableRef}
-              rowKey="id"
-              columns={columns}
-              dataSource={filtered}
-              loading={loading}
-              onChange={handleTableChange}
-              scroll={{ x: 900, y: scrollY }}
-              pagination={false}
-            />
+            {table}
           </div>
         </Flex>
       </Card>

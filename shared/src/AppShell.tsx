@@ -63,7 +63,7 @@ export interface AppShellProps {
   userMenuExtra?: MenuProps['items'];
   onUserMenuClick?: (key: string) => void;
   notificationCount?: number;
-  footer: { left: ReactNode; right: ReactNode };
+  footer: { left: ReactNode; right?: ReactNode };
   children: ReactNode;
 }
 
@@ -239,7 +239,7 @@ export function AppShell({
       <Footer>
         <Flex justify="space-between" wrap gap="small">
           <Text type="secondary">{footer.left}</Text>
-          <Text type="secondary">{footer.right}</Text>
+          {footer.right && <Text type="secondary">{footer.right}</Text>}
         </Flex>
       </Footer>
     </Layout>
