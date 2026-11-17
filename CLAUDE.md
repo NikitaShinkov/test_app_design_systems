@@ -57,7 +57,8 @@ design/
 ├── docs/screenshots/    # rendered results (1440px, 1440px scrolled, 390px, drawer, create modal)
 └── antd-contacts/       # Ant Design trial
     ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
-    ├── index.html
+    ├── index.html       # <link rel="icon" href="/favicon.svg">
+    ├── public/favicon.svg  # the logo.svg artwork with a square viewBox (0 -4.5 41 41), centered
     ├── package.json     # antd 6.7.1, @ant-design/icons 6.3.4, @fontsource-variable/inter 5.3.0, React 19, Vite 8, TS 7
     └── src/
         ├── main.tsx     # ConfigProvider(locale=ruRU, theme=appTheme) + antd App + reset.css
@@ -130,6 +131,8 @@ npm run build   # tsc -b + vite build (a >500 kB chunk warning from antd is expe
   `CSS.getPlatformFontsForNode` shows Inter (web font) actually rendering the header, menu, breadcrumb, title,
   buttons, table, modal, form labels, required marks and footer. "CRM" re-fitted for Inter: cap top/baseline
   11.89/43.89 vs logo 12/44 (sub-pixel). Playwright 29/29, 0 warnings.
+- 2026-11-17: Favicon replaced. Vite's default `public/favicon.svg` is now the `logo.svg` "D&" mark, with an
+  identical path and a square viewBox. Verified that the dev server and `dist/` both serve it.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
