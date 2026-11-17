@@ -15,6 +15,14 @@ interface FitOptions {
    * (`line-height: normal` = ascent + descent from the font metrics). E.g. 0.96 = 96% of normal.
    */
   lineHeight?: number;
+  /**
+   * Width mode (single line): size the font so that `text` is exactly this many px wide (advance width).
+   * The block is then as high as the cap height (cap top → baseline), so a flex parent can centre the
+   * capital-letter band on the logo. `heightPx` is ignored in this mode.
+   */
+  width?: number;
+  /** Text to measure in width mode. */
+  text?: string;
 }
 
 const supportsTextBox = () =>
@@ -34,7 +42,7 @@ const supportsTextBox = () =>
  */
 export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOptions = {}): CSSProperties {
   const { family, style = 'normal', weight = 400 } = font;
-  const { lines = 1, lineHeight: lhFactor = 1 } = options;
+  const { lines = 1, lineHeight: lhFactor = 1, width, text } = options;
 
   // Web fonts load asynchronously; canvas would measure the fallback font until then.
   // Re-measure once the exact face (family + style + weight) is available.
@@ -64,18 +72,23 @@ export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOption
     // Natural ("normal") line height of this font, as a multiple of the font size.
     const lhRatio = lhFactor * ((m.fontBoundingBoxAscent + m.fontBoundingBoxDescent) / base);
 
-    const fontSize = heightPx / (capRatio + (lines - 1) * lhRatio);
+    const widthMode = Boolean(width && text);
+    const fontSize = widthMode
+      ? (width! / ctx.measureText(text!).width) * base
+      : heightPx / (capRatio + (lines - 1) * lhRatio);
     const k = fontSize / base;
     const capHeight = capRatio * fontSize;
+    // Block height: given height, or (width mode) the cap height of the fitted text.
+    const blockHeight = widthMode ? capHeight : heightPx;
     // Font metrics used for the line box; browsers round them to whole pixels during line layout.
     const fontAscent = Math.round(m.fontBoundingBoxAscent * k);
     const fontDescent = Math.round(m.fontBoundingBoxDescent * k);
 
-    const common: CSSProperties = { display: 'block', height: heightPx, fontSize, fontStyle: style, fontWeight: weight };
+    const common: CSSProperties = { display: 'block', height: blockHeight, fontSize, fontStyle: style, fontWeight: weight };
 
-    if (lines === 1) {
-      // Baseline at heightPx: (L − ascent − descent)/2 + ascent = heightPx.
-      const lineHeight = 2 * heightPx - fontAscent + fontDescent;
+    if (lines === 1 || widthMode) {
+      // Baseline at blockHeight: (L − ascent − descent)/2 + ascent = blockHeight.
+      const lineHeight = 2 * blockHeight - fontAscent + fontDescent;
       return {
         ...common,
         lineHeight: `${lineHeight}px`, // fallback positioning
@@ -93,5 +106,5 @@ export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOption
     return { ...common, lineHeight: `${lineHeight}px`, marginTop: capHeight - firstBaseline };
     // fontVersion: recompute after the web font has loaded
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heightPx, family, style, weight, lines, lhFactor, fontVersion]);
+  }, [heightPx, family, style, weight, lines, lhFactor, width, text, fontVersion]);
 }

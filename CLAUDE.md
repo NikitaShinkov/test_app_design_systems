@@ -7,9 +7,11 @@ design system, so we can judge how it looks and how well the skill can use it.
 
 Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, branch `main`).
 
-Current trial: **Ant Design**, two apps on one shared UI layer (npm workspaces):
+Current trial: **Ant Design**, three apps on one shared UI layer (npm workspaces):
 - `antd-contacts`: the Dynamics.CRM "Контакты" list (`img_design_1.png`), in Russian.
 - `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English (product name "Replacement / Register" on two lines).
+- `antd-configurator`: the COMPACS "Архив предложений" + offer card (`img_design_3_1*.png`, `img_design_3_2 (updated).png`),
+  in Russian (product name "Configurator").
 - `shared` (`@dynamics/ui-shared`): everything standard (theme, providers, shell, form rules, hooks, CSS overrides).
   **Every rule below lives in `shared` and applies to both apps.** The apps only contain pages, domain forms and data.
 
@@ -66,7 +68,8 @@ logo, and a shared folder (not copies).
 - Shell = `AppShell` from `shared` (each app passes `productName`, `sections`, `activeSection`, search placeholder,
   user, footer texts; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
   Header (56px): logo `shared/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
-  product name ("CRM" in app 1: one line, Italic Regular; "Replacement" / "Register" in app 2: two lines, Semi Bold
+  product name ("Configurator" in app 3: one line, Medium Italic, font sized so the text is exactly 160px wide
+  (`productNameWidth`), capital-letter band centred on the logo; "CRM" in app 1: one line, Italic Regular; "Replacement" / "Register" in app 2: two lines, Semi Bold
   Italic, line spacing 0.85 × the font's natural (`normal`) line height; `token.colorPrimary`, hidden below `md`). With several lines the cap top
   of the first line and the baseline of the last line sit on the logo edges (descenders like "g" hang below). They're direct children of one
   `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
@@ -94,6 +97,7 @@ design/
 ├── package.json         # npm workspaces: shared, antd-contacts, antd-proposals (one root node_modules + lock)
 ├── img_design_1.png     # reference screenshot, app 1 (structure only)
 ├── img_design_2.png     # reference screenshot, app 2 (structure only)
+├── img_design_3_1.png, img_design_3_1 (updated).png, img_design_3_2 (updated).png  # app 3 references
 ├── logo.svg             # Dynamics Scientific "D&" mark, 41×32 (source; copy in shared/assets)
 ├── favicon_logo.svg     # favicon source, 32×32 (copied to <app>/public/favicon.svg)
 ├── docs/screenshots/    # app 1 rendered results (last refreshed before the Inter change)
@@ -125,6 +129,20 @@ design/
 │       ├── pages/ContactsPage.tsx         # breadcrumb view switcher + full-height Card + Table
 │       ├── components/ContactFormModal.tsx  # create/edit contact popup
 │       └── data/contacts.ts  # 37 mock records (first 10 = screenshot)
+├── antd-configurator/   # app 3 (ru), port 5175
+│   └── src/
+│       ├── App.tsx      # AppShell: "Configurator" (500 italic, 160px wide), 3 sections (Быстрый расчёт /
+│       │                #   Архив предложений (28) / Прайс и цены), header Tag "Локальная демонстрация"
+│       ├── icons.ts     # one icon per section, shared by the tab and the page heading
+│       ├── pages/ArchivePage.tsx    # breadcrumb, info Alert, full-height Card: icon + title, search, reload,
+│       │                            #   count + sort label (default "Обновлено ↓"), Table (28 rows, 32px; name +
+│       │                            #   grey customer, number, Вид Tag with ЗИП tooltip, version, updated, Открыть →);
+│       │                            #   a row click opens the offer card
+│       ├── components/OfferModal.tsx  # offer card: title + "Версия N" Tag, info Alert, "Данные предложения" form
+│       │                              #   (Название required; Заказчик, Номер optional; ≤300), save bar (status,
+│       │                              #   "Открыть сохранённую версию", "Сохранить"), Сохранённая запись,
+│       │                              #   История сохранений; each save = a new version
+│       └── data/offers.ts   # 28 offers (3 = screenshot, 25 more), versions/history, formatUtc
 └── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
     └── src/
         ├── main.tsx     # <AppProviders lang="en"><App/></AppProviders>
@@ -154,6 +172,7 @@ React 19 needs no compatibility patch for antd v6.
 npm install                 # installs all workspaces into the root node_modules
 npm run dev:contacts        # app 1 → http://localhost:5173
 npm run dev:proposals       # app 2 → http://localhost:5174
+npm run dev:configurator    # app 3 → http://localhost:5175
 npm run build               # tsc -b + vite build for every app (a >500 kB chunk warning from antd is expected)
 npm run build -w antd-contacts   # one app
 ```
@@ -259,6 +278,14 @@ npm run build -w antd-contacts   # one app
   11.95 vs 12, baseline 43.95 vs 44). App 2 50/50, app 1 regression 29/29, "CRM" unchanged.
 - 2026-11-17: Requested: bigger still. Line spacing factor 0.96 → 0.85: font 16.9 → 18.2px, line spacing 19.65 →
   18.72px, gap "p" → "R" 3.75 → 1.6px (lines touch at about 0.78), edges unchanged (11.95/43.95 vs 12/44). App 2 50/50.
+- 2026-11-17: Third app `antd-configurator` (COMPACS archive + offer card) on the shared standard. Shared additions:
+  `useGlyphFit` width mode + `AppShell productNameWidth` ("Configurator" = 160px wide at 26.4px Medium Italic,
+  cap band centred on the logo), and `AppShell headerExtra` (hidden below md; at 390px it caused 473px of content).
+  Screenshot elements → standard: sidebar → top menu (3 sections), "Локальная демонстрация" → header Tag, two-line
+  cells → one line with grey secondary, ЗИП footnote → Tag tooltip, "Последние изменения сверху" → default sort
+  "Обновлено ↓", offer page → popup (row click / name / "Открыть →"). App 3 suite 51/51 (shell parity, name width
+  159.98px and centring, list, sort, search, tooltip, fixed parts, popup pre-fill, dirty/restore, validation incl.
+  301 chars, save → version 2 + history + row on top, 390px). Apps 1/2 re-run: 29/29, 24/24, 50/50.
 - 2026-11-17: The user noticed the italic "e" differs from Figma. Diagnosis without screenshots (canvas glyph → ASCII):
   the app used Inter 4's *true* italic (diagonal "e" crossbar); Figma's "Semi Bold Italic" is Inter 3.x (slanted
   roman, horizontal crossbar); and it wasn't a fake/synthesised italic. Italic now comes from Inter 3.19
@@ -321,6 +348,7 @@ npm run build -w antd-contacts   # one app
 - Inter 4 (Google Fonts/Fontsource) italics are true italics with different letter shapes from Inter 3 (Figma);
   for design parity, take the italic from Inter 3.19. To compare glyphs without screenshots, draw them on a canvas
   and print the pixels as ASCII.
+- antd `Alert` has `role="alert"` too, so scope form-error queries to `label [role="alert"]`.
 - Canvas `measureText` snaps glyph bounds to whole pixels at small font sizes (e.g. 14px), so measure at 100px
   and scale.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

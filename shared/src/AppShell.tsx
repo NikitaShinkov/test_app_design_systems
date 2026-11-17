@@ -45,6 +45,13 @@ export interface AppShellProps {
   productNameWeight?: number;
   /** Multi-line names: line spacing as a fraction of the font's natural line height (normal). Default 1. */
   productNameLineHeight?: number;
+  /**
+   * Single-line names: fit the font size to this text width (px) instead of the logo height.
+   * The capital-letter band is then vertically centred on the logo.
+   */
+  productNameWidth?: number;
+  /** Optional element in the header before the actions (e.g. a status Tag); shown from the md breakpoint up. */
+  headerExtra?: ReactNode;
   logoSrc?: string;
   logoAlt?: string;
   sections: ShellSection[];
@@ -72,6 +79,8 @@ export function AppShell({
   productName,
   productNameWeight = 400,
   productNameLineHeight = 1,
+  productNameWidth,
+  headerExtra,
   logoSrc = defaultLogo,
   logoAlt = 'Dynamics Scientific',
   sections,
@@ -92,7 +101,7 @@ export function AppShell({
   const productNameFit = useGlyphFit(
     LOGO_HEIGHT,
     { family: token.fontFamily, style: 'italic', weight: productNameWeight },
-    { lines: nameLines.length, lineHeight: productNameLineHeight },
+    { lines: nameLines.length, lineHeight: productNameLineHeight, width: productNameWidth, text: nameLines.join(' ') },
   );
 
   const notInDemo = (what: string) => message.info(t.notInDemo(what));
@@ -166,6 +175,7 @@ export function AppShell({
         )}
 
         <Space size="small" style={{ marginInlineStart: 'auto' }}>
+          {screens.md && headerExtra /* hidden on narrow screens, like the search field */}
           <Tooltip title={t.notifications}>
             <Badge count={notificationCount} size="small">
               <Button type="text" icon={<BellOutlined />} aria-label={t.notifications} />

@@ -4,11 +4,13 @@
   "workspaces": [
     "shared",
     "antd-contacts",
-    "antd-proposals"
+    "antd-proposals",
+    "antd-configurator"
   ],
   "scripts": {
     "dev:contacts": "npm run dev -w antd-contacts",
     "dev:proposals": "npm run dev -w antd-proposals",
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "dev:configurator": "npm run dev -w antd-configurator"
   }
 }
