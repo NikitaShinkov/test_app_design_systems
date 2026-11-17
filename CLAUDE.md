@@ -9,7 +9,7 @@ Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, br
 
 Current trial: **Ant Design**, two apps on one shared UI layer (npm workspaces):
 - `antd-contacts`: the Dynamics.CRM "Контакты" list (`img_design_1.png`), in Russian.
-- `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English (product name "Register").
+- `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English (product name "Replacement / Register" on two lines).
 - `shared` (`@dynamics/ui-shared`): everything standard (theme, providers, shell, form rules, hooks, CSS overrides).
   **Every rule below lives in `shared` and applies to both apps.** The apps only contain pages, domain forms and data.
 
@@ -64,7 +64,9 @@ logo, and a shared folder (not copies).
 - Shell = `AppShell` from `shared` (each app passes `productName`, `sections`, `activeSection`, search placeholder,
   user, footer texts; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
   Header (56px): logo `shared/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
-  product name ("CRM" in app 1, "Register" in app 2; Italic Regular, `token.colorPrimary`, hidden below `md`). They're direct children of one
+  product name ("CRM" in app 1: one line, Italic Regular; "Replacement" / "Register" in app 2: two lines, Semi Bold
+  Italic, line height 0.96 × `token.lineHeight`; `token.colorPrimary`, hidden below `md`). With several lines the cap top
+  of the first line and the baseline of the last line sit on the logo edges (descenders like "g" hang below). They're direct children of one
   `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
   `useGlyphFit(32, font)`, which measures the real font (re-measured after the web font loads) so the **cap height**
   (flat tops of R/M) equals the logo height. CSS `text-box: trim-both cap alphabetic` puts the cap top and the
@@ -108,7 +110,7 @@ design/
 │       ├── FormField.tsx      # FormFields grid (label col = widest label + 30) + FormField
 │       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
 │       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
-│       ├── useGlyphFit.ts     # cap height = N px (product name next to the logo)
+│       ├── useGlyphFit.ts     # 1..n lines: first cap top → last baseline = N px (product name)
 │       └── antd-overrides.css # the only CSS (menu underline inset)
 ├── antd-contacts/       # app 1 (ru), port 5173
 │   ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
@@ -122,20 +124,20 @@ design/
 └── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
     └── src/
         ├── main.tsx     # <AppProviders lang="en"><App/></AppProviders>
-        ├── App.tsx      # AppShell config: "Register", 9 sections (counts 211 / 75), user Local administrator
+        ├── App.tsx      # AppShell config: "Replacement / Register" (600 italic, LH 0.96), 9 sections (counts 211 / 75), user Local administrator
         │                #   with a "Preview as" role submenu
-        ├── pages/ProposalsPage.tsx  # breadcrumb + full-height Card: eyebrow + title + Review next / Review
-        │                            #   proposal, description + local-review status, filter row (search,
+        ├── pages/ProposalsPage.tsx  # breadcrumb + full-height Card: icon + title + Review next / Review
+        │                            #   proposal, description, filter row (search,
         │                            #   order, decision, product, exact supplier, Clear), count + sort label,
-        │                            #   Table (211 rows, 32px single-line, Tags, Review link), help note
+        │                            #   Table (211 rows, 32px single-line, Tags, Review link)
         ├── components/ReviewProposalModal.tsx  # Proposal / Decision / Responsible / Decision date / Comment;
         │                                       #   responsible + date required unless Pending
         └── data/proposals.ts  # 211 proposals (QA-0201…0211 = screenshot), workflowOf() stage labels
 ```
 
 App 2 mapping from `img_design_2.png` (structure only): the left sidebar became the shared top shell, with counts as
-menu badges; the "Local administrator · Preview as" block became the user menu; the "Local review" card became a
-status line; the sort selects became column sorting + a label; two-line cells became one line with grey secondary
+menu badges; the "Local administrator · Preview as" block became the user menu; the "Local review" card, the "WORKING REGISTER" eyebrow and the footer help
+note were removed at the user's request; the sort selects became column sorting + a label; two-line cells became one line with grey secondary
 text; the pager became one scrolling list; "Review" opens the review popup.
 
 ## Stack versions
@@ -241,6 +243,12 @@ npm run build -w antd-contacts   # one app
   while scrolling, filters (Cyrillic fragment, part number, order, decision, product, exact supplier, Clear),
   sort label, review popup (pre-fill, English messages, submit-only timing, label column = widest + 30,
   28/32 block), Review next, 390px with no scroll, Inter rendered. App 1 re-run: 29/29, 24/24, 40/40, 28/28, menu 6/6.
+- 2026-11-17: App 2 requested: two-line product name "Replacement" / "Register" in Semi Bold Italic, line height 96%
+  of the default (0.96 × 1.5714 → 14.3px font / 21.6px LH), top of "R" on the logo top, "Register" baseline on the
+  logo bottom. `useGlyphFit` and `AppShell` now support n lines + weight + line-height factor. The Proposals tab uses
+  the heading's icon (shared `ProposalsIcon` = SwapOutlined). Removed "WORKING REGISTER", the local-review status line
+  and the footer help note. Verified: R top 11.96 vs 12, baseline 43.95 vs 44 (the "g" descender 3.1px below), 600
+  italic Inter web font, same icon, texts gone. App 2 50/50; app 1 "CRM" unchanged 11.89/43.89, regression 29/29.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -294,4 +302,6 @@ npm run build -w antd-contacts   # one app
   typed dates with Tab.
 - npm workspaces: `shared` is TS source linked into the root `node_modules`; Vite transpiles it and `tsc -b` in each
   app type-checks it. App-only deps (e.g. `dayjs` in app 2) go in that app's package.json.
+- Canvas `measureText` snaps glyph bounds to whole pixels at small font sizes (e.g. 14px), so measure at 100px
+  and scale.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

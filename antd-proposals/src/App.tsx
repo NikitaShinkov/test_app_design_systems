@@ -10,16 +10,16 @@ import {
   FieldTimeOutlined,
   OrderedListOutlined,
   SyncOutlined,
-  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { AppShell } from '@dynamics/ui-shared';
 import type { ShellSection } from '@dynamics/ui-shared';
 import ProposalsPage from './pages/ProposalsPage';
+import { ProposalsIcon } from './icons';
 import { proposals } from './data/proposals';
 
 const sections: ShellSection[] = [
   { key: 'dashboard', label: 'Dashboard', icon: <AppstoreOutlined /> },
-  { key: 'proposals', label: 'Proposals', icon: <UnorderedListOutlined />, count: proposals.length },
+  { key: 'proposals', label: 'Proposals', icon: <ProposalsIcon />, count: proposals.length },
   { key: 'workflow', label: 'Workflow', icon: <SyncOutlined /> },
   { key: 'rounds', label: 'Approval rounds', icon: <OrderedListOutlined /> },
   { key: 'final', label: 'Final approval', icon: <CheckCircleOutlined /> },
@@ -45,7 +45,9 @@ export default function App() {
 
   return (
     <AppShell
-      productName="Register"
+      productName={['Replacement', 'Register']}
+      productNameWeight={600}
+      productNameLineHeight={0.96}
       sections={sections}
       activeSection="proposals"
       searchPlaceholder="Search proposal, part number, manufacturer…"

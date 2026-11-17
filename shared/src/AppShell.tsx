@@ -36,8 +36,15 @@ export interface ShellSection {
 }
 
 export interface AppShellProps {
-  /** Product name next to the logo (italic, primary colour, cap height = logo height). */
-  productName: string;
+  /**
+   * Product name next to the logo (italic, primary colour). One line, or several lines as an array:
+   * the cap top of the first line and the baseline of the last line align with the logo's top and bottom.
+   */
+  productName: string | string[];
+  /** Font weight of the product name (default 400 = Regular; 600 = Semi Bold). */
+  productNameWeight?: number;
+  /** Multi-line names: line height as a fraction of the default line height (token.lineHeight). Default 1. */
+  productNameLineHeight?: number;
   logoSrc?: string;
   logoAlt?: string;
   sections: ShellSection[];
@@ -63,6 +70,8 @@ export interface AppShellProps {
  */
 export function AppShell({
   productName,
+  productNameWeight = 400,
+  productNameLineHeight = 1,
   logoSrc = defaultLogo,
   logoAlt = 'Dynamics Scientific',
   sections,
@@ -79,7 +88,12 @@ export function AppShell({
   const screens = Grid.useBreakpoint();
   const { message } = AntApp.useApp();
   const t = useSharedStrings();
-  const productNameFit = useGlyphFit(LOGO_HEIGHT, { family: token.fontFamily, style: 'italic', weight: 400 });
+  const nameLines = Array.isArray(productName) ? productName : [productName];
+  const productNameFit = useGlyphFit(
+    LOGO_HEIGHT,
+    { family: token.fontFamily, style: 'italic', weight: productNameWeight },
+    { lines: nameLines.length, lineHeight: productNameLineHeight * token.lineHeight },
+  );
 
   const notInDemo = (what: string) => message.info(t.notInDemo(what));
   const searchLabel = searchPlaceholder.replace(/[….]+$/, '');
@@ -126,9 +140,14 @@ export function AppShell({
             styles={{ root: { display: 'block' }, image: { display: 'block' } }}
           />
           {screens.md && (
-            // Italic Regular; letters (ink) exactly as tall as the logo and aligned to its top and bottom.
+            // Italic; first-line cap top and last-line baseline on the logo top/bottom edges (useGlyphFit).
             <Text italic style={{ ...productNameFit, color: token.colorPrimary, whiteSpace: 'nowrap' }}>
-              {productName}
+              {nameLines.map((line, i) => (
+                <span key={line}>
+                  {i > 0 && <br />}
+                  {line}
+                </span>
+              ))}
             </Text>
           )}
         </Flex>

@@ -7,16 +7,31 @@ interface FontSpec {
   weight?: number | string;
 }
 
+interface FitOptions {
+  /** Number of text lines in the block (default 1). */
+  lines?: number;
+  /** Line height as a multiple of the font size (used between lines when `lines > 1`). */
+  lineHeight?: number;
+}
+
+const supportsTextBox = () =>
+  typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('text-box', 'trim-both cap alphabetic');
+
 /**
- * Sizes upper-case text so that its *visible capital letters* (not the line box) are exactly `heightPx`
- * tall: the cap height (flat tops of H, R, M…) aligns with the top of a `heightPx`-high block and the
- * baseline with its bottom. Round letters (C, O, S) overshoot by a fraction of a pixel, as in any typeface.
+ * Sizes text so that its *visible letters* fill a block of exactly `heightPx`:
+ * the cap height (flat top of H, R, M…) of the FIRST line touches the top of the block and the
+ * alphabetic baseline of the LAST line touches its bottom. Descenders (g, y) and round overshoots (C, O)
+ * extend slightly beyond, as in any typeface.
  *
- * Measures the real font with canvas `measureText`, so it adapts to whatever font the OS resolves
- * (Segoe UI, SF Pro, Roboto…). Returns styles for a block-level element.
+ *   1 line : capHeight            = heightPx
+ *   n lines: capHeight + (n−1)·LH = heightPx,  LH = lineHeight × fontSize
+ *
+ * Measures the real font with canvas `measureText` (re-measured after the web font loads), so it adapts
+ * to the font the OS/browser resolves. Returns styles for a block-level element.
  */
-export function useGlyphFit(heightPx: number, font: FontSpec): CSSProperties {
+export function useGlyphFit(heightPx: number, font: FontSpec, options: FitOptions = {}): CSSProperties {
   const { family, style = 'normal', weight = 400 } = font;
+  const { lines = 1, lineHeight: lhRatio = 1.2 } = options;
 
   // Web fonts load asynchronously; canvas would measure the fallback font until then.
   // Re-measure once the exact face (family + style + weight) is available.
@@ -41,31 +56,37 @@ export function useGlyphFit(heightPx: number, font: FontSpec): CSSProperties {
     const base = 100;
     ctx.font = `${style} ${weight} ${base}px ${family}`;
     const m = ctx.measureText('H'); // flat glyph: top = cap height, bottom = baseline
-    const capHeight = m.actualBoundingBoxAscent;
-    if (!capHeight || !m.fontBoundingBoxAscent) return fallback;
+    const capRatio = m.actualBoundingBoxAscent / base;
+    if (!capRatio || !m.fontBoundingBoxAscent) return fallback;
 
-    const k = heightPx / capHeight;
+    const fontSize = heightPx / (capRatio + (lines - 1) * lhRatio);
+    const k = fontSize / base;
+    const capHeight = capRatio * fontSize;
     // Font metrics used for the line box; browsers round them to whole pixels during line layout.
     const fontAscent = Math.round(m.fontBoundingBoxAscent * k);
     const fontDescent = Math.round(m.fontBoundingBoxDescent * k);
 
-    // In a line box of height L the baseline sits at (L − fontAscent − fontDescent)/2 + fontAscent.
-    // Put the baseline at heightPx (bottom of the block) so cap tops land at 0 (top of the block).
-    const lineHeight = 2 * heightPx - fontAscent + fontDescent;
+    const common: CSSProperties = { display: 'block', height: heightPx, fontSize, fontStyle: style, fontWeight: weight };
 
-    return {
-      display: 'block',
-      height: heightPx,
-      fontSize: base * k,
-      // Fallback positioning for browsers without text-box-trim (depends on metric rounding).
-      lineHeight: `${lineHeight}px`,
-      // Exact positioning: trim the box to cap height (top) and alphabetic baseline (bottom).
-      // Chrome/Edge 133+, Safari 18.2+.
-      ...({ textBox: 'trim-both cap alphabetic' } as CSSProperties),
-      fontStyle: style,
-      fontWeight: weight,
-    };
+    if (lines === 1) {
+      // Baseline at heightPx: (L − ascent − descent)/2 + ascent = heightPx.
+      const lineHeight = 2 * heightPx - fontAscent + fontDescent;
+      return {
+        ...common,
+        lineHeight: `${lineHeight}px`, // fallback positioning
+        // Exact positioning: trim the box to cap height (top) and alphabetic baseline (bottom).
+        ...({ textBox: 'trim-both cap alphabetic' } as CSSProperties),
+      };
+    }
+
+    const lineHeight = lhRatio * fontSize;
+    if (supportsTextBox()) {
+      return { ...common, lineHeight: `${lineHeight}px`, ...({ textBox: 'trim-both cap alphabetic' } as CSSProperties) };
+    }
+    // Fallback: shift the first line so its cap top sits at the top of the block.
+    const firstBaseline = (lineHeight - fontAscent - fontDescent) / 2 + fontAscent;
+    return { ...common, lineHeight: `${lineHeight}px`, marginTop: capHeight - firstBaseline };
     // fontVersion: recompute after the web font has loaded
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heightPx, family, style, weight, fontVersion]);
+  }, [heightPx, family, style, weight, lines, lhRatio, fontVersion]);
 }

@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { App as AntApp, Badge, Breadcrumb, Button, Card, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
+import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
 import type { TableProps, TagProps } from 'antd';
-import { CheckOutlined, HomeOutlined, PlusOutlined, SwapOutlined } from '@ant-design/icons';
+import { CheckOutlined, HomeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useTableScrollY } from '@dynamics/ui-shared';
 import { decisionLabels, orderOptions, productOptions, proposals as initialProposals, workflowOf } from '../data/proposals';
 import type { Decision, Proposal, WorkflowStage } from '../data/proposals';
 import { ReviewProposalModal } from '../components/ReviewProposalModal';
 import type { ReviewResult } from '../components/ReviewProposalModal';
+import { ProposalsIcon } from '../icons';
 
 const { Title, Text, Link } = Typography;
 
@@ -186,17 +187,12 @@ export default function ProposalsPage() {
       >
         <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
           <Flex justify="space-between" align="center" wrap gap="medium">
-            <Flex vertical>
-              <Text type="secondary" strong style={{ fontSize: 12, letterSpacing: 1 }}>
-                WORKING REGISTER
-              </Text>
-              <Space size="medium" align="center">
-                <SwapOutlined style={{ fontSize: 24 }} />
-                <Title level={3} style={{ margin: 0 }}>
-                  Replacement proposals
-                </Title>
-              </Space>
-            </Flex>
+            <Space size="medium" align="center">
+              <ProposalsIcon style={{ fontSize: 24 }} />
+              <Title level={3} style={{ margin: 0 }}>
+                Replacement proposals
+              </Title>
+            </Space>
             <Space wrap>
               <Button icon={<CheckOutlined />} onClick={reviewNext}>
                 Review next
@@ -207,13 +203,7 @@ export default function ProposalsPage() {
             </Space>
           </Flex>
 
-          <Flex vertical gap={2}>
-            <Text type="secondary">Compare original and alternative components, then record a controlled client decision.</Text>
-            <Space size="small" wrap>
-              <Badge status="success" text={<Text type="secondary">Local review · changes saved</Text>} />
-              <Text type="secondary">· Order QA-PAGE-ORDER · Alternative Components Database AC8v12v3.xlsm</Text>
-            </Space>
-          </Flex>
+          <Text type="secondary">Compare original and alternative components, then record a controlled client decision.</Text>
 
           <Flex wrap gap="small" align="center">
             <Input.Search
@@ -275,11 +265,6 @@ export default function ProposalsPage() {
               pagination={false}
             />
           </div>
-
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            Search matches text fragments, including part numbers and Cyrillic. Filters, sorting and counts cover all
-            accessible matching rows.
-          </Text>
         </Flex>
       </Card>
 
