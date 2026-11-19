@@ -19,11 +19,15 @@ import {
 import type { MenuProps } from 'antd';
 import { BellOutlined, LogoutOutlined, SearchOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
 import defaultLogo from '../assets/logo.svg';
-import { LOGO_HEIGHT, useProductNameFit } from './useProductNameFit';
 import { useSharedStrings } from './i18n';
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
+
+/** Logo height in the header (px); the width follows the SVG's aspect ratio (92×24). */
+const LOGO_HEIGHT = 24;
+/** Application name next to the logo: Regular Italic at this font size (px). */
+const PRODUCT_NAME_FONT_SIZE = 25;
 
 export interface ShellSection {
   key: string;
@@ -34,11 +38,7 @@ export interface ShellSection {
 }
 
 export interface AppShellProps {
-  /**
-   * Application name next to the logo (italic, primary colour). Its layout is chosen automatically by the
-   * standard algorithm (useProductNameFit): Regular one line if it fits 160px at 32px capitals; otherwise
-   * Semi Bold two lines (2+ words) or Medium one line fitted to 160px (one word).
-   */
+  /** Application name next to the logo: one line, Regular Italic, 25px, primary colour, 8px after the logo. */
   productName: string;
   /** Optional element in the header before the actions (e.g. a status Tag); shown from the md breakpoint up. */
   headerExtra?: ReactNode;
@@ -84,7 +84,6 @@ export function AppShell({
   const screens = Grid.useBreakpoint();
   const { message } = AntApp.useApp();
   const t = useSharedStrings();
-  const { lines: nameLines, style: productNameFit, mode: nameMode } = useProductNameFit(productName, token.fontFamily);
 
   const notInDemo = (what: string) => message.info(t.notInDemo(what));
   const searchLabel = searchPlaceholder.replace(/[….]+$/, '');
@@ -116,13 +115,17 @@ export function AppShell({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: token.marginLG,
+          // 12px between the name and the search; the search adds marginSM on its right, so search → actions
+          // stays at least 24px (marginLG).
+          gap: token.marginSM,
           background: token.colorBgContainer,
           paddingInline: token.paddingLG,
         }}
       >
-        {/* Flex (not Space) so the logo and the name sit side by side without wrapper divs. */}
-        <Flex align="center" gap={8}>
+        {/* Flex (not Space) so the logo and the name sit side by side without wrapper divs.
+            align="baseline": the logo has no text baseline, so flexbox uses its bottom edge; the name's baseline
+            therefore sits exactly on the logo's bottom edge (descenders such as "p" hang below it). */}
+        <Flex align="baseline" gap={8}>
           <Image
             src={logoSrc}
             alt={logoAlt}
@@ -131,14 +134,19 @@ export function AppShell({
             styles={{ root: { display: 'block' }, image: { display: 'block' } }}
           />
           {screens.md && (
-            // Layout chosen by the logo/name algorithm (useProductNameFit); data-name-mode helps tests/inspection.
-            <Text italic data-name-mode={nameMode} style={{ ...productNameFit, color: token.colorPrimary, whiteSpace: 'nowrap' }}>
-              {nameLines.map((line, i) => (
-                <span key={line}>
-                  {i > 0 && <br />}
-                  {line}
-                </span>
-              ))}
+            // One line, Regular Italic 25px, baseline on the logo's bottom edge (see the Flex above).
+            <Text
+              italic
+              style={{
+                display: 'block',
+                fontSize: PRODUCT_NAME_FONT_SIZE,
+                fontWeight: 400,
+                lineHeight: 'normal',
+                color: token.colorPrimary,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {productName}
             </Text>
           )}
         </Flex>
@@ -147,12 +155,18 @@ export function AppShell({
           <Input.Search
             placeholder={searchPlaceholder}
             allowClear
-            style={{ flex: 1, maxWidth: 520 }}
+            style={{ flex: 1, maxWidth: 520, marginInlineEnd: token.marginSM }}
             onSearch={(value) => value && notInDemo(t.globalSearch(value))}
           />
         ) : (
           <Tooltip title={searchLabel}>
-            <Button type="text" icon={<SearchOutlined />} aria-label={searchLabel} onClick={() => notInDemo(searchLabel)} />
+            <Button
+              type="text"
+              icon={<SearchOutlined />}
+              aria-label={searchLabel}
+              style={{ marginInlineEnd: token.marginSM }}
+              onClick={() => notInDemo(searchLabel)}
+            />
           </Tooltip>
         )}
 

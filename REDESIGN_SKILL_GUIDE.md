@@ -42,8 +42,6 @@ Public API (`shared/src/index.ts`):
 | `FormFields`, `FormField`, `LABEL_EXTRA_WIDTH` | Standard form layout (section 8). |
 | `useSubmitValidation()` | Standard validation timing (section 8). |
 | `useTableScrollY()` | Full-height table with a fixed header (section 6). |
-| `useProductNameFit`, `LOGO_HEIGHT`, `NAME_MAX_WIDTH`, `TWO_LINE_SPACING` | Logo/name algorithm (section 5.2), already used by `AppShell`. |
-| `useGlyphFit` | Low-level text fitting (used by the algorithm). |
 | `appTheme`, `createFormConfig`, `strings`, `useSharedStrings` | Tokens, form messages, shell strings (ru/en). |
 
 How to add it to an application:
@@ -69,7 +67,7 @@ Minimal app:
 
 // App.tsx
 <AppShell
-  productName="CRM"                         // layout chosen automatically (section 5.2)
+  productName="CRM"                         // one line, Regular Italic 25px (section 5.2)
   sections={[{ key: 'contacts', label: 'Контакты', icon: <ContactsIcon />, count: 37 }, …]}
   activeSection="contacts"
   searchPlaceholder="Поиск по всей CRM…"
@@ -135,7 +133,9 @@ in components. Apps don't override tokens.
 - **Layout:** exactly one viewport high (`100dvh`). The page never scrolls; lists scroll inside themselves.
 - **Header (56px), left to right:**
   - logo + application name (5.2)
-  - global `Input.Search` (max 520px; an icon button below `md`)
+  - global `Input.Search` (max 520px; an icon button below `md`), **12px after the application name** (or after the
+    logo below `md`). The Header gap is `marginSM` (12px), and the search has `marginInlineEnd: marginSM`, so search →
+    actions stays at least 24px.
   - notifications `Badge`
   - user `Dropdown` (avatar initials + name; it holds Profile / Log out, with optional extra items, e.g. "Preview as")
   - **an outlined "Settings / Настройки" button with icon and text**
@@ -151,45 +151,18 @@ in components. Apps don't override tokens.
 - **Footer:** left text only: **`Dynamics <AppName> © <year>`** ("Dynamics.CRM © 2026", "Dynamics Register © 2026",
   "Dynamics Configurator © 2026"). No slogans and no "fictional data" notes.
 
-### 5.2 Logo and application name: the algorithm
+### 5.2 Logo and application name
 
-The block in the top-left corner is the 41×32 "D&" logo (`shared/assets/logo.svg`), 8px gap, then the application
-name in italic, `colorPrimary`, hidden below `md`. The logo and the name are direct children of one
-`Flex align="center" gap={8}`, with no wrapper divs or dividers.
+The block in the top-left corner is the Dynamics logo (`shared/assets/logo.svg`, a copy of the root `logo.svg`,
+92×24 viewBox) shown **24px high**, then an **8px gap**, then the application name. The logo and the name are direct
+children of one `Flex align="baseline" gap={8}`, with no wrapper divs or dividers.
 
-**Algorithm** (implemented in `shared/src/useProductNameFit.ts`; `AppShell` applies it to `productName`):
-
-1. **The text height must match the logo height (32px).** This means the height of the **uppercase letters**
-   (cap height, the flat top of "H") and **not** the line height or font size.
-2. **At that height, check whether the text fits within 160px.** If it fits, keep this font size and use
-   **Regular Italic** (400). Example: **"CRM"** (98.9px wide, 43.8px font size).
-3. **If it doesn't fit, check whether the name has one word or more.**
-   - **Two words:** split into two lines and adjust the size so that the **top line aligns with the top of the logo**
-     (cap top of the first line) and the **bottom line aligns with the bottom of the logo** (baseline of the last
-     line). Use **Semi Bold Italic** (600). Example: **"Replacement Register"** → "Replacement" / "Register"
-     (18.2px font).
-   - **More than two words:** split into two lines anyway, at the word break that makes the longer line as short as
-     possible. Examples: "Warehouse Management System" → "Warehouse" / "Management System"; "Quality Assurance
-     Control Center" → "Quality Assurance" / "Control Center".
-   - **Then check the width:** first the font is sized up to fill the logo height with small gaps between the lines.
-     If the wider line is then **more than 160px**, the font is **reduced until that line is exactly 160px**. The line
-     spacing ratio stays the same, and the (now shorter) two-line block is **vertically centred on the logo**.
-     Examples: "Warehouse" / "Management System" → 15.6px font (widest line 159.95px); "International Procurement" /
-     "Coordination" → 12.7px. "Replacement" / "Register" (115.6px) and "Audit" / "Log" need no reduction.
-4. **If it doesn't fit and is a single word:** adjust the font size so that the text is exactly **160px** wide. Use
-   **Medium Italic** (500), with the capital-letter band vertically centred on the logo. Example: **"Configurator"**
-   (26.4px font, 159.98px wide).
-
-Implementation details the skill must keep:
-- **Measure the real font:** canvas `measureText` with the actual italic face, re-measured after
-  `document.fonts.load()`. Font size ≠ letter height: capitals are about 70% of the font size.
-- **Two-line spacing:** `TWO_LINE_SPACING` = **0.85 × the font's natural (`normal`) line height**, which gives
-  ~18.2px text with ~1.6px between the "p" descender and the next line's capitals. Lines touch at about 0.78.
-- **Positioning:** CSS `text-box: trim-both cap alphabetic` (Chrome/Edge 133+, Safari 18.2+), with a computed
-  line-height fallback.
-- **Overshoot:** round letters (C, O) overshoot by about 0.5px and descenders (g, p) hang below the logo. That's
-  correct typography: align the flat letters.
-- **Inspection:** the name element carries `data-name-mode="regular|two-lines|fit-width"` for tests and inspection.
+The name (`AppShell productName`) is always **one line**, **Regular Italic** (400), **25px** font size,
+`colorPrimary`, and hidden below `md`. **The name's baseline sits on the logo's bottom edge** (bottom alignment):
+`align="baseline"` does it, because the logo image has no text baseline and flexbox uses its bottom edge instead.
+Descenders ("p" in "Replacement") hang below the logo, as is normal typography. There is no fitting, no
+two-line layout and no width limit: every app uses the same style ("CRM", "Replacement Register", "Configurator").
+The constants are `LOGO_HEIGHT` and `PRODUCT_NAME_FONT_SIZE` in `shared/src/AppShell.tsx`.
 
 ### 5.3 Language
 - `AppProviders lang` selects the antd locale, the shell strings and the two validation messages (`shared/src/i18n.ts`).
@@ -326,7 +299,7 @@ const { errors, reset, formProps } = useSubmitValidation<Values>();
 | Sidebar user block, role switcher | user `Dropdown` (+ `userMenuExtra` submenu) |
 | Settings nav item / gear icon | the header "Settings / Настройки" outlined button only |
 | Logout icon button | the user menu "Log out / Выйти" |
-| Product/company name next to the logo | `productName` (algorithm 5.2); the Dynamics logo always |
+| Product/company name next to the logo | `productName` (one line, Regular Italic 25px, section 5.2); the Dynamics logo always |
 | Page header with an eyebrow and description | icon + H3 title (+ an optional one-line description); eyebrow dropped |
 | Pager, rows per page | removed: a full-height scrolling table |
 | Sort dropdowns | column-header sorting + the "Сортировка / Sort" label |
@@ -348,11 +321,9 @@ Run against the dev server **and** the production build (`npm run build` + `vite
   `--ant-padding` 8px, `--ant-card-body-padding` 0px, `--ant-layout-footer-padding` `8px 24px 8px`, menu line height
   32px, `--ant-layout-body-bg` `#ffffff`, header 56px, Content padding `16px 24px`, rows 32px, favicon `/favicon.svg`.
 - **Name block:**
-  - `data-name-mode` matches the algorithm.
-  - Edges (via baseline probes + canvas cap height measured at 100px and scaled) are within 0.5px of the logo's top
-    and bottom. Width mode: 160 ± 0.5px. Two lines: every line ≤ 160px; if the font was reduced, the block's
-    midpoint is within 0.5px of the logo's midpoint.
-  - The right weight and italic.
+  - Logo 24px high; 8px between the logo and the name; 12px between the name and the search field.
+  - Name: one line, 25px, weight 400, italic, `colorPrimary`; its baseline (a 0×0 inline-block probe) equals the
+    logo's bottom edge.
   - CDP `CSS.getPlatformFontsForNode` reports Inter.
 - **Page:**
   - The document doesn't scroll (`scrollHeight ≤ innerHeight`) at 1440×900.
@@ -396,8 +367,6 @@ Run against the dev server **and** the production build (`npm run build` + `vite
 - **Inline content in the 56px Header** sits on a tall line box: make the logo Image and the name `display: block`
   (Image `styles.root`/`styles.image`).
 - **Table `scroll.y` must be numeric:** use `useTableScrollY`, and every flex ancestor needs `min-height: 0`.
-- **Canvas text measurement:** wait for `document.fonts.load()`, and measure at 100px then scale (small sizes snap
-  to pixels).
 - **`Typography.Link` with only `onClick`** isn't focusable or a link role, so add `role="button"` and `aria-label`.
 - **Pressing Enter in a DatePicker inside a Form submits the form.**
 - **Workspaces on Windows:** stopping `npx vite` can leave node running on the port; check with `netstat`.

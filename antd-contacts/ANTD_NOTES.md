@@ -58,7 +58,7 @@ run that asserts **0 console warnings**. This trial passes it.
 |---|---|
 | App shell | `Layout` > `Header` / `Content` / `Footer` |
 | Light header | `Header style={{ background: token.colorBgContainer }}` (antd docs pattern, via `theme.useToken()`) |
-| Logo + product name | `Flex align="center" gap={8}` > `Image preview={false}` (block via `styles.root`/`styles.image`) + `Typography.Text italic` (Regular) coloured with `token.colorPrimary`, sized by `useGlyphFit` so cap height = logo height |
+| Logo + product name | `Flex align="center" gap={8}` > `Image preview={false}` (block via `styles.root`/`styles.image`) + `Typography.Text italic` (Regular) coloured with `token.colorPrimary`, 25px; logo 24px high |
 | Global search | `Input.Search` (≥ md), icon `Button` (< md) |
 | Notifications | `Badge count` + `Button type="text"` + `Tooltip` |
 | User menu | `Dropdown menu={{ items }}` + `Button icon={<Avatar/>}` + `Typography.Text ellipsis` |

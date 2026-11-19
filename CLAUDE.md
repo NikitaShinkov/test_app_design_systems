@@ -8,12 +8,12 @@ design system, so we can judge how it looks and how well the skill can use it.
 Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, branch `main`).
 
 **Outcome:** Ant Design v6 + the shared layer in `shared/` was selected and adapted on three apps. The handover for
-the redesign-skill developer is **`REDESIGN_SKILL_GUIDE.md`** (procedure, rules, logo/name algorithm, mapping,
+the redesign-skill developer is **`REDESIGN_SKILL_GUIDE.md`** (procedure, rules, logo/name, mapping,
 verification, pitfalls). Keep it in sync with `shared/` whenever a rule changes. Results: `screenshots/`.
 
 Current trial: **Ant Design**, three apps on one shared UI layer (npm workspaces):
 - `antd-contacts`: the Dynamics.CRM "Контакты" list (`img_design_1.png`), in Russian.
-- `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English (product name "Replacement / Register" on two lines).
+- `antd-proposals`: the "Replacement proposals" register (`img_design_2.png`), in English (product name "Replacement Register").
 - `antd-configurator`: the COMPACS "Архив предложений" + offer card (`img_design_3_1*.png`, `img_design_3_2 (updated).png`),
   in Russian (product name "Configurator").
 - `shared` (`@dynamics/ui-shared`): everything standard (theme, providers, shell, form rules, hooks, CSS overrides).
@@ -72,20 +72,14 @@ logo, and a shared folder (not copies).
   popups of the three apps, taken on 2026-11-17 at the user's request. The old `docs/` folder was deleted.
 - Shell = `AppShell` from `shared` (each app passes `productName`, `sections`, `activeSection`, search placeholder,
   user, footer texts; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
-  Header (56px): logo `shared/assets/logo.svg` (the "D&" mark, 41×32, copied from the root `logo.svg`) and the
-  product name, laid out **automatically** by `useProductNameFit` (`AppShell productName="…"` only; the algorithm is in
-  REDESIGN_SKILL_GUIDE.md §5.2):
-  1. Regular Italic at a 32px cap height if ≤ 160px wide ("CRM").
-  2. Otherwise 2+ words → two lines, Semi Bold Italic, first cap top / last baseline on the logo edges, line spacing
-     0.85 × normal ("Replacement Register"). If the wider line is then > 160px, the font is reduced until it's exactly
-     160px and the block is centred on the logo.
-  3. Otherwise one word → Medium Italic sized to 160px, cap band centred ("Configurator").
-  `data-name-mode` shows the chosen mode; `token.colorPrimary`, hidden below `md`. They're direct children of one
-  `Flex align="center" gap={8}`, with no Space wrappers and no Divider. The "CRM" size comes from
-  `useGlyphFit(32, font)`, which measures the real font (re-measured after the web font loads) so the **cap height**
-  (flat tops of R/M) equals the logo height. CSS `text-box: trim-both cap alphabetic` puts the cap top and the
-  baseline on the logo's edges, with a line-height formula as the fallback. The round "C" overshoots by about
-  0.5px, as round glyphs normally do.
+  Header (56px): logo `shared/assets/logo.svg` (the Dynamics logo, 92×24 viewBox, copied from the root `logo.svg`)
+  shown **24px high**, an **8px gap**, then the product name: **one line, Regular Italic (400), 25px**,
+  `token.colorPrimary`, **baseline on the logo's bottom edge** (`Flex align="baseline"`), hidden below `md` (constants `LOGO_HEIGHT`/`PRODUCT_NAME_FONT_SIZE` in
+  `AppShell.tsx`). The old fitting algorithm (`useProductNameFit`/`useGlyphFit`, cap-height matching, two lines,
+  160px width) was removed at the user's request (2026-11-19). Logo and name are direct children of one
+  `Flex align="baseline" gap={8}`, with no Space wrappers and no Divider.
+  Header gap `token.marginSM` (12px): the name → search field is **12px**; the search (field or mobile icon button) has
+  `marginInlineEnd: marginSM`, so search → actions stays ≥ 24px.
   Actions: notifications, user dropdown for "Иван Петров" (avatar "ИП", which holds "Выйти"), and an outlined
   (default) icon+text "Настройки" button. There's no separate logout button. The section menu has 8 items, with no
   "Настройки" item, because settings live in the header button.
@@ -118,7 +112,7 @@ design/
 ├── img_design_1.png     # reference screenshot, app 1 (structure only)
 ├── img_design_2.png     # reference screenshot, app 2 (structure only)
 ├── img_design_3_1.png, img_design_3_1 (updated).png, img_design_3_2 (updated).png  # app 3 references
-├── logo.svg             # Dynamics Scientific "D&" mark, 41×32 (source; copy in shared/assets)
+├── logo.svg             # Dynamics logo, 92×24 (source; copy in shared/assets), shown 24px high
 ├── favicon_logo.svg     # favicon source, 32×32 (copied to <app>/public/favicon.svg)
 ├── REDESIGN_SKILL_GUIDE.md  # handover for the redesign-skill developer (read this first)
 ├── screenshots/         # desktop 1440×900: 1-crm-*, 2-register-*, 3-configurator-* (main page + popups)
@@ -138,8 +132,6 @@ design/
 │       ├── FormField.tsx      # FormFields grid (label col = widest label + 30) + FormField
 │       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
 │       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
-│       ├── useProductNameFit.ts  # logo/name algorithm (regular / two-lines / fit-width)
-│       ├── useGlyphFit.ts     # 1..n lines: first cap top → last baseline = N px; line spacing = factor × normal
 │       ├── fonts.css          # italic @font-face → Inter 3.19 (matches Figma)
 │       └── antd-overrides.css # the only CSS besides fonts (menu underline, table Tags)
 ├── antd-contacts/       # app 1 (ru), port 5173
@@ -153,7 +145,7 @@ design/
 │       └── data/contacts.ts  # 37 mock records (first 10 = screenshot)
 ├── antd-configurator/   # app 3 (ru), port 5175
 │   └── src/
-│       ├── App.tsx      # AppShell: "Configurator" (500 italic, 160px wide), 3 sections (Быстрый расчёт /
+│       ├── App.tsx      # AppShell: "Configurator", 3 sections (Быстрый расчёт /
 │       │                #   Архив предложений (28) / Прайс и цены), footer "Dynamics Configurator © 2026"
 │       ├── icons.ts     # one icon per section, shared by the tab and the page heading
 │       ├── pages/ArchivePage.tsx    # breadcrumb, full-height Card: icon + title, search, reload,
@@ -169,7 +161,7 @@ design/
 └── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
     └── src/
         ├── main.tsx     # <AppProviders lang="en"><App/></AppProviders>
-        ├── App.tsx      # AppShell config: "Replacement / Register" (600 italic, 0.85 × normal LH), 9 sections (counts 211 / 75), user Local administrator
+        ├── App.tsx      # AppShell config: "Replacement Register", 9 sections (counts 211 / 75), user Local administrator
         │                #   with a "Preview as" role submenu
         ├── pages/ProposalsPage.tsx  # breadcrumb + full-height Card: icon + title + Review next / Review
         │                            #   proposal, description, filter row (search,
@@ -348,6 +340,18 @@ npm run build -w antd-contacts   # one app
   (`inter-ui@3.19.3`, `fonts.css`) for both apps; upright stays Inter 4. The app's italic "e" now matches the
   Inter 3.19 reference row for row. Fits unchanged: Register 11.95/43.95, CRM 11.88/43.88 vs 12/44.
   App 2 50/50, app 1 regression 29/29, 0 warnings.
+- 2026-11-19: Requested logo block change: new `logo.svg` (92×24, copied to `shared/assets`), shown 24px high; all
+  previous name rules removed (`useProductNameFit.ts`, `useGlyphFit.ts` and their exports deleted); the name is now one
+  line, Regular Italic 25px, 8px after the logo, in all three apps. Verified in Chrome at 1440×900 (computed styles and
+  rects, no screenshots): logo 92×24, gap 8px, name 25px / 400 / italic / rgb(0,132,201) / Inter Variable, one line
+  (30px box), name centre = logo centre (28px); no horizontal scroll at 390, 768, 1024px. `npm run build` passes.
+- 2026-11-19: Requested: logo and name aligned on their bottom edges. `Flex align="center"` → `align="baseline"` (the logo
+  has no baseline, so flexbox uses its bottom edge). Verified in all three apps: name baseline 37px = logo bottom 37px
+  (logo 13–37px in the 56px header), gap 8px, 25px / 400 / italic.
+- 2026-11-19: Requested: 12px between the application name and the search field. Header gap `marginLG` → `marginSM`,
+  plus `marginInlineEnd: marginSM` on the search (field and mobile icon button) to keep search → actions at 24px.
+  Verified in all three apps: name → search 12px at 1440 and 800px; search → actions 24px at 800px (search shrunk) and
+  at 390px (logo → icon button 12px, same total spacing as before); no horizontal scroll. `npm run build` passes.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -409,4 +413,6 @@ npm run build -w antd-contacts   # one app
 - antd `Alert` has `role="alert"` too, so scope form-error queries to `label [role="alert"]`.
 - Canvas `measureText` snaps glyph bounds to whole pixels at small font sizes (e.g. 14px), so measure at 100px
   and scale.
+- In a `Flex align="baseline"`, an image (no text baseline) aligns by its bottom edge, which puts a neighbouring
+  text's baseline exactly on the image bottom, with no font metrics or `text-box` needed.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.
