@@ -1,6 +1,6 @@
-/** Section icons shared between the menu and page headings (one icon per section). */
+/** Section icons for the sidebar, matching the source app (⌂ home, list, price). Page headings have no icon (none in the source). */
 export {
-  CalculatorOutlined as QuickCalcIcon,
+  HomeOutlined as QuickCalcIcon,
   ContainerOutlined as ArchiveIcon,
   TagsOutlined as PricesIcon,
 } from '@ant-design/icons';

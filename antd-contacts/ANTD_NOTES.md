@@ -13,7 +13,7 @@ token: {
 },
 components: {
   Card:   { bodyPadding: 0 },                  // --ant-card-body-padding
-  Layout: { bodyBg: '#ffffff', headerHeight: 56, footerPadding: '8px 24px 8px' },  // --ant-layout-*
+  Layout: { bodyBg: '#ffffff', headerHeight: 56 },  // --ant-layout-* (no footer)
   Menu:   { itemPaddingInline: 8, horizontalLineHeight: '32px' },  // --ant-menu-*
   Table:  { cellPaddingBlock: 4.5 },           // 4.5 + 22 + 4.5 + 1px border = 32px rows
 }
@@ -56,11 +56,11 @@ run that asserts **0 console warnings**. This trial passes it.
 ## 2. Element → component map (reusable for other pages)
 | Page element | antd |
 |---|---|
-| App shell | `Layout` > `Header` / `Content` / `Footer` |
+| App shell | `Layout` > `Header` / (horizontal `Menu` or `Sider`) / `Content`; no footer |
 | Light header | `Header style={{ background: token.colorBgContainer }}` (antd docs pattern, via `theme.useToken()`) |
 | Logo + product name | `Flex align="center" gap={8}` > `Image preview={false}` (block via `styles.root`/`styles.image`) + `Typography.Text italic` (Regular) coloured with `token.colorPrimary`, 25px; logo 24px high |
 | Global search | `Input.Search` (≥ md), icon `Button` (< md) |
-| Notifications | `Badge count` + `Button type="text"` + `Tooltip` |
+| Notifications | `Badge count title=""` + `Button type="text" aria-label` (no tooltips anywhere) |
 | User menu | `Dropdown menu={{ items }}` + `Button icon={<Avatar/>}` + `Typography.Text ellipsis` |
 | Settings | `Button icon={<SettingOutlined/>}` with text (default variant = visible border) |
 | Section navigation | `Menu mode="horizontal" items` (8 sections; overflows into "…" automatically) |
@@ -73,7 +73,7 @@ run that asserts **0 console warnings**. This trial passes it.
 | Row link / open action | `Typography.Link` (text and icon-only, so rows stay one line high) |
 | Total | the count line above the table (pagination removed by request) |
 | Create / edit contact | One `ContactFormModal`: `Modal centered` + `Form` (via `modalRender`, `validateTrigger={[]}`), fields from `FormField` |
-| Form fields | `FormFields` grid (`max-content | minmax(0,1fr)`: label column = widest label + 30px) > `FormField` = `<label>` (label `Text` + error `Text type="danger" ellipsis={{ tooltip }}` with `contain: inline-size`, 28px block) + `Form.Item noStyle` input |
+| Form fields | `FormFields` grid (`max-content | minmax(0,1fr)`: label column = widest label + 30px) > `FormField` = `<label>` (label `Text` + error `Text type="danger" ellipsis` (no tooltip) with `contain: inline-size`, 28px block) + `Form.Item noStyle` input |
 | Form messages / required mark | `ConfigProvider form={{ validateMessages, requiredMark: false }}` (`formConfig.ts`) |
 | Feedback | `App.useApp().message` |
 | Responsiveness | `Grid.useBreakpoint()` |
@@ -134,9 +134,9 @@ level 3.
 - **Layout:** antd puts errors under the input (wrapper column) and offers no option to move them. The
   standard here is "`<label>` (label text + error under it) on the left, the input on the right": the error is
   inside the `<label for>`, and the two-line block is `controlHeight − 4` (28px for a 32px input; 14px per line,
-  error at `fontSizeSM`) and centred on the input. It's one line with `ellipsis={{ tooltip }}`. The label column is
+  error at `fontSizeSM`) and centred on the input. It's one line with `ellipsis` (no tooltip). The label column is
   as wide as the widest label text + 30px (CSS grid `max-content`, 30px padding after the label text). The error is excluded from that width with
-  `contain: inline-size`, so long messages truncate and show a tooltip. It needs a thin composition:
+  `contain: inline-size`, so long messages truncate with "…" (no tooltip). It needs a thin composition:
   `FormFields` (grid) + `FormField` (`<label htmlFor>` flex column + `Form.Item noStyle`).
 - **Timing:** `validateTrigger={[]}` on the Form; show `errorFields` from `onFinishFailed`; clear them in
   `onValuesChange`.
@@ -148,7 +148,7 @@ level 3.
 
 ## 5.3 Second app on the same standard (`antd-proposals`, `img_design_2.png`)
 The standard layer now lives in `shared/` (`@dynamics/ui-shared`, npm workspace). A new app needs only:
-`<AppProviders lang>` + `<AppShell productName sections activeSection searchPlaceholder user footer>` + pages
+`<AppProviders lang>` + `<AppShell productName navigation sections activeSection searchPlaceholder user>` + pages
 built from antd, plus `FormFields`/`FormField` + `useSubmitValidation` for forms and `useTableScrollY` for lists.
 That's what the skill should install.
 
@@ -156,7 +156,7 @@ How a differently-designed app (dark sidebar, two-line table cells, pager, sort 
 standard:
 | Original element | Standard result |
 |---|---|
-| Left sidebar nav with counts | shared horizontal Menu; counts as `Badge` in the item label (`ShellSection.count`) |
+| Left sidebar nav with counts | `AppShell navigation="sidebar"` (collapsible `Layout.Sider` + inline Menu; the source pattern is kept); counts as `Badge` in the item label (`ShellSection.count`) |
 | User block with "Preview as" select | user Dropdown with a submenu (`userMenuExtra`) |
 | Context card ("Local review · changes saved") | `Badge status="success"` + secondary text line |
 | Sort dropdowns | column-header sorting + "· Sort: …" label |

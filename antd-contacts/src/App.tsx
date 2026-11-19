@@ -8,6 +8,7 @@ import {
   FileTextOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
+import { useState } from 'react';
 import { AppShell } from '@dynamics/ui-shared';
 import type { ShellSection } from '@dynamics/ui-shared';
 import ContactsPage from './pages/ContactsPage';
@@ -24,17 +25,19 @@ const sections: ShellSection[] = [
 ];
 
 export default function App() {
+  const [section, setSection] = useState('contacts');
   return (
     <AppShell
       productName="CRM"
       sections={sections}
-      activeSection="contacts"
+      activeSection={section}
+      onSectionChange={setSection}
       searchPlaceholder="Поиск по всей CRM…"
       user={{ name: 'Иван Петров', initials: 'ИП' }}
       notificationCount={2}
-      footer={{ left: `Dynamics.CRM © ${new Date().getFullYear()}` }}
     >
-      <ContactsPage />
+      {/* Demo navigation: every section shows the same page structure; only the heading changes. */}
+      <ContactsPage title={section === 'contacts' ? undefined : sections.find((s) => s.key === section)?.label} />
     </AppShell>
   );
 }

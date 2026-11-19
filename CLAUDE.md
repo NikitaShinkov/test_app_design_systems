@@ -19,8 +19,9 @@ Current trial: **Ant Design**, three apps on one shared UI layer (npm workspaces
 - `shared` (`@dynamics/ui-shared`): everything standard (theme, providers, shell, form rules, hooks, CSS overrides).
   **Every rule below lives in `shared` and applies to both apps.** The apps only contain pages, domain forms and data.
 
-User decisions for app 2: the same shell as app 1 (not the screenshot's left sidebar), English UI, the same Dynamics
-logo, and a shared folder (not copies).
+User decisions for app 2: the same shell as app 1, but with the **source's left sidebar** as the navigation (the rule
+"keep the source navigation pattern" from 2026-11-19 replaced the earlier tabs decision), English UI, the same Dynamics
+logo, and a shared folder (not copies). App 3 also uses a sidebar (its source `img_design_3_1.png` has one).
 
 ## Rules (must follow)
 - The screenshot is a reference for **page structure and element types only**. Do not copy its colours,
@@ -33,8 +34,8 @@ logo, and a shared folder (not copies).
 - All visual customisation goes **only through antd design tokens** in `shared/src/theme.ts`
   (`ConfigProvider theme={appTheme}` inside `AppProviders`). Don't put colours or spacing overrides in components. Current theme:
   `colorPrimary`/`colorLink` `#0084C9`, `padding` 8 (`--ant-padding`), Card `bodyPadding` 0, Layout
-  `bodyBg` `#ffffff`, `headerHeight` 56 and `footerPadding` `8px 24px 8px`, Menu `itemPaddingInline` 8 and
-  `horizontalLineHeight` `32px`, Modal `motionDurationSlow` 0.225s / `motionDurationMid` 0.15s (popup animations at 75% of
+  `bodyBg` `#ffffff` and `headerHeight` 56, Menu `itemPaddingInline` 8, `horizontalLineHeight` `32px` and
+  `collapsedIconSize` 14, Badge `paddingInline` 4, Modal `motionDurationSlow` 0.225s / `motionDurationMid` 0.15s (popup animations at 75% of
   antd's defaults; Modal only), Table `cellPaddingBlock` 4.5px (32px rows). Exceptions with no token, set
   inline: Content padding `16px 24px` (`AppShell`) and the page Card `boxShadow: 'none'` (pages).
 - Page Card (list pages): `variant="borderless"`, no shadow, body padding 0 (the table is flush with the content
@@ -45,11 +46,11 @@ logo, and a shared folder (not copies).
     `token.padding` row gap), and build every field with `FormField` (`shared/src/FormField.tsx`). The label
     column is **the widest label text in that form + 30px** (`LABEL_EXTRA_WIDTH`, padding after the label text,
     so the error line can use those 30px too), with no fixed width, so all inputs start on one vertical line. Error messages are excluded from that width by `contain: inline-size`, so they truncate
-    with "…" and show a tooltip when longer than the column. The error sits
+    with "…" (no tooltip) when longer than the column. The error sits
     **inside the `<label for=…>`**, directly under the label text. With an error the two-line block is exactly
     `token.controlHeight − 4` px high (32 → 28; each line is 14px line height, the error at `fontSizeSM`) and
-    vertically centred on the input. The error is one line, using `Typography.Text ellipsis={{ tooltip }}` (the
-    full text shows in a tooltip only when truncated). Inputs are bound with `Form.Item noStyle`, so antd's own
+    vertically centred on the input. The error is one line, using `Typography.Text ellipsis` (no tooltip). Inputs
+    are bound with `Form.Item noStyle`, so antd's own
     error list (which is always under the input) isn't used.
   - Messages come only from `shared/src/formConfig.ts` (`createFormConfig(lang)`, ConfigProvider
     `form.validateMessages`): required or whitespace → "Заполните поле" / "Fill in the field", any other rule →
@@ -71,7 +72,7 @@ logo, and a shared folder (not copies).
   Verify with computed styles and DOM measurements instead. `screenshots/` holds the desktop (1440×900) main pages and
   popups of the three apps, retaken on 2026-11-19 at the user's request. The old `docs/` folder was deleted.
 - Shell = `AppShell` from `shared` (each app passes `productName`, `sections`, `activeSection`, search placeholder,
-  user, footer texts; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
+  user; there is no footer; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
   Header (56px): logo `shared/assets/logo.svg` (the Dynamics logo, 92×24 viewBox, copied from the root `logo.svg`)
   shown **24px high**, an **8px gap**, then the product name: **one line, Regular Italic (400), 25px**,
   `token.colorPrimary`, **baseline on the logo's bottom edge** (`Flex align="baseline"`), hidden below `md` (constants `LOGO_HEIGHT`/`PRODUCT_NAME_FONT_SIZE` in
@@ -80,6 +81,27 @@ logo, and a shared folder (not copies).
   `Flex align="baseline" gap={8}`, with no Space wrappers and no Divider.
   Header gap `token.marginSM` (12px): the name → search field is **12px**; the search (field or mobile icon button) has
   `marginInlineEnd: marginSM`, so search → actions stays ≥ 24px.
+  **Navigation keeps the source app's pattern** (`AppShell navigation`): `"tabs"` (default) = horizontal Menu under the
+  header (CRM); `"sidebar"` (Register, Configurator) = light `Layout.Sider` under the header, left of the Content:
+  220px expanded / 49px collapsed = 4px inner padding (antd's `Menu.itemMarginInline` 4) + **40 × 40px square
+  buttons** + 4px + the 1px right border; **no dead gaps**: items are 44px with no margin (`sidebarTheme` Menu
+  `itemMarginBlock` 0, `itemHeight` 44) and paint only their middle 40px (CSS transparent `border-block: 2px` +
+  `background-clip: padding-box`, which keeps the side padding next to the icon), so hovering / clicking the 4px gap
+  hits the nearer button; icons only, no tooltips (`Menu tooltip={false}`); **instant, no animation**
+  (`sidebarTheme` `motion: false`, nested ConfigProvider around the Sider); toggled by a text Button with the Material
+  Symbols **Left Panel Open** (collapsed) / **Left Panel Close** (expanded) icons (antd custom `Icon`) at the **left of the header** (header `paddingInlineStart` 8,
+  so its icon centre is x 24); every section icon is also centred at x 24 in both states (`inlineIndent` 13,
+  `collapsedIconSize` 14); a click in the sidebar outside the `.ant-menu-item`s toggles it (both ways); count badges
+  follow the name when expanded and sit on the icon when collapsed (CSS rules: collapsed items `overflow: visible`;
+  badge `line-height` restored, so the digits sit at the same height as when expanded; the Badge wrapper and its icon get
+  `line-height: 1` + `align-self: center`, and Badge `offset={[0, -6]}` puts the count's top edge on the button's top
+  edge); the Sider has a real 1px
+  `colorSplit` right border and the header the same bottom border. The Sider is `position: absolute` (zIndex 10) and
+  the content has `marginInlineStart` = the sidebar width. `breakpoint="md"`: starts collapsed; expanded below md it
+  overlays. Never convert one pattern into the other. Section icons only where the source shows them; **page headings
+  never have an icon**. Demo section switching: each app keeps `section` in state (`activeSection` +
+  `onSectionChange`); every section shows the same page, only the heading changes to the section name (the default
+  section keeps its own title).
   Actions: notifications, user dropdown for "Иван Петров" (avatar "ИП", which holds "Выйти"), and an outlined
   (default) icon+text "Настройки" button. There's no separate logout button. The section menu has 8 items, with no
   "Настройки" item, because settings live in the header button.
@@ -99,8 +121,12 @@ logo, and a shared folder (not copies).
 - Each app's `vite.config.ts` has `resolve.dedupe` for react/react-dom/antd/icons/dayjs. Without it, the production
   bundle got two React instances through the linked `shared` package ("reading 'useContext'", a blank page).
   **Always smoke-test production builds** (`vite preview`), not only the dev server.
-- Footers: left text only ("Dynamics.CRM © 2026", "Dynamics Register © 2026", "Dynamics Configurator © 2026");
-  `footer.right` is optional and unused. App 3 has no header Tag.
+- **No footer** in any app (`AppShell` has none; the content fills the viewport). App 3 has no header Tag.
+- **No tooltips anywhere** (antd `Tooltip`, Menu tooltips, sort tooltips, truncation tooltips, native `title`):
+  `Menu tooltip={false}`; every Table gets `showSorterTooltip={false}` and `components={tableComponents}` (shared
+  pass-through `<th>` without `title`; antd's sorter sets it on ellipsis columns after `onHeaderCell`); body columns
+  use `ellipsis: { showTitle: false }`; Badges `title=""`; no `title` on Tags; FormField errors `ellipsis` without
+  tooltip. Icon-only buttons keep `aria-label`.
 - Browser tab titles: app 1 "CRM", app 2 "Replacement Register", app 3 "Configurator" (`<title>` in each `index.html`).
 - Frontend only, with typed mock data. There's no Express server in this trial.
 - Look up antd APIs in the machine-readable docs: https://ant.design/llms.txt and
@@ -129,32 +155,35 @@ design/
 │       ├── AppProviders.tsx   # ConfigProvider(locale by lang, appTheme, createFormConfig(lang)) + antd App +
 │       │                      #   reset.css + Inter + antd-overrides.css + LangContext
 │       ├── AppShell.tsx       # Layout(100dvh) > Header (logo + product name, global search, bell, user menu,
-│       │                      #   Settings) + horizontal Menu (sections, optional counts) + Content + Footer
-│       ├── theme.ts           # appTheme: the single place for tokens
+│       │                      #   Settings) + section nav (horizontal Menu, or collapsible Sider with
+│       │                      #   navigation="sidebar": toggle in the header; optional counts) + Content (no footer)
+│       ├── theme.ts           # appTheme + sidebarTheme (motion off, 44px items, no item margin): the single place for tokens
 │       ├── formConfig.ts      # createFormConfig(lang): 2 standard messages, requiredMark false
 │       ├── i18n.ts            # shared strings ru/en (shell + messages), useSharedStrings()
 │       ├── FormField.tsx      # FormFields grid (label col = widest label + 30) + FormField
 │       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
 │       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
+│       ├── tableComponents.tsx     # Table components: header cell without native title tooltips
 │       ├── fonts.css          # italic @font-face → Inter 3.19 (matches Figma)
-│       └── antd-overrides.css # the only CSS besides fonts (menu underline, table Tags)
+│       └── antd-overrides.css # the only CSS besides fonts (menu underline, table Tags, collapsed sidebar badge
+│                              #   overflow + line height)
 ├── antd-contacts/       # app 1 (ru), port 5173
 │   ├── ANTD_NOTES.md    # findings for the skill: doc sources, component map, v6 rules, pros/cons
 │   ├── index.html, public/favicon.svg, package.json (antd 6.7.1, icons 6.3.4, React 19, Vite 8, TS 7)
 │   └── src/
 │       ├── main.tsx     # <AppProviders lang="ru"><App/></AppProviders>
-│       ├── App.tsx      # AppShell config: "CRM", 8 sections, user Иван Петров
+│       ├── App.tsx      # AppShell config: "CRM", 8 sections (switchable: same page, heading = section), user Иван Петров
 │       ├── pages/ContactsPage.tsx         # breadcrumb view switcher + full-height Card + Table
 │       ├── components/ContactFormModal.tsx  # create/edit contact popup
 │       └── data/contacts.ts  # 37 mock records (first 10 = screenshot)
 ├── antd-configurator/   # app 3 (ru), port 5175
 │   └── src/
-│       ├── App.tsx      # AppShell: "Configurator", 3 sections (Быстрый расчёт /
-│       │                #   Архив предложений (28) / Прайс и цены), footer "Dynamics Configurator © 2026"
-│       ├── icons.ts     # one icon per section, shared by the tab and the page heading
-│       ├── pages/ArchivePage.tsx    # breadcrumb, full-height Card: icon + title, search, reload,
+│       ├── App.tsx      # AppShell: "Configurator", navigation="sidebar", 3 sections (Быстрый расчёт /
+│       │                #   Архив предложений (28) / Прайс и цены)
+│       ├── icons.ts     # sidebar icons as in the source (⌂ Home, archive, prices)
+│       ├── pages/ArchivePage.tsx    # breadcrumb, full-height Card: title (no icon, as in the source), search, reload,
 │       │                            #   count + sort label (default "Обновлено ↓"), Table (28 rows, 32px; name +
-│       │                            #   grey customer, number, Вид Tag with ЗИП tooltip, version, updated, Открыть →);
+│       │                            #   grey customer, number, Вид Tag, version, updated, Открыть →);
 │       │                            #   a row click opens the offer card
 │       ├── components/OfferModal.tsx  # offer card: title + "Версия N" Tag, "Данные предложения" form
 │       │                              #   (Название required; Заказчик, Номер optional; ≤300), Сохранённая запись,
@@ -165,9 +194,9 @@ design/
 └── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
     └── src/
         ├── main.tsx     # <AppProviders lang="en"><App/></AppProviders>
-        ├── App.tsx      # AppShell config: "Replacement Register", 9 sections (counts 211 / 75), user Local administrator
+        ├── App.tsx      # AppShell config: "Replacement Register", navigation="sidebar", 9 sections (counts 211 / 75), user Local administrator
         │                #   with a "Preview as" role submenu
-        ├── pages/ProposalsPage.tsx  # breadcrumb + full-height Card: icon + title + Review next / Review
+        ├── pages/ProposalsPage.tsx  # breadcrumb + full-height Card: title (no icon) + Review next / Review
         │                            #   proposal, description, filter row (search,
         │                            #   order, decision, product, exact supplier, Clear), count + sort label,
         │                            #   Table (211 rows, 32px single-line, Tags, Review link)
@@ -176,8 +205,8 @@ design/
         └── data/proposals.ts  # 211 proposals (QA-0201…0211 = screenshot), workflowOf() stage labels
 ```
 
-App 2 mapping from `img_design_2.png` (structure only): the left sidebar became the shared top shell, with counts as
-menu badges; the "Local administrator · Preview as" block became the user menu; the "Local review" card, the "WORKING REGISTER" eyebrow and the footer help
+App 2 mapping from `img_design_2.png` (structure only): the left sidebar stays a (collapsible) sidebar under the shared
+header, with counts as menu badges; the "Local administrator · Preview as" block became the user menu; the "Local review" card, the "WORKING REGISTER" eyebrow and the footer help
 note were removed at the user's request; the sort selects became column sorting + a label; two-line cells became one line with grey secondary
 text; the pager became one scrolling list; "Review" opens the review popup.
 
@@ -363,6 +392,67 @@ npm run build -w antd-contacts   # one app
   four popups (CRM create/edit, Register review, Configurator offer): no Cancel, the last button is primary at the
   bottom right (24px right / 20px bottom), Esc and an outside click close, first field focused, empty submit still
   shows errors, 0 console warnings. The 7 screenshots in `screenshots/` were retaken at 1440×900.
+- 2026-11-19: New rule: keep the source app's top-level navigation pattern (sidebar → sidebar, tabs → tabs); a sidebar
+  must collapse/expand with icons visible when collapsed. `AppShell navigation="tabs" | "sidebar"` added (Sider
+  `collapsible`, built-in trigger, `breakpoint="md"`). CRM and Configurator originals use tabs (unchanged); the
+  Register original has a left sidebar, so app 2 now uses `navigation="sidebar"`. Guide §1.1 rule 7, §5.1, §9, §10
+  updated. Verified (Register): sidebar 200 → 80 → 200px by the trigger; collapsed, 9/9 icons visible, 0 labels, hover
+  tooltip "Workflow"; section click still shows its message; 390px starts collapsed (80px) and expands; page one
+  viewport high, table body scrolls, rows 32px, row click opens the popup, no horizontal scroll at 1440/800/390. CRM and
+  Configurator still have the horizontal menu, 0 console warnings, `npm run build` passes. Screenshots not retaken.
+- 2026-11-19: Requested sidebar/shell changes: Configurator uses a sidebar (its source has one); count badges next to
+  the name (expanded) / on the icon (collapsed); section icons only where the source has them (all three do; Configurator
+  ⌂ → HomeOutlined) and page-heading icons removed where the source title has none (Register, Configurator); smooth
+  animation; footer removed in all apps (`AppShell` `footer` prop and `Layout.footerPadding` gone); header bottom border
+  with a sidebar; collapsed width 40px (expanded 220px so "Архив предложений" + badge fits); toggle button at the left of
+  the header with its icon on the section-icon line; a click on empty collapsed-sidebar space expands it. Stutter
+  diagnosis (frame timing + CPU profile + trace, no screenshots): the table repainted on every frame (paint/layerize
+  ~12 ms/frame; with the table hidden, 17 ms frames), so the Sider now animates over the page and the content moves
+  once. Frames during a toggle (first 250 ms): before 33–67 ms with 3–7 dropped; now 17 ms except the first (dev) and
+  0–1 dropped (prod). Verified: toggle icon and all section icons centred at x 20 in both states; sidebar 220/40; badges
+  inside the label / on the icon within 40px; empty-area click expands, section click doesn't; header border = sidebar
+  edge line; no footer; content left 220/40; popups above the sidebar; rows 32px, page doesn't scroll; 390px starts
+  collapsed and overlays when expanded; CRM still has tabs; 0 console warnings; `npm run build` passes.
+- 2026-11-19: Requested: instant sidebar (no animation); collapsed-badge digits 1px too high; missing sidebar right
+  border; no tooltips anywhere; Material "Side Navigation" toggle icon; collapsed buttons 40 × 40 (were 32 × 40).
+  `sidebarTheme` (nested ConfigProvider: `motion: false`, `Menu.itemMarginInline` 0); Sider 220 / 41 with a real
+  `borderInlineEnd` (the inset shadow was painted over by the Menu's background); `inlineIndent` 13; icon =
+  Material Symbols side_navigation SVG (fonts.gstatic.com, Apache 2.0) via antd `Icon component`; badge cause found with
+  CDP `CSS.getMatchedStylesForNode`: antd Menu `.ant-menu-item-icon > * { line-height: 1 }` → CSS rule restoring
+  `--ant-badge-indicator-height-sm`; tooltips removed (antd Tooltips in shell/pages, ЗИП hint, Menu, sort hints, native
+  titles via `tableComponents`, `showTitle: false`, Badge `title=""`, Tag title, FormField). Verified: width per frame
+  220 → 41 (no intermediate values, 0 running animations); border 1px `colorSplit`, menu 40px inside it; items 40×40
+  (collapsed) / 219×40; toggle and section icons centred at x 20 in both states; badge text top −1px in both states
+  (line height 14px); 0 `.ant-tooltip` on hover and 0 non-empty `title` attributes in all 3 apps; truncated form error
+  has no tooltip; sorting, click-to-expand, rows 32px, popups, 390px overlay unchanged; 0 console warnings; build passes.
+- 2026-11-19: Requested: sidebar inner padding back with 40 × 40 buttons; a click outside the section buttons also
+  collapses the sidebar; no icons in page headings; demo switching between sections (same page, only the heading
+  changes). `sidebarTheme` keeps only `motion: false` (antd's 4px `itemMarginInline` is the padding); collapsed width
+  4 + 40 + 4 + 1 = 49; header `paddingInlineStart` 8; icons on x 24; Sider `onClick` toggles both ways; CRM heading icon
+  removed; `AppShell onSectionChange`; pages take `title`. Verified: collapsed items 40×40 at x 4, expanded 211×40 at
+  x 4, sider 49 / 220 with a 1px border, toggle and all section icons centred at x 24 in both states, collapsed badges
+  inside the 4–44 button; empty-area click collapses and expands; collapsed section click keeps it collapsed; section
+  switch: Register "Replacement proposals" → "Workflow", Configurator → "Прайс и цены", CRM "Контакты" → "Компании",
+  selected item follows, rows unchanged (211 / 28 / 37), no demo message, row popups still open; no heading icons;
+  0 console warnings; build passes.
+- 2026-11-19: Requested: the gaps between sidebar buttons hover and click like the adjacent button. Items are now 44px
+  with no vertical margin (`sidebarTheme`) and paint only their middle 40px (CSS: 2px padding-block, background-clip
+  content-box, radius 8px / 10px; menu padding-block 2px keeps the first button at y 60). Found on the way: the collapsed
+  "211" badge stuck out above its button into the gap (it was already 3px over the button above): antd gives the
+  collapsed icon wrapper and its icon `line-height: itemHeight` and the flex item stretched; fixed with `line-height: 1`
+  + `align-self: center`. Verified (Register, Configurator, both states): visible buttons unchanged (60–100, 104–144,
+  …; 211 / 40 wide), hit boxes touch (58–102, 102–146, …); `:hover` at y 101 → button 1, y 103 → button 2; clicks at
+  y 103 / 147 select buttons 2 / 3 without toggling the sidebar; an empty-area click still toggles; collapsed badge
+  centred on the icon's top-right corner (x 31, y 116.9) inside its button, digits at the same offset as expanded;
+  icons at x 24; instant toggle, section switching and no-tooltips checks unchanged; 0 console warnings.
+- 2026-11-19: Requested: restore the side padding next to the icon; collapsed badges on the buttons' top edge; toggle
+  icons Material "Left Panel Open" / "Left Panel Close". The padding was lost by my previous change: `background-clip:
+  content-box` also clipped the left/right padding (collapsed highlight only x 17–31). Now a transparent 2px
+  `border-block` + `background-clip: padding-box`. Badge `offset={[0, -6]}` in the collapsed state; icons downloaded from
+  fonts.gstatic.com (left_panel_open / left_panel_close, Apache 2.0). Verified (Register, Configurator): highlight
+  x 4–44 / 4–215, y 104–144 (13px each side of the icon); collapsed badge top 103.9 vs button top 104, inside x 4–44,
+  digits offset unchanged; toggle shows left_panel_open collapsed and left_panel_close expanded, centred at x 24; gaps
+  still hover/click the nearer button; 0 console warnings; build passes.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -426,4 +516,22 @@ npm run build -w antd-contacts   # one app
   and scale.
 - In a `Flex align="baseline"`, an image (no text baseline) aligns by its bottom edge, which puts a neighbouring
   text's baseline exactly on the image bottom, with no font metrics or `text-box` needed.
+- An antd `Layout.Sider` whose width animates while the content follows it re-lays out and repaints the content
+  every frame; with a table that's 33–67 ms frames. Animate only the Sider (absolute, over the page) and move the
+  content once.
+- antd Menu items have `overflow: hidden`, which clips a Badge on the icon in a collapsed sidebar.
+- In an inline-collapsed Menu, antd centres the icon in the column; to keep the same x when expanded, set
+  `inlineIndent` = icon left − `itemMarginInline`, and `collapsedIconSize` = `iconSize`.
+- Badge multi-digit counts use `paddingInline` (= `paddingXS`, 8) per side; "211" is 33px wide by default.
+- A nested `ConfigProvider theme={{ token: { motion: false } }}` makes a Sider (and its Menu) switch instantly while
+  the rest of the app keeps its motion.
+- An inset `box-shadow` on a `Layout.Sider` is hidden by the Menu's background; use a real border.
+- antd Menu `.ant-menu-item-icon > * { line-height: 1 }` also hits a Badge count when the Badge wraps the icon.
+- antd's sorter sets a native `title` on sortable header cells of `ellipsis` columns *after* `onHeaderCell`, so
+  `onHeaderCell: () => ({ title: '' })` doesn't help; a `components.header.cell` that drops `title` does.
+- antd Menu item margins (`itemMarginBlock`) leave dead strips between items. For a gap that still belongs to the
+  items, use taller items with no margin, a transparent `border-block` and `background-clip: padding-box`
+  (`padding-block` + `content-box` also clips away the side padding).
+- A Badge used as a collapsed menu item's icon is stretched to the item height (antd's `line-height: itemHeight` on
+  the wrapper and the icon, plus flex stretch), so its count sits at the item's top edge.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

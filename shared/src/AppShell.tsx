@@ -1,9 +1,11 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import Icon from '@ant-design/icons';
 import {
   App as AntApp,
   Avatar,
   Badge,
   Button,
+  ConfigProvider,
   Dropdown,
   Flex,
   Grid,
@@ -12,22 +14,69 @@ import {
   Layout,
   Menu,
   Space,
-  Tooltip,
   Typography,
   theme,
 } from 'antd';
 import type { MenuProps } from 'antd';
-import { BellOutlined, LogoutOutlined, SearchOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  BellOutlined,
+  LogoutOutlined,
+  SearchOutlined,
+  SettingOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import defaultLogo from '../assets/logo.svg';
 import { useSharedStrings } from './i18n';
+import { sidebarTheme } from './theme';
 
-const { Header, Content, Footer } = Layout;
+const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
 
 /** Logo height in the header (px); the width follows the SVG's aspect ratio (92×24). */
 const LOGO_HEIGHT = 24;
 /** Application name next to the logo: Regular Italic at this font size (px). */
 const PRODUCT_NAME_FONT_SIZE = 25;
+/**
+ * Sidebar widths (px), including its 1px right border. Expanded: fits "Архив предложений" + its count badge.
+ * Collapsed: 4px inner padding (antd's itemMarginInline) + a 40px button + 4px + the border, so the collapsed section
+ * buttons are 40 × 40px squares.
+ */
+const SIDER_WIDTH = 220;
+const SIDER_ITEM_INSET = 4;
+const SIDER_BUTTON_SIZE = 40;
+const SIDER_COLLAPSED_WIDTH = SIDER_ITEM_INSET + SIDER_BUTTON_SIZE + SIDER_ITEM_INSET + 1;
+/**
+ * Sidebar icon line. Collapsed, antd centres the 14px icon in the 48px menu column (x 17–31, centre 24 = the centre of
+ * the 40px button at x 4–44). Expanded, the icon starts at itemMarginInline (4) + inlineIndent, so inlineIndent 13 keeps
+ * it at the same x in both states. The header toggle button (32px, starting at x 8) has its icon on the same centre.
+ */
+const SIDER_INLINE_INDENT = 13;
+const SIDER_TOGGLE_OFFSET = 8;
+/** Below md the expanded sidebar overlays the page, so it is drawn above the content. */
+const SIDER_Z_INDEX = 10;
+
+/**
+ * Material Symbols "left_panel_open" / "left_panel_close" (outlined, 24px; Apache License 2.0), as antd custom icons.
+ * The toggle shows "open" while the sidebar is collapsed and "close" while it is expanded.
+ */
+const PANEL_FRAME =
+  'M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-80v-560H200v560h120Zm80 0h360v-560H400v560Zm-80 0H200h120Z';
+const LeftPanelOpenSvg = () => (
+  <svg viewBox="0 -960 960 960" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+    <path d={`M500-640v320l160-160-160-160Z${PANEL_FRAME}`} />
+  </svg>
+);
+const LeftPanelCloseSvg = () => (
+  <svg viewBox="0 -960 960 960" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+    <path d={`M660-320v-320L500-480l160 160Z${PANEL_FRAME}`} />
+  </svg>
+);
+/**
+ * Collapsed sidebar: the count badge sits on the icon's top-right corner by default (centred on it). Move it up so its
+ * top edge is on the button's top edge: (button 40 − icon 14) / 2 = 13px from button top to icon top, minus half the
+ * badge height (7) = 6px up.
+ */
+const COLLAPSED_BADGE_OFFSET: [number, number] = [0, -6];
 
 export interface ShellSection {
   key: string;
@@ -44,8 +93,20 @@ export interface AppShellProps {
   headerExtra?: ReactNode;
   logoSrc?: string;
   logoAlt?: string;
+  /**
+   * Top-level navigation pattern. Keep the source app's pattern: `"tabs"` (default) = horizontal tab bar under the
+   * header; `"sidebar"` = collapsible left sidebar (antd `Layout.Sider`, 220px / 40px collapsed, no animation). The
+   * toggle button is the first item in the header; a click in the sidebar outside the section items also toggles it.
+   * Collapsed, only the section icons stay visible (count badge on the icon). No tooltips anywhere.
+   */
+  navigation?: 'tabs' | 'sidebar';
   sections: ShellSection[];
   activeSection: string;
+  /**
+   * Called with the section key when the user picks another section. Without it, a section click only shows a
+   * "not part of this demo" message.
+   */
+  onSectionChange?: (key: string) => void;
   /** Global search placeholder, e.g. "Поиск по всей CRM…". */
   searchPlaceholder: string;
   user: { name: string; initials: string };
@@ -53,16 +114,16 @@ export interface AppShellProps {
   userMenuExtra?: MenuProps['items'];
   onUserMenuClick?: (key: string) => void;
   notificationCount?: number;
-  footer: { left: ReactNode; right?: ReactNode };
   children: ReactNode;
 }
 
 /**
  * Standard application shell for all apps:
  *   Header (56px): logo + product name | global search | notifications, user menu, Settings button
- *   horizontal section Menu (continuous underline, see antd-overrides.css)
- *   Content (fills the space; pages manage their own scrolling)
- *   Footer
+ *   navigation="tabs":    horizontal section Menu (continuous underline, see antd-overrides.css), then Content
+ *   navigation="sidebar": header with a bottom border and the toggle button first; collapsible Sider with an inline
+ *                         section Menu on the left, Content on the right
+ *   Content fills the rest; pages manage their own scrolling. There is no footer.
  * The layout is exactly one viewport high.
  */
 export function AppShell({
@@ -70,20 +131,22 @@ export function AppShell({
   headerExtra,
   logoSrc = defaultLogo,
   logoAlt = 'Dynamics Scientific',
+  navigation = 'tabs',
   sections,
   activeSection,
+  onSectionChange,
   searchPlaceholder,
   user,
   userMenuExtra,
   onUserMenuClick,
   notificationCount = 0,
-  footer,
   children,
 }: AppShellProps) {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
   const { message } = AntApp.useApp();
   const t = useSharedStrings();
+  const [siderCollapsed, setSiderCollapsed] = useState(false);
 
   const notInDemo = (what: string) => message.info(t.notInDemo(what));
   const searchLabel = searchPlaceholder.replace(/[….]+$/, '');
@@ -95,19 +158,41 @@ export function AppShell({
     { key: 'logout', label: t.logout, icon: <LogoutOutlined />, danger: true },
   ];
 
+  const isSidebar = navigation === 'sidebar';
+  // title="": no native tooltip (antd sets the count as the badge's title by default).
+  const countBadge = (count: number, children?: ReactNode, offset?: [number, number]) => (
+    <Badge count={count} overflowCount={9999} size="small" color={token.colorPrimary} showZero title="" offset={offset}>
+      {children}
+    </Badge>
+  );
+
   const menuItems: MenuProps['items'] = sections.map((s) => ({
     key: s.key,
-    icon: s.icon,
+    // Collapsed sidebar: the label is hidden, so the count badge moves onto the icon.
+    icon:
+      isSidebar && siderCollapsed && s.count !== undefined ? countBadge(s.count, s.icon, COLLAPSED_BADGE_OFFSET) : s.icon,
     label:
       s.count === undefined ? (
         s.label
       ) : (
         <>
-          {s.label}{' '}
-          <Badge count={s.count} overflowCount={9999} size="small" color={token.colorPrimary} showZero />
+          {s.label} {countBadge(s.count)}
         </>
       ),
   }));
+
+  const sectionClick: MenuProps['onClick'] = ({ key }) => {
+    const section = sections.find((s) => s.key === key);
+    if (key === activeSection || !section) return;
+    if (onSectionChange) onSectionChange(key);
+    else notInDemo(t.section(section.label));
+  };
+
+  // Content fills the rest of the viewport (there is no footer); pages scroll their own lists.
+  const content = (
+    <Content style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>{children}</Content>
+  );
+  const splitLine = `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`;
 
   return (
     <Layout style={{ height: '100dvh' }}>
@@ -120,8 +205,20 @@ export function AppShell({
           gap: token.marginSM,
           background: token.colorBgContainer,
           paddingInline: token.paddingLG,
+          // Sidebar layout: the toggle button comes first, its icon on the sidebar's icon line (x 20), and the header
+          // gets the same bottom border as the sidebar's right border.
+          ...(isSidebar && { paddingInlineStart: SIDER_TOGGLE_OFFSET, borderBottom: splitLine }),
         }}
       >
+        {isSidebar && (
+          <Button
+            type="text"
+            icon={<Icon component={siderCollapsed ? LeftPanelOpenSvg : LeftPanelCloseSvg} />}
+            aria-label={siderCollapsed ? t.expandNav : t.collapseNav}
+            aria-expanded={!siderCollapsed}
+            onClick={() => setSiderCollapsed((c) => !c)}
+          />
+        )}
         {/* Flex (not Space) so the logo and the name sit side by side without wrapper divs.
             align="baseline": the logo has no text baseline, so flexbox uses its bottom edge; the name's baseline
             therefore sits exactly on the logo's bottom edge (descenders such as "p" hang below it). */}
@@ -159,24 +256,20 @@ export function AppShell({
             onSearch={(value) => value && notInDemo(t.globalSearch(value))}
           />
         ) : (
-          <Tooltip title={searchLabel}>
-            <Button
-              type="text"
-              icon={<SearchOutlined />}
-              aria-label={searchLabel}
-              style={{ marginInlineEnd: token.marginSM }}
-              onClick={() => notInDemo(searchLabel)}
-            />
-          </Tooltip>
+          <Button
+            type="text"
+            icon={<SearchOutlined />}
+            aria-label={searchLabel}
+            style={{ marginInlineEnd: token.marginSM }}
+            onClick={() => notInDemo(searchLabel)}
+          />
         )}
 
         <Space size="small" style={{ marginInlineStart: 'auto' }}>
           {screens.md && headerExtra /* hidden on narrow screens, like the search field */}
-          <Tooltip title={t.notifications}>
-            <Badge count={notificationCount} size="small">
-              <Button type="text" icon={<BellOutlined />} aria-label={t.notifications} />
-            </Badge>
-          </Tooltip>
+          <Badge count={notificationCount} size="small" title="">
+            <Button type="text" icon={<BellOutlined />} aria-label={t.notifications} />
+          </Badge>
 
           <Dropdown
             trigger={['click']}
@@ -205,39 +298,76 @@ export function AppShell({
         </Space>
       </Header>
 
-      {/* Side padding lives on a wrapper, not on the Menu: antd's overflow ("…") logic measures the Menu
-          without subtracting its own padding and would push items past the right edge on narrow screens.
-          The wrapper also draws the full-width bottom line (same colorSplit as the Menu's own border). */}
-      <div
-        style={{
-          paddingInline: token.paddingLG,
-          background: token.colorBgContainer,
-          borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`,
-        }}
-      >
-        <Menu
-          mode="horizontal"
-          selectedKeys={[activeSection]}
-          items={menuItems}
-          style={{ borderBottom: 'none' }}
-          onClick={({ key }) => {
-            const section = sections.find((s) => s.key === key);
-            if (key !== activeSection && section) notInDemo(t.section(section.label));
-          }}
-        />
-      </div>
-
-      {/* Content fills the space between the menu and the footer; pages scroll their own lists. */}
-      <Content style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        {children}
-      </Content>
-
-      <Footer>
-        <Flex justify="space-between" wrap gap="small">
-          <Text type="secondary">{footer.left}</Text>
-          {footer.right && <Text type="secondary">{footer.right}</Text>}
-        </Flex>
-      </Footer>
+      {isSidebar ? (
+        // Sidebar pattern (the source app had a left sidebar). It switches instantly (sidebarTheme: motion off). The Sider
+        // is absolute (zIndex) so that below md the expanded sidebar can overlay the page; the content sits beside it
+        // via marginInlineStart. minHeight 0 keeps the page one viewport high so only the lists scroll.
+        <Layout hasSider style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+          <ConfigProvider theme={sidebarTheme}>
+            <Sider
+              theme="light"
+              width={SIDER_WIDTH}
+              collapsedWidth={SIDER_COLLAPSED_WIDTH}
+              collapsible
+              trigger={null /* the toggle button lives in the header */}
+              collapsed={siderCollapsed}
+              onCollapse={setSiderCollapsed}
+              breakpoint="md" /* starts collapsed on narrow screens; the toggle still expands it */
+              style={{
+                position: 'absolute',
+                insetBlock: 0,
+                insetInlineStart: 0,
+                zIndex: SIDER_Z_INDEX,
+                // Right border: the same 1px colorSplit line as the header's bottom border. It is part of the Sider's
+                // width (border-box), so the collapsed icon column is exactly 40px.
+                borderInlineEnd: splitLine,
+                cursor: 'pointer', // the empty sidebar area is a toggle
+              }}
+              // A click anywhere in the sidebar except on a section item toggles it (expands or collapses).
+              onClick={(e) => {
+                if (!(e.target as HTMLElement).closest('.ant-menu-item')) setSiderCollapsed((c) => !c);
+              }}
+            >
+              <Menu
+                mode="inline"
+                inlineIndent={SIDER_INLINE_INDENT}
+                tooltip={false /* no tooltips: collapsed items show only the icon */}
+                selectedKeys={[activeSection]}
+                items={menuItems}
+                style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', borderInlineEnd: 'none' }}
+                onClick={sectionClick}
+              />
+            </Sider>
+          </ConfigProvider>
+          {/* The content sits beside the sidebar. Below md the expanded sidebar overlays the page instead of squeezing
+              it. minWidth 0: wide tables scroll inside the page. */}
+          <Layout
+            style={{
+              minHeight: 0,
+              minWidth: 0,
+              marginInlineStart: siderCollapsed || !screens.md ? SIDER_COLLAPSED_WIDTH : SIDER_WIDTH,
+            }}
+          >
+            {content}
+          </Layout>
+        </Layout>
+      ) : (
+        <>
+          {/* Side padding lives on a wrapper, not on the Menu: antd's overflow ("…") logic measures the Menu
+              without subtracting its own padding and would push items past the right edge on narrow screens.
+              The wrapper also draws the full-width bottom line (same colorSplit as the Menu's own border). */}
+          <div style={{ paddingInline: token.paddingLG, background: token.colorBgContainer, borderBottom: splitLine }}>
+            <Menu
+              mode="horizontal"
+              selectedKeys={[activeSection]}
+              items={menuItems}
+              style={{ borderBottom: 'none' }}
+              onClick={sectionClick}
+            />
+          </div>
+          {content}
+        </>
+      )}
     </Layout>
   );
 }

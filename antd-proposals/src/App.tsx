@@ -34,6 +34,7 @@ const roles = ['Administrator', 'Reviewer', 'Viewer'];
 export default function App() {
   const { message } = AntApp.useApp();
   const [role, setRole] = useState('Administrator');
+  const [section, setSection] = useState('proposals');
 
   const previewAs: MenuProps['items'] = [
     {
@@ -46,8 +47,10 @@ export default function App() {
   return (
     <AppShell
       productName="Replacement Register"
+      navigation="sidebar" /* the source app (img_design_2.png) has a left sidebar */
       sections={sections}
-      activeSection="proposals"
+      activeSection={section}
+      onSectionChange={setSection}
       searchPlaceholder="Search proposal, part number, manufacturer…"
       user={{ name: 'Local administrator', initials: 'LA' }}
       userMenuExtra={previewAs}
@@ -57,9 +60,9 @@ export default function App() {
         message.info(`Previewing as ${key.slice(5)}`);
       }}
       notificationCount={1}
-      footer={{ left: `Dynamics Register © ${new Date().getFullYear()}` }}
     >
-      <ProposalsPage />
+      {/* Demo navigation: every section shows the same page structure; only the heading changes. */}
+      <ProposalsPage title={section === 'proposals' ? undefined : sections.find((s) => s.key === section)?.label} />
     </AppShell>
   );
 }

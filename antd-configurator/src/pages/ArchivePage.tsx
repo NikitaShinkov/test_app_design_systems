@@ -1,12 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
-import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Space, Table, Tag, Tooltip, Typography } from 'antd';
+import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Space, Table, Tag, Typography } from 'antd';
 import type { TableProps } from 'antd';
 import { ArrowRightOutlined, HomeOutlined, ReloadOutlined } from '@ant-design/icons';
-import { useTableScrollY } from '@dynamics/ui-shared';
-import { formatUtc, kindHints, kindLabels, offers as initialOffers } from '../data/offers';
+import { tableComponents, useTableScrollY } from '@dynamics/ui-shared';
+import { formatUtc, kindLabels, offers as initialOffers } from '../data/offers';
 import type { Offer, OfferRequisites } from '../data/offers';
 import { OfferModal } from '../components/OfferModal';
-import { ArchiveIcon } from '../icons';
 
 const { Title, Text, Link } = Typography;
 
@@ -37,7 +36,8 @@ function plural(n: number, [one, few, many]: [string, string, string]) {
   return many;
 }
 
-export default function ArchivePage() {
+/** `title`: the page heading (the active section's name; the page structure is the same for every section). */
+export default function ArchivePage({ title = 'Архив предложений' }: { title?: string }) {
   const { message } = AntApp.useApp();
   const [data, setData] = useState<Offer[]>(initialOffers);
   const [query, setQuery] = useState('');
@@ -70,7 +70,7 @@ export default function ArchivePage() {
     const sortable = (field: SortField) => ({
       key: field,
       title: titles[field],
-      ellipsis: true,
+      ellipsis: { showTitle: false }, // no native title tooltips
       sorter: compare[field],
       sortOrder: sort?.field === field ? sort.order : null,
     });
@@ -95,9 +95,7 @@ export default function ArchivePage() {
         ...sortable('kind'),
         width: 110,
         render: (_, o) => (
-          <Tooltip title={kindHints[o.kind]}>
-            <Tag>{kindLabels[o.kind]}</Tag>
-          </Tooltip>
+          <Tag>{kindLabels[o.kind]}</Tag>
         ),
       },
       { ...sortable('version'), width: 100, dataIndex: 'version' },
@@ -125,6 +123,8 @@ export default function ArchivePage() {
     () => (
       <Table<Offer>
         ref={tableRef}
+        showSorterTooltip={false /* no tooltips anywhere */}
+        components={tableComponents /* header cells without native title tooltips */}
         rowKey="id"
         columns={columns}
         dataSource={filtered}
@@ -173,12 +173,10 @@ export default function ArchivePage() {
       >
         <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
           <Flex justify="space-between" align="center" wrap gap="medium">
-            <Space size="medium" align="center">
-              <ArchiveIcon style={{ fontSize: 24 }} />
-              <Title level={3} style={{ margin: 0 }}>
-                Архив предложений
-              </Title>
-            </Space>
+            {/* No icon in page headings (only the section buttons have icons). */}
+            <Title level={3} style={{ margin: 0 }}>
+              {title}
+            </Title>
             <Space wrap>
               <Input.Search
                 placeholder="Поиск: предложения…"
@@ -190,9 +188,7 @@ export default function ArchivePage() {
                 }}
                 style={{ width: 280 }}
               />
-              <Tooltip title="Обновить">
-                <Button icon={<ReloadOutlined />} aria-label="Обновить" onClick={reload} />
-              </Tooltip>
+              <Button icon={<ReloadOutlined />} aria-label="Обновить" onClick={reload} />
             </Space>
           </Flex>
 

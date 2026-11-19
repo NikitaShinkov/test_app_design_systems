@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AppShell } from '@dynamics/ui-shared';
 import type { ShellSection } from '@dynamics/ui-shared';
 import ArchivePage from './pages/ArchivePage';
@@ -11,16 +12,19 @@ const sections: ShellSection[] = [
 ];
 
 export default function App() {
+  const [section, setSection] = useState('archive');
   return (
     <AppShell
       productName="Configurator"
+      navigation="sidebar" /* the source app (img_design_3_1.png) has a left sidebar */
       sections={sections}
-      activeSection="archive"
+      activeSection={section}
+      onSectionChange={setSection}
       searchPlaceholder="Поиск по COMPACS…"
       user={{ name: 'Демо-пользователь', initials: 'ДП' }}
-      footer={{ left: `Dynamics Configurator © ${new Date().getFullYear()}` }}
     >
-      <ArchivePage />
+      {/* Demo navigation: every section shows the same page structure; only the heading changes. */}
+      <ArchivePage title={section === 'archive' ? undefined : sections.find((s) => s.key === section)?.label} />
     </AppShell>
   );
 }

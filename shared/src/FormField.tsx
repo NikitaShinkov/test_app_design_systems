@@ -51,7 +51,7 @@ interface FormFieldProps {
  *
  * The error sits inside the <label>, under the label text. With an error the two-line block is
  * exactly `controlHeight − 4` px high (2 × half of it per line) and vertically centred on the input.
- * The error is one line within the label column; if it does not fit it ends with "…" and shows a tooltip.
+ * The error is one line within the label column; if it does not fit it ends with "…" (no tooltip).
  *
  * Composed only of antd primitives. The field is bound with `Form.Item noStyle`, so antd's own
  * error list (which always sits under the input) is not rendered.
@@ -76,7 +76,7 @@ export function FormField({ formName, name, label, rules, error, children }: For
           <Text
             type="danger"
             role="alert"
-            ellipsis={{ tooltip: error }}
+            ellipsis
             // inline-size containment: the message's own width is ignored when sizing the label column,
             // so the column is as wide as the widest label text only.
             style={{ display: 'block', contain: 'inline-size', fontSize: token.fontSizeSM, lineHeight }}

@@ -8,12 +8,11 @@ import {
   Input,
   Space,
   Table,
-  Tooltip,
   Typography,
 } from 'antd';
 import type { BreadcrumbProps, TableProps } from 'antd';
-import { useTableScrollY } from '@dynamics/ui-shared';
-import { ContactsOutlined, ExportOutlined, HomeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { tableComponents, useTableScrollY } from '@dynamics/ui-shared';
+import { ExportOutlined, HomeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { contacts as initialContacts } from '../data/contacts';
 import type { Contact } from '../data/contacts';
 import { ContactFormModal } from '../components/ContactFormModal';
@@ -59,7 +58,8 @@ const normalize = (v: ContactFormValues): ContactFormValues => ({
   position: v.position?.trim() || undefined,
 });
 
-export default function ContactsPage() {
+/** `title`: the page heading (the active section's name; the page structure is the same for every section). */
+export default function ContactsPage({ title = 'Контакты' }: { title?: string }) {
   const { message } = AntApp.useApp();
   const [data, setData] = useState<Contact[]>(initialContacts);
   const [view, setView] = useState<ViewKey>('all');
@@ -99,7 +99,7 @@ export default function ContactsPage() {
       title: fieldTitles[field],
       dataIndex: field,
       key: field,
-      ellipsis: true,
+      ellipsis: { showTitle: false }, // no native title tooltips
       sorter: compareBy(field),
       sortOrder: sort?.field === field ? sort.order : null,
     });
@@ -125,12 +125,10 @@ export default function ContactsPage() {
         width: 48,
         align: 'center',
         render: (_, record) => (
-          <Tooltip title="Открыть карточку">
-            {/* Link (not Button) keeps the row at one text line = 30px. */}
-            <Link role="button" aria-label={`Открыть ${record.name}`} onClick={() => setEditing(record)}>
-              <ExportOutlined />
-            </Link>
-          </Tooltip>
+          // Link (not Button) keeps the row at one text line (32px).
+          <Link role="button" aria-label={`Открыть ${record.name}`} onClick={() => setEditing(record)}>
+            <ExportOutlined />
+          </Link>
         ),
       },
     ];
@@ -145,6 +143,8 @@ export default function ContactsPage() {
     () => (
       <Table<Contact>
         ref={tableRef}
+        showSorterTooltip={false /* no tooltips anywhere */}
+        components={tableComponents /* header cells without native title tooltips */}
         rowKey="id"
         columns={columns}
         dataSource={filtered}
@@ -206,12 +206,10 @@ export default function ContactsPage() {
       >
         <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
           <Flex justify="space-between" align="center" wrap gap="medium">
-            <Space size="medium" align="center">
-              <ContactsOutlined style={{ fontSize: 24 }} />
-              <Title level={3} style={{ margin: 0 }}>
-                Контакты
-              </Title>
-            </Space>
+            {/* No icon in page headings (only the section buttons have icons). */}
+            <Title level={3} style={{ margin: 0 }}>
+              {title}
+            </Title>
 
             <Space wrap>
               <Input.Search
@@ -224,9 +222,7 @@ export default function ContactsPage() {
                 }}
                 style={{ width: 280 }}
               />
-              <Tooltip title="Обновить">
-                <Button icon={<ReloadOutlined />} aria-label="Обновить" onClick={reload} />
-              </Tooltip>
+              <Button icon={<ReloadOutlined />} aria-label="Обновить" onClick={reload} />
               <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
                 Создать контакт
               </Button>

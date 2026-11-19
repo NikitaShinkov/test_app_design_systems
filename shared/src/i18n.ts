@@ -5,6 +5,8 @@ export type Lang = 'ru' | 'en';
 /** UI strings used by the shared layer (shell + validation). App-specific texts stay in the apps. */
 export interface SharedStrings {
   settings: string;
+  expandNav: string;
+  collapseNav: string;
   profile: string;
   logout: string;
   notifications: string;
@@ -20,6 +22,8 @@ export interface SharedStrings {
 export const strings: Record<Lang, SharedStrings> = {
   ru: {
     settings: 'Настройки',
+    expandNav: 'Развернуть меню',
+    collapseNav: 'Свернуть меню',
     profile: 'Профиль',
     logout: 'Выйти',
     notifications: 'Уведомления',
@@ -31,6 +35,8 @@ export const strings: Record<Lang, SharedStrings> = {
   },
   en: {
     settings: 'Settings',
+    expandNav: 'Expand menu',
+    collapseNav: 'Collapse menu',
     profile: 'Profile',
     logout: 'Log out',
     notifications: 'Notifications',

@@ -26,15 +26,35 @@ export const appTheme: ThemeConfig = {
     Layout: {
       bodyBg: '#ffffff', // --ant-layout-body-bg
       headerHeight: 56, // --ant-layout-header-height
-      footerPadding: '8px 24px 8px', // --ant-layout-footer-padding
     },
     Menu: {
       itemPaddingInline: 8, // --ant-menu-item-padding-inline
       horizontalLineHeight: '32px', // --ant-menu-horizontal-line-height
+      // Sidebar: same icon size collapsed and expanded (antd: 16 / 14), so icons don't resize while it animates.
+      collapsedIconSize: 14,
+    },
+    Badge: {
+      // Multi-digit counts: 4px side padding (antd: 8) so "211" fits on a sidebar icon in the 40px collapsed column.
+      paddingInline: 4,
     },
     Table: {
       // 4.5px + 22px line height + 4.5px + 1px row border = 32px row height
       cellPaddingBlock: 4.5,
     },
+  },
+};
+
+/**
+ * Sidebar sub-theme (AppShell navigation="sidebar"), applied by a nested ConfigProvider around the Sider; it inherits
+ * appTheme and only adds motion off: the sidebar expands and collapses instantly (no width / label / icon animation).
+ * The menu keeps antd's 4px item inset (itemMarginInline) as the sidebar's inner padding; the collapsed width is set
+ * so that the buttons inside it are 40 × 40px (AppShell).
+ * Menu items have no vertical margin and are 44px tall: the 4px gap between the 40px buttons is drawn inside the items
+ * (antd-overrides.css: 2px padding-block + background-clip), so hovering or clicking the gap hits the adjacent button.
+ */
+export const sidebarTheme: ThemeConfig = {
+  token: { motion: false },
+  components: {
+    Menu: { itemMarginBlock: 0, itemHeight: 44 },
   },
 };

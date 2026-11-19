@@ -2,12 +2,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
 import type { TableProps, TagProps } from 'antd';
 import { CheckOutlined, HomeOutlined, PlusOutlined } from '@ant-design/icons';
-import { useTableScrollY } from '@dynamics/ui-shared';
+import { tableComponents, useTableScrollY } from '@dynamics/ui-shared';
 import { decisionLabels, orderOptions, productOptions, proposals as initialProposals, workflowOf } from '../data/proposals';
 import type { Decision, Proposal, WorkflowStage } from '../data/proposals';
 import { ReviewProposalModal } from '../components/ReviewProposalModal';
 import type { ReviewResult } from '../components/ReviewProposalModal';
-import { ProposalsIcon } from '../icons';
 
 const { Title, Text, Link } = Typography;
 
@@ -57,7 +56,8 @@ const haystack = (p: Proposal) =>
     .join(' ')
     .toLowerCase();
 
-export default function ProposalsPage() {
+/** `title`: the page heading (the active section's name; the page structure is the same for every section). */
+export default function ProposalsPage({ title = 'Replacement proposals' }: { title?: string }) {
   const { message } = AntApp.useApp();
   const [data, setData] = useState<Proposal[]>(initialProposals);
   const [query, setQuery] = useState('');
@@ -116,7 +116,7 @@ export default function ProposalsPage() {
     const sortable = (field: SortField) => ({
       key: field,
       title: sortTitles[field],
-      ellipsis: true,
+      ellipsis: { showTitle: false }, // no native title tooltips
       sorter: (a: Proposal, b: Proposal) => sortValue[field](a).localeCompare(sortValue[field](b), 'en'),
       sortOrder: sort?.field === field ? sort.order : null,
     });
@@ -124,7 +124,7 @@ export default function ProposalsPage() {
       { ...sortable('id'), width: 110, render: (_, p) => <Link onClick={() => openReview(p)}>{p.id}</Link> },
       { ...sortable('order'), width: 150, dataIndex: 'order' },
       { ...sortable('productDecimal'), width: 210, render: (_, p) => <TwoPart main={p.productDecimal} sub={p.product} /> },
-      { key: 'position', title: 'Position', width: 90, ellipsis: true, render: (_, p) => p.position ?? '—' },
+      { key: 'position', title: 'Position', width: 90, ellipsis: { showTitle: false }, render: (_, p) => p.position ?? '—' },
       { ...sortable('original'), width: 200, render: (_, p) => <TwoPart main={p.original.part} sub={p.original.maker} /> },
       { ...sortable('alternative'), width: 260, render: (_, p) => <TwoPart main={p.alternative.part} sub={p.alternative.maker} /> },
       { ...sortable('supplier'), width: 170, dataIndex: 'supplier' },
@@ -141,7 +141,7 @@ export default function ProposalsPage() {
         render: (_, p) => {
           const w = workflowOf(p);
           return (
-            <Tag color={stageColor[w.stage]} title={w.label}>
+            <Tag color={stageColor[w.stage]}>
               {w.label}
             </Tag>
           );
@@ -170,6 +170,8 @@ export default function ProposalsPage() {
     () => (
       <Table<Proposal>
         ref={tableRef}
+        showSorterTooltip={false /* no tooltips anywhere */}
+        components={tableComponents /* header cells without native title tooltips */}
         rowKey="id"
         columns={columns}
         dataSource={filtered}
@@ -207,12 +209,10 @@ export default function ProposalsPage() {
       >
         <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
           <Flex justify="space-between" align="center" wrap gap="medium">
-            <Space size="medium" align="center">
-              <ProposalsIcon style={{ fontSize: 24 }} />
-              <Title level={3} style={{ margin: 0 }}>
-                Replacement proposals
-              </Title>
-            </Space>
+            {/* No icon in page headings (only the section buttons have icons). */}
+            <Title level={3} style={{ margin: 0 }}>
+              {title}
+            </Title>
             <Space wrap>
               <Button icon={<CheckOutlined />} onClick={reviewNext}>
                 Review next

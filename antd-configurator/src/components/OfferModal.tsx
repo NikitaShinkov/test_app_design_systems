@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Card, Descriptions, Divider, Flex, Form, Input, Modal, Space, Table, Tag, Typography } from 'antd';
 import type { TableProps } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
-import { FormField, FormFields, useSubmitValidation } from '@dynamics/ui-shared';
+import { FormField, FormFields, tableComponents, useSubmitValidation } from '@dynamics/ui-shared';
 import { formatUtc, kindLabels, requisitesSummary } from '../data/offers';
 import type { Offer, OfferRequisites, OfferVersion } from '../data/offers';
 
@@ -29,7 +29,7 @@ const historyColumns: TableProps<OfferVersion>['columns'] = [
   {
     key: 'requisites',
     title: 'Реквизиты',
-    ellipsis: true,
+    ellipsis: { showTitle: false }, // no native title tooltips
     // One line (32px rows): name + grey summary of the optional requisites.
     render: (_, v) => (
       <>
@@ -157,6 +157,7 @@ export function OfferModal({ offer, open, onSave, onClose }: OfferModalProps) {
             >
               <Table<OfferVersion>
                 rowKey="version"
+                components={tableComponents /* no native title tooltips */}
                 columns={historyColumns}
                 dataSource={offer.history}
                 pagination={false}

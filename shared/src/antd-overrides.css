@@ -21,3 +21,56 @@
 .ant-table-wrapper .ant-table-tbody > tr > td .ant-tag {
   vertical-align: top;
 }
+
+/*
+ * Collapsed sidebar (AppShell navigation="sidebar"): a section's count badge moves onto its icon (top-right
+ * corner, like the header bell). antd clips menu items (`overflow: hidden`, for label ellipsis), which cuts the
+ * badge off in the 40px column. Collapsed items have no visible label, so let them overflow. No token for this.
+ */
+.ant-layout-sider .ant-menu.ant-menu-inline-collapsed > .ant-menu-item {
+  overflow: visible;
+}
+
+/*
+ * Collapsed sidebar badge text: antd's Menu sets `line-height: 1` on every child of the item icon
+ * (`.ant-menu-item .ant-menu-item-icon > *`, 3 classes). With the Badge wrapping the icon, that rule also hits the
+ * count, so its digits sat 1px higher than in the expanded sidebar. Restore the Badge's own line height (its height
+ * token). Selector: 2 classes more than antd's. No token for this.
+ */
+.ant-layout-sider .ant-menu .ant-menu-item .ant-menu-item-icon > .ant-badge-count-sm {
+  line-height: var(--ant-badge-indicator-height-sm);
+}
+
+/*
+ * Sidebar buttons have no dead gap between them. sidebarTheme makes the menu items 44px tall with no vertical margin
+ * (antd: 40px + 4px margin, which left a 4px strip that was neither hovered nor clickable). Here each item gets a 2px
+ * transparent border at the top and bottom and paints its background (hover / selected) only inside the border
+ * (padding-box: the side padding next to the icon stays part of the button), so the visible button is still 40px with
+ * a 4px gap, but the gap belongs to the adjacent buttons: hovering it highlights the nearer button and clicking it
+ * opens that section. The vertical corner radius is increased by the 2px border, so the clipped background keeps
+ * antd's 8px corners. The menu's 2px padding keeps the first button where it was.
+ * (content-box clipping was wrong: it also cut off the side padding.) No token covers the hit area.
+ * Selectors: one class more than antd's inline-menu item rules.
+ */
+.ant-layout-sider .ant-menu.ant-menu-root {
+  padding-block: 2px;
+}
+.ant-layout-sider .ant-menu.ant-menu-root > .ant-menu-item {
+  border-block: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: var(--ant-menu-item-border-radius) / calc(var(--ant-menu-item-border-radius) + 2px);
+}
+
+/*
+ * Collapsed sidebar badge position: antd gives the collapsed item's icon wrapper `line-height: itemHeight` (to centre a
+ * bare icon; also on the icon inside it), and as a flex item it is stretched to the item height. When the Badge is that wrapper, it becomes 44px
+ * tall and the count sits at the item's top edge, above the button. With the icon's own line height and no stretching
+ * the wrapper is icon-sized, so the count sits on the icon's top-right corner, inside the 40 × 40 button. No token.
+ */
+.ant-layout-sider .ant-menu.ant-menu-inline-collapsed > .ant-menu-item .ant-badge.ant-menu-item-icon {
+  line-height: 1;
+  align-self: center;
+}
+.ant-layout-sider .ant-menu.ant-menu-inline-collapsed > .ant-menu-item .ant-badge.ant-menu-item-icon > .anticon {
+  line-height: 1; /* antd gives the collapsed icon itself line-height: itemHeight as well */
+}
