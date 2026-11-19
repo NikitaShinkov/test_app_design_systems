@@ -69,7 +69,7 @@ logo, and a shared folder (not copies).
   `--ant-font-family` starts with `'Inter Variable'`.
 - **Screenshots: do not generate any** (not `screenshots/`, not visual checks) unless the user explicitly asks.
   Verify with computed styles and DOM measurements instead. `screenshots/` holds the desktop (1440×900) main pages and
-  popups of the three apps, taken on 2026-11-17 at the user's request. The old `docs/` folder was deleted.
+  popups of the three apps, retaken on 2026-11-19 at the user's request. The old `docs/` folder was deleted.
 - Shell = `AppShell` from `shared` (each app passes `productName`, `sections`, `activeSection`, search placeholder,
   user, footer texts; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
   Header (56px): logo `shared/assets/logo.svg` (the Dynamics logo, 92×24 viewBox, copied from the root `logo.svg`)
@@ -89,6 +89,10 @@ logo, and a shared folder (not copies).
   headers, with a "· Sort: …" label in the count line.
 - Tables: **clicking anywhere on a row opens the row's popup** (`onRow` onClick + pointer cursor) in all apps.
   Exception: links with their own action stop the row click, e.g. CRM e-mail addresses (`mailto:`, opens the mail app).
+- Popups: action buttons **only at the bottom right**, the **primary (blue) button rightmost**, and **no "Cancel" /
+  "Отмена" button**. Cancelling = the X, a click outside the popup or Esc (antd defaults, keep them on). Form popups
+  drop antd's default Cancel with `footer={(_, { OkBtn }) => <OkBtn />}`; the Configurator card keeps its bottom save
+  bar ("Открыть сохранённую версию" link, then the primary "Сохранить"). Side panels/drawers are never used: popups only.
 - Popups: the **first form field gets focus** on open (`autoFocus` on the first control), never the X button. Opening
   a popup must not re-render the page's table: memoize `columns` and the `<Table>` element (stable callbacks), or
   the click → animation delay grows with the row count (it was ~550 ms with 211 rows).
@@ -352,6 +356,13 @@ npm run build -w antd-contacts   # one app
   plus `marginInlineEnd: marginSM` on the search (field and mobile icon button) to keep search → actions at 24px.
   Verified in all three apps: name → search 12px at 1440 and 800px; search → actions 24px at 800px (search shrunk) and
   at 390px (logo → icon button 12px, same total spacing as before); no horizontal scroll. `npm run build` passes.
+- 2026-11-19: Requested: REDESIGN_SKILL_GUIDE.md gets the latest logo/name changes and the core adaptation rules
+  (new §1.1: logo/name; no pagination + full-height scrolling tables; side panels → popups; popup buttons bottom right
+  with the primary rightmost; no Cancel button; labels left of inputs), with details in §7, §8, §9 and §10. Code:
+  CRM and Register popups lost antd's default Cancel button (`footer={(_, { OkBtn }) => <OkBtn />}`). Verified in all
+  four popups (CRM create/edit, Register review, Configurator offer): no Cancel, the last button is primary at the
+  bottom right (24px right / 20px bottom), Esc and an outside click close, first field focused, empty submit still
+  shows errors, 0 console warnings. The 7 screenshots in `screenshots/` were retaken at 1440×900.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:

@@ -67,6 +67,8 @@ export function ReviewProposalModal({ open, proposal, proposals, onSubmit, onCan
       open={open}
       okText="Save decision"
       okButtonProps={{ htmlType: 'submit' }}
+      // No "Cancel" button: close with the X, a click outside the popup or Esc. The primary button is alone, bottom right.
+      footer={(_, { OkBtn }) => <OkBtn />}
       onCancel={onCancel}
       afterClose={reset}
       destroyOnHidden

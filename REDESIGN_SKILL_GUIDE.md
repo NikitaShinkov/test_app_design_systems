@@ -27,6 +27,23 @@ For every application it redesigns, the skill:
    *use* the shared pieces and not to re-implement or override them.
 4. Verifies the result with the checks in section 10, including a **production build**.
 
+### 1.1 Core adaptation rules (at a glance)
+
+These are the changes to stock Ant Design that the skill applies to every source app. Each one is detailed in the
+section given in brackets.
+
+1. **Logo and name:** the Dynamics logo 24px high, 8px gap, then the application name on one line in Regular Italic
+   (400), 25px, `colorPrimary`. The name's **baseline sits on the logo's bottom edge**, and the search field starts
+   **12px** after the name (5.1, 5.2).
+2. **No pagination:** tables have no pager. Each table fills the full free height of the screen, and if the rows don't
+   fit, only the table body scrolls (6.2).
+3. **No side panels:** details side panels/drawers and separate detail pages become **popups** (`Modal`) (7).
+4. **Popup buttons at the bottom right:** the action buttons sit only at the bottom right of the popup, and the
+   **primary (blue) button is the rightmost** one (7).
+5. **No "Cancel" button in popups:** the popup is cancelled with the close icon (X), a click outside the popup, or
+   Esc (7).
+6. **Labels to the left of inputs:** a field's label is on the same line, to the left of the input, never above it (8).
+
 The original screenshots or UI tell the skill **what the page contains and how it is organised** (sections, fields,
 columns, actions). They are **not** a source of colours, spacing, fonts or component shapes. Those come only from the
 standard.
@@ -235,15 +252,26 @@ Reference: `antd-contacts/src/components/ContactFormModal.tsx`, `antd-proposals/
 
 - `Modal centered destroyOnHidden`, with the default width or wider for card-like popups (960). Animation speed comes
   from the theme (75%).
+- **Side panels become popups.** Every details side panel (`Drawer`) or separate detail/record page in the
+  source app becomes a `Modal`.
 - **Create and edit share one popup component.** Edit = the same form, pre-filled and fully editable. Clicking a row
   opens edit. A side panel/drawer is **not** used for record details.
 - **Focus:** the **first form field** gets focus when the popup opens (`autoFocus` on the first control). The close
   (X) button must never be focused first.
 - **No delay:** the popup animation must start immediately after the click (measured 26–61ms in production). See the
   memoization rule in 6.2.
+- **Buttons: bottom right only, primary rightmost, no "Cancel".**
+  - Action buttons appear only in the popup's bottom-right corner (the Modal footer, or the save bar in card-like
+    popups). No action buttons in the header or in the middle of the body.
+  - The **primary (blue) button is the rightmost**. Secondary actions (e.g. a link button "Открыть сохранённую
+    версию") go to its left.
+  - **No "Cancel" / "Отмена" button.** Cancelling is done with the close icon (X), a click outside the popup (mask) or
+    Esc. Those are antd's defaults (`mask.closable` and `keyboard` are true): don't turn them off. Close = discard,
+    with no confirmation.
 - **Form + buttons:**
   - Simple popups: wrap the Modal content in the Form via `modalRender={(dom) => <Form …>{dom}</Form>}`, with
-    `okButtonProps={{ htmlType: 'submit' }}` and `okText` "Создать" / "Сохранить" / "Save decision".
+    `okButtonProps={{ htmlType: 'submit' }}` and `okText` "Создать" / "Сохранить" / "Save decision". Remove
+    antd's default Cancel button with `footer={(_, { OkBtn }) => <OkBtn />}`.
   - Card-like popups (a record card with a save state, history, etc.): `footer={null}` and a `<Form>` wrapping the
     **whole body**, with a **save bar at the very bottom**: status text ("Все изменения сохранены" / "Есть
     несохранённые изменения"), a link button "Открыть сохранённую версию" (restore), and a primary "Сохранить"
@@ -267,7 +295,8 @@ const { errors, reset, formProps } = useSubmitValidation<Values>();
 </Form>
 ```
 
-- **Layout:** the label and the input are on **one line**.
+- **Layout:** the label is **to the left of the input**, on the same line, **never above it** (no
+  `layout="vertical"` forms and no floating labels).
   - The label column width = **the widest label text in the form + 30px** (CSS grid `max-content`; no fixed width).
     All inputs start on one vertical line.
   - **Errors sit inside the `<label for=…>`, under the label text.** With an error, the label + error block is
@@ -310,7 +339,9 @@ const { errors, reset, formProps } = useSubmitValidation<Values>();
 | Details side panel / separate details page | a popup (`Modal`) with the editable pre-filled form |
 | Record card page (form + history) | a card-like popup, with the save bar at the bottom |
 | Info/demo banners, help footnotes, status cards | removed |
-| Floating-label / stacked-label inputs | `FormField` (inline label, error inside the label) |
+| Floating-label / stacked-label inputs (label above the input) | `FormField` (label to the left of the input, error inside the label) |
+| "Cancel" / "Отмена" button in a dialog | removed: close with X, a click outside or Esc |
+| Dialog buttons at the top, left or centre | the footer, bottom right, primary (blue) rightmost |
 | Required "*" | none |
 
 ## 10. Verification checklist (automate with Playwright; no screenshots unless asked)
@@ -338,6 +369,9 @@ Run against the dev server **and** the production build (`npm run build` + `vite
   - e-mail links don't open a popup and aren't `defaultPrevented`
 - **Popups:**
   - `document.activeElement` is the first field.
+  - No "Cancel"/"Отмена" button; the last button is `.ant-btn-primary` and sits at the bottom right (24px from the
+    right and 20px from the bottom of the popup).
+  - Esc and a click on the mask both close the popup.
   - Click → animation start is under ~100ms.
   - `getAnimations()`: zoom 225ms, mask 150ms.
   - Pre-filled values; save, then the list updates.
