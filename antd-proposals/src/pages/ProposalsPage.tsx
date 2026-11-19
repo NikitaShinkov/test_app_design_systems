@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
-import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
+import { App as AntApp, Button, Card, Flex, Input, Select, Table, Tag, Typography } from 'antd';
 import type { TableProps, TagProps } from 'antd';
-import { CheckOutlined, HomeOutlined, PlusOutlined } from '@ant-design/icons';
-import { tableComponents, useTableScrollY } from '@dynamics/ui-shared';
+import { CheckOutlined, PlusOutlined } from '@ant-design/icons';
+import { TableToolbar, tableComponents, useTableScrollY } from '@dynamics/ui-shared';
 import { decisionLabels, orderOptions, productOptions, proposals as initialProposals, workflowOf } from '../data/proposals';
 import type { Decision, Proposal, WorkflowStage } from '../data/proposals';
 import { ReviewProposalModal } from '../components/ReviewProposalModal';
@@ -199,7 +199,7 @@ export default function ProposalsPage({ title = 'Replacement proposals' }: { tit
 
   return (
     <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
-      <Breadcrumb items={[{ title: <HomeOutlined />, href: '#' }, { title: 'Replacement Register' }, { title: 'Proposals' }]} />
+      {/* No breadcrumb: the section has a single page (breadcrumbs only for moving between pages of a section). */}
 
       {/* Card and its body stretch to the full remaining height; no border or shadow (body padding is a token). */}
       <Card
@@ -208,66 +208,74 @@ export default function ProposalsPage({ title = 'Replacement proposals' }: { tit
         styles={{ body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
       >
         <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
-          <Flex justify="space-between" align="center" wrap gap="medium">
-            {/* No icon in page headings (only the section buttons have icons). */}
-            <Title level={3} style={{ margin: 0 }}>
-              {title}
-            </Title>
-            <Space wrap>
-              <Button icon={<CheckOutlined />} onClick={reviewNext}>
-                Review next
-              </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => openReview(null)}>
-                Review proposal
-              </Button>
-            </Space>
-          </Flex>
+          {/* No icon in page headings (only the section buttons have icons). */}
+          <Title level={3} style={{ margin: 0 }}>
+            {title}
+          </Title>
 
           <Text type="secondary">Compare original and alternative components, then record a controlled client decision.</Text>
 
-          <Flex wrap gap="small" align="center">
-            <Input.Search
-              placeholder="Search register"
-              allowClear
-              value={query}
-              onChange={(e) => onFilter(setQuery)(e.target.value)}
-              style={{ width: 240 }}
-            />
-            <Select
-              placeholder="All orders"
-              allowClear
-              value={order}
-              onChange={onFilter(setOrder)}
-              options={orderOptions.map((o) => ({ value: o, label: o }))}
-              style={{ width: 170 }}
-            />
-            <Select
-              placeholder="All decisions"
-              allowClear
-              value={decision}
-              onChange={onFilter(setDecision)}
-              options={(Object.keys(decisionLabels) as Decision[]).map((d) => ({ value: d, label: decisionLabels[d] }))}
-              style={{ width: 150 }}
-            />
-            <Select
-              placeholder="All products"
-              allowClear
-              value={product}
-              onChange={onFilter(setProduct)}
-              options={productOptions.map((p) => ({ value: p, label: p }))}
-              style={{ width: 160 }}
-            />
-            <Input
-              placeholder="Supplier (exact name)"
-              allowClear
-              value={supplier}
-              onChange={(e) => onFilter(setSupplier)(e.target.value)}
-              style={{ width: 200 }}
-            />
-            <Button onClick={clearFilters} disabled={!hasFilters}>
-              Clear filters
-            </Button>
-          </Flex>
+          {/* One toolbar above the table: search and filters on the left; secondary + primary action on the right. */}
+          <TableToolbar
+            left={
+              <>
+                <Input.Search
+                  placeholder="Search register"
+                  allowClear
+                  value={query}
+                  onChange={(e) => onFilter(setQuery)(e.target.value)}
+                  style={{ width: 180 }}
+                />
+                <Select
+                  placeholder="All orders"
+                  allowClear
+                  value={order}
+                  onChange={onFilter(setOrder)}
+                  options={orderOptions.map((o) => ({ value: o, label: o }))}
+                  style={{ width: 130 }}
+                />
+                <Select
+                  placeholder="All decisions"
+                  allowClear
+                  value={decision}
+                  onChange={onFilter(setDecision)}
+                  options={(Object.keys(decisionLabels) as Decision[]).map((d) => ({
+                    value: d,
+                    label: decisionLabels[d],
+                  }))}
+                  style={{ width: 120 }}
+                />
+                <Select
+                  placeholder="All products"
+                  allowClear
+                  value={product}
+                  onChange={onFilter(setProduct)}
+                  options={productOptions.map((p) => ({ value: p, label: p }))}
+                  style={{ width: 125 }}
+                />
+                <Input
+                  placeholder="Exact supplier"
+                  allowClear
+                  value={supplier}
+                  onChange={(e) => onFilter(setSupplier)(e.target.value)}
+                  style={{ width: 140 }}
+                />
+                <Button onClick={clearFilters} disabled={!hasFilters}>
+                  Clear filters
+                </Button>
+              </>
+            }
+            right={
+              <>
+                <Button icon={<CheckOutlined />} onClick={reviewNext}>
+                  Review next
+                </Button>
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => openReview(null)}>
+                  Review proposal
+                </Button>
+              </>
+            }
+          />
 
           <Text type="secondary">
             {filtered.length} matching {filtered.length === 1 ? 'proposal' : 'proposals'} · Sort: {sortLabel}

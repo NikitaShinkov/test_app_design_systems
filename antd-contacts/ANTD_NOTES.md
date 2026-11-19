@@ -64,7 +64,7 @@ run that asserts **0 console warnings**. This trial passes it.
 | User menu | `Dropdown menu={{ items }}` + `Button icon={<Avatar/>}` + `Typography.Text ellipsis` |
 | Settings | `Button icon={<SettingOutlined/>}` with text (default variant = visible border) |
 | Section navigation | `Menu mode="horizontal" items` (8 sections; overflows into "…" automatically) |
-| View switcher ("Все: Контакты ›") | `Breadcrumb` item with `menu` |
+| View switcher (source: "Все: Контакты ›" in the breadcrumb) | dedicated filter `Select` above the table (no breadcrumb: single-page section) |
 | Page container | `Card variant="borderless"` (full height via `style` + `styles.body`; `boxShadow: 'none'`; body padding 0 via the `bodyPadding` token) |
 | Page title | icon + `Typography.Title level={3}` |
 | Toolbar | `Input.Search`, `Button icon={<ReloadOutlined/>}`, `Button type="primary" icon={<PlusOutlined/>}` |

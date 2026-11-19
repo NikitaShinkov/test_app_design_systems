@@ -12,6 +12,11 @@ Then fix this guide.
 | `antd-contacts` (CRM, ru) | `img_design_1.png` | `screenshots/1-*.png` |
 | `antd-proposals` (Replacement Register, en) | `img_design_2.png` | `screenshots/2-*.png` |
 | `antd-configurator` (Configurator, ru) | `img_design_3_1*.png`, `img_design_3_2 (updated).png` | `screenshots/3-*.png` |
+| `antd-itsupport` (IT Support, ru) | the running IT Support 0.2.0 release (`old_apps/IT-Support-0.2.0-Windows-x64`, compiled, no source) | runs on the original server (3.1) |
+
+The `screenshots/` folder was taken on 2026-11-17/19, **before** the latest rules (Register and Configurator sidebars,
+no breadcrumbs, the table toolbar with "Обновить" on the right, no footer/tooltips). Use it for the overall look only;
+the code in the four apps and this guide are the reference for the current standard.
 
 ---
 
@@ -64,6 +69,13 @@ section given in brackets.
 10. **No tooltips anywhere:** no antd `Tooltip`, no Menu item tooltips, no table sort tooltips, no tooltip on truncated
     text, and no native `title` tooltips (Badge, Tag, table cells and headers). Icon-only buttons keep an
     `aria-label` for accessibility (11 in the pitfalls lists how each source of tooltips is switched off).
+11. **Breadcrumbs only for moving between pages within a section** (6.1). A section with a single page (e.g. the
+    "Контакты" section with one "Контакты" page) has **no** `Breadcrumb` (no "Контакты / Контакты"). Breadcrumbs
+    never filter tables: a view switch such as "Все: Контакты ›" becomes a **dedicated filter** above the table.
+12. **One toolbar above every table** (`TableToolbar`, 6.1): the search field and the filters (with "Clear filters")
+    on the **left**; the buttons on the **right**: the refresh button (if any) **first**, as a secondary button with
+    text ("Обновить" / "Refresh"), then the other secondary buttons, and the **primary button always last** (far
+    right). The title row holds only the page title.
 
 The original screenshots or UI tell the skill **what the page contains and how it is organised** (sections, fields,
 columns, actions). They are **not** a source of colours, spacing, fonts or component shapes. Those come only from the
@@ -81,6 +93,7 @@ Public API (`shared/src/index.ts`):
 | `useSubmitValidation()` | Standard validation timing (section 8). |
 | `useTableScrollY()` | Full-height table with a fixed header (section 6). |
 | `tableComponents` | Pass to every `Table` (`components={tableComponents}`): header cells without native `title` tooltips. |
+| `TableToolbar` `left` / `right` | The one toolbar above a table: search and filters on the left; Refresh, other secondary buttons, then the primary on the right (6.1). |
 | `sidebarTheme` | Sub-theme for the sidebar (motion off, full-width menu items); applied by `AppShell`. |
 | `appTheme`, `createFormConfig`, `strings`, `useSharedStrings` | Tokens, form messages, shell strings (ru/en). |
 
@@ -124,7 +137,7 @@ Minimal app:
 1. **Inventory** the source app: screens, navigation sections (with counters), page titles, tables (columns, row
    actions, sorting, filters, search), popups/forms (fields, required/optional, limits, buttons), language.
 2. **Map** every element to the standard using the cheat-sheet in section 9. Drop decorative or explanatory blocks
-   (section 6.6).
+   (section 6.3).
 3. **Scaffold** the app (Vite react-ts), add `@dynamics/ui-shared`, `resolve.dedupe`, the favicon and `<title>`
    (section 5.5).
 4. **Shell:** `main.tsx` with `AppProviders lang`, and `App.tsx` with `AppShell` config: `navigation` = the source
@@ -133,6 +146,22 @@ Minimal app:
 6. **Popups:** follow the popup and form templates (sections 7–8).
 7. **Data:** typed models. Keep the same field semantics as the source app.
 8. **Verify:** section 10 (dev **and** `vite build` + `vite preview`). No screenshots unless the user asks for them.
+
+### 3.1 Source app without source code (a compiled release)
+Reference: `antd-itsupport` (IT Support 0.2.0 shipped as a portable release: built client, compiled Express server,
+bundled Node). The skill rebuilds **only the front end** and keeps the back end unchanged:
+- **Inventory from the running app and its files:** the user guide, the server's routes and validation schemas
+  (`dist/server`, `dist/data-types`), and behaviour visible in the client bundle (status colours, labels, CSV format).
+- **Talk to the original API exactly like the original client** (e.g. GET `/api/session` → session cookie + CSRF
+  token in `X-CSRF-Token`). Show the server's own error messages (e.g. "Этот инвентарный номер уже используется.").
+- **Run it on the original server:** if the server can serve a client folder (here `startServer({ clientDir })`),
+  point it at the new `dist/` with a small launcher (`antd-itsupport/serve.mjs`), started with the release's own
+  runtime (native modules such as better-sqlite3 are built for it). Use a **separate data folder** (a copy) so the
+  original app and the new version never share one database.
+- **Dev mode:** proxy `/api` from Vite to that server. If the server only accepts same-origin requests, drop the
+  `Origin` header in the proxy (`proxyReq.removeHeader('origin')`); the session cookie and CSRF token still apply.
+- Replace summary cards with the count line ("43 ТМЦ · выдано 37 · на складе 2 …"), multi-line cells with one line
+  (count + grey names), and a details side panel with a card popup.
 
 ## 4. Theme and global styling
 
@@ -298,23 +327,35 @@ The constants are `LOGO_HEIGHT` and `PRODUCT_NAME_FONT_SIZE` in `shared/src/AppS
 ## 6. List page template
 
 Reference: `antd-contacts/src/pages/ContactsPage.tsx`, `antd-proposals/src/pages/ProposalsPage.tsx`,
-`antd-configurator/src/pages/ArchivePage.tsx`.
+`antd-configurator/src/pages/ArchivePage.tsx`, `antd-itsupport/src/pages/AssetsPage.tsx` (search, three filters,
+CSV export, totals in the count line) and its `PageFrame` component (title + full-height Card).
 
 ### 6.1 Structure (top to bottom)
-1. `Breadcrumb`: Home icon / area / page. It may hold a view switcher as an item `menu`.
+1. **`Breadcrumb` only if the section has several pages** and the user has moved from one to another (e.g. list →
+   record page → sub-page). It shows that path and lets the user go back. A single-page section has **no breadcrumb**:
+   the section tab and the page title already say where the user is. **Never use breadcrumb items to filter the
+   table** (no `menu` on a breadcrumb item): filters live in the table toolbar (below). None of the reference apps has a
+   multi-page section, so none of them shows a breadcrumb.
 2. A full-height `Card variant="borderless"` with `boxShadow: 'none'` (body padding 0 via the token):
-   - **Title row:** `Typography.Title level={3}` with **no icon** (5.4) on the left; actions on the right:
-     `Input.Search` (280px), refresh icon `Button` with an `aria-label` (no tooltip), and the primary action
-     (`Button type="primary"` with an icon).
+   - **Title:** `Typography.Title level={3}` with **no icon** (5.4), **alone** (no buttons or search next to it).
    - Optional one-line description (`Text type="secondary"`).
-   - Optional filter row (`Select`s, an exact-match `Input`, a "Clear filters" button that is disabled when empty).
+   - **Table toolbar** (`TableToolbar` from `@dynamics/ui-shared`), one row directly above the count line and table:
+     - `left`, in this order: `Input.Search` (≈ 180–280px), the filters (`Select`s, an exact-match `Input`, a
+       "Clear filters" button that is disabled when empty). Every way of narrowing the table is here, including views that the source put in
+       a breadcrumb menu (CRM: `Select` "Все контакты / С телефоном / С должностью").
+     - `right`, in this order: the **refresh** button if the page has one — a secondary (default) `Button` with the
+       reload icon **and text** "Обновить" / "Refresh" — then the other secondary buttons (e.g. "Экспорт CSV",
+       "Review next"), and the **primary** (`Button type="primary"` with an icon) **always last**, at the far right.
+       Omit `right` only when the page has neither actions nor refresh.
+     - Size the controls so the toolbar is **one row at 1440px** (with an expanded sidebar the content is 1160px wide:
+       the Register uses 180 / 130 / 120 / 125 / 140). On narrow screens it wraps; the right group stays right-aligned.
    - **Count + sort line:** `"<N> <items> · Сортировка: <Column> ↑/↓"` (en: `· Sort:`). The default sort is the
      source app's natural order (e.g. "Обновлено ↓" for "latest changes first").
    - **The table** fills the rest (6.2).
 
 ### 6.2 Table rules
-- **No pagination.** Show all rows. Only the table body scrolls, so the header, menu, breadcrumb, title and column
-  header stay fixed.
+- **No pagination.** Show all rows. Only the table body scrolls, so the header, menu, title, table toolbar, count line
+  and column header stay fixed.
   ```tsx
   const { boxRef, tableRef, scrollY, scrollToTop } = useTableScrollY();
   <div ref={boxRef} style={{ flex: 1, minHeight: 0 }}>
@@ -355,7 +396,9 @@ The user removed these in every iteration; the skill should not add them:
 ## 7. Popup template
 
 Reference: `antd-contacts/src/components/ContactFormModal.tsx`, `antd-proposals/src/components/ReviewProposalModal.tsx`,
-`antd-configurator/src/components/OfferModal.tsx`.
+`antd-configurator/src/components/OfferModal.tsx`, and `antd-itsupport/src/components/` (`AssetCardModal`: a record card
+that replaced a side panel, with read-only details, history and the actions at the bottom right; `AssetFormModal`,
+`MoveModal`, `EmployeeModal`, `WorkplaceModal`: create/edit forms, some opened on top of the card).
 
 - `Modal centered destroyOnHidden`, with the default width or wider for card-like popups (960). Animation speed comes
   from the theme (75%).
@@ -364,7 +407,9 @@ Reference: `antd-contacts/src/components/ContactFormModal.tsx`, `antd-proposals/
 - **Create and edit share one popup component.** Edit = the same form, pre-filled and fully editable. Clicking a row
   opens edit. A side panel/drawer is **not** used for record details.
 - **Focus:** the **first form field** gets focus when the popup opens (`autoFocus` on the first control). The close
-  (X) button must never be focused first.
+  (X) button must never be focused first. A popup opened **on top of another popup** (e.g. "Изменить карточку" from
+  an asset card) loses `autoFocus` to antd's nested-modal focus handling and focuses the X: also focus the first field
+  in `afterOpenChange` (`antd-itsupport/src/format.ts` → `focusOnOpen`).
 - **No delay:** the popup animation must start immediately after the click (measured 26–61ms in production). See the
   memoization rule in 6.2.
 - **Buttons: bottom right only, primary rightmost, no "Cancel".**
@@ -440,6 +485,10 @@ const { errors, reset, formProps } = useSubmitValidation<Values>();
 | Page header with an eyebrow and description | icon + H3 title (+ an optional one-line description); eyebrow dropped |
 | Pager, rows per page | removed: a full-height scrolling table |
 | Sort dropdowns | column-header sorting + the "Сортировка / Sort" label |
+| Breadcrumb "Section / Page" on a single-page section | removed |
+| Breadcrumb item with a view menu ("Все: Контакты ›") | a dedicated filter `Select` in the table toolbar |
+| Buttons and search in the page header / a separate filter row | one `TableToolbar`: search and filters left; Refresh, secondary, primary right |
+| Icon-only refresh button | secondary button with text "Обновить" / "Refresh", first in the right group |
 | Two-line table cells | one line: main text + grey secondary text |
 | Status pills/badges | `Tag` (colour by status) |
 | Abbreviation footnotes | removed (no tooltips either) |
@@ -469,8 +518,13 @@ Run against the dev server **and** the production build (`npm run build` + `vite
 - **Page:**
   - The document doesn't scroll (`scrollHeight ≤ innerHeight`) at 1440×900.
   - The Card reaches the content bottom, the table body scrolls, and every row is 32px.
-  - The header, menu, breadcrumb, title and column header don't move while the list scrolls.
+  - The header, menu, title and column header don't move while the list scrolls.
   - No `.ant-pagination`.
+  - No `.ant-breadcrumb` in any single-page section; every filter is in the table toolbar.
+  - Toolbar: one row at 1440px directly above the table; the left group starts at the table's left edge (search
+    first, no refresh), the right group ends at its right edge: "Обновить" first (default button with text), the
+    primary button last; the title row has no
+    buttons.
   - Navigation pattern = the source app's (`.ant-layout-sider` vs `.ant-menu-horizontal`); no `.ant-layout-footer`.
   - Sidebar: 232px expanded (items 223 × 40 at x 4; section icons 18 × 18); the header button (Left Panel Close icon; Left Panel Open when
     collapsed) collapses it to 49px;

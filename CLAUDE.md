@@ -7,7 +7,8 @@ design system, so we can judge how it looks and how well the skill can use it.
 
 Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, branch `main`).
 
-**Outcome:** Ant Design v6 + the shared layer in `shared/` was selected and adapted on three apps. The handover for
+**Outcome:** Ant Design v6 + the shared layer in `shared/` was selected and adapted on three apps, then used to
+redesign a fourth, real one (IT Support 0.2.0, `antd-itsupport`). The handover for
 the redesign-skill developer is **`REDESIGN_SKILL_GUIDE.md`** (procedure, rules, logo/name, mapping,
 verification, pitfalls). Keep it in sync with `shared/` whenever a rule changes. Results: `screenshots/`.
 
@@ -109,8 +110,15 @@ logo, and a shared folder (not copies). App 3 also uses a sidebar (its source `i
   "Настройки" item, because settings live in the header button.
 - Page layout: exactly one viewport high (`Layout` `100dvh`). Content → Card → `ant-card-body` stretch to the
   free height. Tables have **no pagination**. Only the body scrolls (`useTableScrollY()` measures `scroll.y` with a
-  ResizeObserver), so the header, menu, breadcrumb, toolbar and table header stay fixed. Sorting is by column
+  ResizeObserver), so the header, menu, toolbar and table header stay fixed. Sorting is by column
   headers, with a "· Sort: …" label in the count line.
+- **Breadcrumbs only for moving between pages within a section.** All sections in the four apps are single pages, so
+  no app shows a `Breadcrumb` (no "Контакты / Контакты"). Breadcrumb items never filter tables: the CRM view switch
+  ("Все: Контакты ›") is now a dedicated `Select` filter (Все контакты / С телефоном / С должностью) above the table.
+- **One toolbar above every table** (`shared/src/TableToolbar.tsx`): search and filters (+ Clear filters) on the left;
+  on the right the refresh button first (secondary, with text "Обновить"), then other secondary buttons, the primary
+  always last. The page title stands alone.
+  One row at 1440px (Register filters narrowed to 180/130/120/125/140 to fit next to the expanded sidebar).
 - Tables: **clicking anywhere on a row opens the row's popup** (`onRow` onClick + pointer cursor) in all apps.
   Exception: links with their own action stop the row click, e.g. CRM e-mail addresses (`mailto:`, opens the mail app).
 - Popups: action buttons **only at the bottom right**, the **primary (blue) button rightmost**, and **no "Cancel" /
@@ -140,7 +148,7 @@ logo, and a shared folder (not copies). App 3 also uses a sidebar (its source `i
 ```
 design/
 ├── CLAUDE.md            # this file
-├── package.json         # npm workspaces: shared, antd-contacts, antd-proposals (one root node_modules + lock)
+├── package.json         # npm workspaces: shared, antd-contacts, antd-proposals, antd-configurator, antd-itsupport
 ├── img_design_1.png     # reference screenshot, app 1 (structure only)
 ├── img_design_2.png     # reference screenshot, app 2 (structure only)
 ├── img_design_3_1.png, img_design_3_1 (updated).png, img_design_3_2 (updated).png  # app 3 references
@@ -166,6 +174,7 @@ design/
 │       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
 │       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
 │       ├── tableComponents.tsx     # Table components: header cell without native title tooltips
+│       ├── TableToolbar.tsx        # the toolbar above a table: left (search, filters, refresh) / right (actions)
 │       ├── fonts.css          # italic @font-face → Inter 3.19 (matches Figma)
 │       └── antd-overrides.css # the only CSS besides fonts (menu underline, table Tags, collapsed sidebar badge
 │                              #   overflow + line height)
@@ -175,7 +184,7 @@ design/
 │   └── src/
 │       ├── main.tsx     # <AppProviders lang="ru"><App/></AppProviders>
 │       ├── App.tsx      # AppShell config: "CRM", 8 sections (switchable: same page, heading = section), user Иван Петров
-│       ├── pages/ContactsPage.tsx         # breadcrumb view switcher + full-height Card + Table
+│       ├── pages/ContactsPage.tsx         # full-height Card: title, search, view filter (Select), Table
 │       ├── components/ContactFormModal.tsx  # create/edit contact popup
 │       └── data/contacts.ts  # 37 mock records (first 10 = screenshot)
 ├── antd-configurator/   # app 3 (ru), port 5175
@@ -183,7 +192,7 @@ design/
 │       ├── App.tsx      # AppShell: "Configurator", navigation="sidebar", 3 sections (Быстрый расчёт /
 │       │                #   Архив предложений (28) / Прайс и цены)
 │       ├── icons.ts     # sidebar icons as in the source (⌂ Home, archive, prices)
-│       ├── pages/ArchivePage.tsx    # breadcrumb, full-height Card: title (no icon, as in the source), search, reload,
+│       ├── pages/ArchivePage.tsx    # full-height Card: title (no icon, as in the source), search, reload,
 │       │                            #   count + sort label (default "Обновлено ↓"), Table (28 rows, 32px; name +
 │       │                            #   grey customer, number, Вид Tag, version, updated, Открыть →);
 │       │                            #   a row click opens the offer card
@@ -193,6 +202,20 @@ design/
 │       │                              #   "Открыть сохранённую версию", "Сохранить"); the Form wraps the whole body
 │       │                              #   so Save stays its submit button; each save = a new version
 │       └── data/offers.ts   # 28 offers (3 = screenshot, 25 more), versions/history, formatUtc
+├── antd-itsupport/      # app 4 (ru): redesign of IT Support 0.2.0 (old_apps/IT-Support-0.2.0-Windows-x64, a compiled
+│   │                    #   release without source). Front end only; the original server/API/SQLite stay unchanged.
+│   ├── serve.mjs        # runs the ORIGINAL server (startServer) with clientDir = this app's dist/, port 4180, data in
+│   │                    #   %LOCALAPPDATA%\it-support-assets-redesign (a copy); start with the release's runtime\node.exe
+│   ├── vite.config.ts   # dev port 5176, /api proxy → 127.0.0.1:4180 (drops Origin: the server is same-origin only)
+│   └── src/
+│       ├── api.ts       # types from the server schemas + client (GET /api/session → cookie + X-CSRF-Token)
+│       ├── inventory.tsx  # InventoryProvider: whole register from GET /api/inventory, reload() after every change
+│       ├── App.tsx      # AppShell "IT Support", tabs (as the source): ТМЦ[icon] / Сотрудники / Рабочие места /
+│       │                #   История / Данные[icon] / Справка[icon] (icons only where the source tabs have them)
+│       ├── pages/       # Assets (register: search, 3 filters, totals in the count line, CSV export), Employees,
+│       │                #   Workplaces (single-line: count + grey names), History, Data (backup/restore), Help
+│       └── components/  # AssetDialogs (card popup instead of the side panel, add/edit, transfer, presence check),
+│                        #   EmployeeModal / WorkplaceModal (+ linked assets), PageFrame (breadcrumb + full-height Card)
 └── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
     └── src/
         ├── main.tsx     # <AppProviders lang="en"><App/></AppProviders>
@@ -223,6 +246,9 @@ npm install                 # installs all workspaces into the root node_modules
 npm run dev:contacts        # app 1 → http://localhost:5173
 npm run dev:proposals       # app 2 → http://localhost:5174
 npm run dev:configurator    # app 3 → http://localhost:5175
+npm run dev:itsupport       # app 4 dev → http://localhost:5176 (needs serve.mjs running for the API)
+# app 4 production: npm run build -w antd-itsupport, then in antd-itsupport:
+#   "../../old_apps/IT-Support-0.2.0-Windows-x64/runtime/node.exe" serve.mjs   → http://127.0.0.1:4180
 npm run build               # tsc -b + vite build for every app (a >500 kB chunk warning from antd is expected)
 npm run build -w antd-contacts   # one app
 ```
@@ -476,6 +502,40 @@ npm run build -w antd-contacts   # one app
   collapse + reload 49 on the first frame (no flash); expand by an empty-area click + reload 232; saved expanded + 390px
   load 49 with the saved "0" kept, widen 232, narrow 49; storage throwing: starts 232, toggles, no page errors;
   production build: collapse + reload 49, 211 rows, no errors; 0 console warnings.
+- 2026-11-19: IT Support 0.2.0 (old_apps) studied, filled with realistic test data (16 employees, 14 workplaces, 43
+  assets, 132 history entries Aug–Nov 2026; dates set via its own backup → restore) and documented with 32 screenshots +
+  an HTML scenario page in its `screenshots/` folder (user request).
+- 2026-11-19: App 4 `antd-itsupport`: IT Support redesigned per REDESIGN_SKILL_GUIDE (front end only; the compiled
+  release has no source). Tabs as in the source, icons only on ТМЦ/Данные/Справка, no footer/tooltips/pagination,
+  32px single-line tables, side-panel card → popup, forms with left labels and no Cancel, totals in the count line.
+  Runs on the original server via `serve.mjs` (port 4180, data copy in it-support-assets-redesign). Fix found: a popup
+  opened from another popup focused the X → `focusOnOpen` in `afterOpenChange`. Verified in Chrome (no screenshots):
+  44/45 checks (shell, 43 rows of 32px, filters/search/sort, CSV, card popup 74 ms, focus, labels left, duplicate
+  number message, required errors, issue + presence check, employees/workplaces/history, backup/restore confirm,
+  help, no tooltips, 390px); the 1 "failure" is the console line of the intentional 409 duplicate test. Data copy reset
+  after the tests. Guide: new §3.1 (source without code) and the nested-popup focus note.
+- 2026-11-19: New rule: breadcrumbs only for moving between pages within a section; never as a table filter. Removed
+  the breadcrumb from all four apps (every section is a single page; IT Support's PageFrame lost its `crumb` prop) and
+  turned the CRM breadcrumb view menu into a dedicated filter `Select`. Verified in Chrome: 0 `.ant-breadcrumb` across
+  all 26 sections of the four apps, pages still one viewport high with 32px rows, CRM filter "С телефоном" → 12 of 37
+  (all 12 contacts with a phone), 0 console warnings; all four builds pass. Guide: core rule 11, §6.1, §9, §10.
+- 2026-11-19: New rule: one toolbar above every table — search, filters and refresh on the left, secondary + primary
+  actions on the right. Shared `TableToolbar` (left/right; the right group keeps `margin-inline-start: auto` when it
+  wraps); applied to all 7 list pages (CRM, Register, Configurator, IT Support ТМЦ/Сотрудники/Рабочие места/История);
+  titles now stand alone; IT Support `PageFrame` lost its `actions` prop. Register filters narrowed to fit one row.
+  Verified in Chrome on all 7 pages at 1440 and 390px: toolbar above the table, left edge = table left, right edge =
+  table right, search first, refresh last, primary rightmost, title row without buttons, one row at 1440, no horizontal
+  scroll at 390, rows 32px, 0 console warnings; all four builds pass.
+- 2026-11-19: New rule: the refresh button moves to the right group of the table toolbar, first, as a secondary button
+  with text ("Обновить"); the primary action stays last. Applied to the 6 pages that have refresh (CRM, Configurator,
+  IT Support ТМЦ/Сотрудники/Рабочие места/История; the Register has none). IT Support ТМЦ filters narrowed (240 / 140 /
+  200 / 170) to keep one row. Verified on all 7 list pages at 1440 and 390px: no refresh in the left group, "Обновить"
+  first and a default button, primary last, right edge = table edge, one row at 1440, refresh click works, 0 console
+  warnings; all builds pass.
+- 2026-11-19: REDESIGN_SKILL_GUIDE.md reviewed for the latest changes: screenshots/ marked as older than the current
+  rules, IT Support added to the list-page and popup references, the toolbar added to the fixed parts of a list page,
+  a wrong section reference fixed (6.6 → 6.3). Committed and pushed together with app 4 and the breadcrumb / toolbar /
+  refresh rules.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:

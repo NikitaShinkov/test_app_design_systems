@@ -1,18 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   App as AntApp,
-  Breadcrumb,
   Button,
   Card,
   Flex,
   Input,
-  Space,
+  Select,
   Table,
   Typography,
 } from 'antd';
-import type { BreadcrumbProps, TableProps } from 'antd';
-import { tableComponents, useTableScrollY } from '@dynamics/ui-shared';
-import { ExportOutlined, HomeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import type { TableProps } from 'antd';
+import { TableToolbar, tableComponents, useTableScrollY } from '@dynamics/ui-shared';
+import { ExportOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { contacts as initialContacts } from '../data/contacts';
 import type { Contact } from '../data/contacts';
 import { ContactFormModal } from '../components/ContactFormModal';
@@ -20,13 +19,12 @@ import type { ContactFormValues } from '../components/ContactFormModal';
 
 const { Title, Text, Link } = Typography;
 
-type BreadcrumbItemMenu = NonNullable<NonNullable<BreadcrumbProps['items']>[number]['menu']>;
 type ViewKey = 'all' | 'withPhone' | 'withPosition';
 type SortField = 'name' | 'email' | 'phone' | 'position';
 type SortState = { field: SortField; order: 'ascend' | 'descend' } | null;
 
 const views: Record<ViewKey, { label: string; test: (c: Contact) => boolean }> = {
-  all: { label: 'Все', test: () => true },
+  all: { label: 'Все контакты', test: () => true },
   withPhone: { label: 'С телефоном', test: (c) => Boolean(c.phone) },
   withPosition: { label: 'С должностью', test: (c) => Boolean(c.position) },
 };
@@ -83,15 +81,7 @@ export default function ContactsPage({ title = 'Контакты' }: { title?: s
 
   const sortLabel = sort ? `${fieldTitles[sort.field]} ${sort.order === 'ascend' ? '↑' : '↓'}` : 'Created At ↓';
 
-  const viewMenu: BreadcrumbItemMenu = {
-    items: (Object.keys(views) as ViewKey[]).map((key) => ({ key, label: `${views[key].label}: Контакты` })),
-    selectable: true,
-    selectedKeys: [view],
-    onClick: ({ key }) => {
-      setView(key as ViewKey);
-      scrollToTop();
-    },
-  };
+
 
   // Memoized columns/table: opening a popup must not re-render the whole list.
   const columns = useMemo<TableProps<Contact>['columns']>(() => {
@@ -190,14 +180,7 @@ export default function ContactsPage({ title = 'Контакты' }: { title?: s
 
   return (
     <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
-      <Breadcrumb
-        items={[
-          { title: <HomeOutlined />, href: '#' },
-          { title: 'Контакты' },
-          { title: `${views[view].label}: Контакты`, menu: viewMenu },
-        ]}
-      />
-
+      {/* No breadcrumb: the section has a single page (breadcrumbs only for moving between pages of a section). */}
       {/* Card and its body stretch to the full remaining height; no border or shadow (body padding is a token). */}
       <Card
         variant="borderless"
@@ -205,29 +188,49 @@ export default function ContactsPage({ title = 'Контакты' }: { title?: s
         styles={{ body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
       >
         <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
-          <Flex justify="space-between" align="center" wrap gap="medium">
-            {/* No icon in page headings (only the section buttons have icons). */}
-            <Title level={3} style={{ margin: 0 }}>
-              {title}
-            </Title>
+          {/* No icon in page headings (only the section buttons have icons). */}
+          <Title level={3} style={{ margin: 0 }}>
+            {title}
+          </Title>
 
-            <Space wrap>
-              <Input.Search
-                placeholder="Поиск: Контакты…"
-                allowClear
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  scrollToTop();
-                }}
-                style={{ width: 280 }}
-              />
-              <Button icon={<ReloadOutlined />} aria-label="Обновить" onClick={reload} />
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
-                Создать контакт
-              </Button>
-            </Space>
-          </Flex>
+          {/* One toolbar above the table: search and view filter on the left; Обновить, then the primary action on the right. */}
+          <TableToolbar
+            left={
+              <>
+                <Input.Search
+                  placeholder="Поиск: Контакты…"
+                  allowClear
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    scrollToTop();
+                  }}
+                  style={{ width: 280 }}
+                />
+                {/* Dedicated table filter (it used to be a menu inside the breadcrumb). */}
+                <Select
+                  aria-label="Показать"
+                  value={view}
+                  onChange={(v: ViewKey) => {
+                    setView(v);
+                    scrollToTop();
+                  }}
+                  options={(Object.keys(views) as ViewKey[]).map((key) => ({ value: key, label: views[key].label }))}
+                  style={{ width: 200 }}
+                />
+              </>
+            }
+            right={
+              <>
+                <Button icon={<ReloadOutlined />} onClick={reload}>
+                  Обновить
+                </Button>
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
+                  Создать контакт
+                </Button>
+              </>
+            }
+          />
 
           <Text type="secondary">
             {filtered.length} {plural(filtered.length, ['запись', 'записи', 'записей'])} · Сортировка: {sortLabel}

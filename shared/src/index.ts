@@ -10,6 +10,7 @@ export { useSubmitValidation } from './useSubmitValidation';
 export type { FieldErrors } from './useSubmitValidation';
 export { useTableScrollY } from './useTableScrollY';
 export { tableComponents } from './tableComponents';
+export { TableToolbar } from './TableToolbar';
 export { appTheme, sidebarTheme } from './theme';
 export { createFormConfig } from './formConfig';
 export { strings, useSharedStrings } from './i18n';

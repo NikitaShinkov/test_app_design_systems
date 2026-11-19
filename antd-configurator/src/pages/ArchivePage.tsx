@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
-import { App as AntApp, Breadcrumb, Button, Card, Flex, Input, Space, Table, Tag, Typography } from 'antd';
+import { App as AntApp, Button, Card, Flex, Input, Table, Tag, Typography } from 'antd';
 import type { TableProps } from 'antd';
-import { ArrowRightOutlined, HomeOutlined, ReloadOutlined } from '@ant-design/icons';
-import { tableComponents, useTableScrollY } from '@dynamics/ui-shared';
+import { ArrowRightOutlined, ReloadOutlined } from '@ant-design/icons';
+import { TableToolbar, tableComponents, useTableScrollY } from '@dynamics/ui-shared';
 import { formatUtc, kindLabels, offers as initialOffers } from '../data/offers';
 import type { Offer, OfferRequisites } from '../data/offers';
 import { OfferModal } from '../components/OfferModal';
@@ -163,7 +163,7 @@ export default function ArchivePage({ title = 'Архив предложений
 
   return (
     <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
-      <Breadcrumb items={[{ title: <HomeOutlined />, href: '#' }, { title: 'Коммерческий расчёт' }, { title: 'Архив предложений' }]} />
+      {/* No breadcrumb: the section has a single page (breadcrumbs only for moving between pages of a section). */}
 
       {/* Card and its body stretch to the full remaining height; no border or shadow (body padding is a token). */}
       <Card
@@ -172,27 +172,35 @@ export default function ArchivePage({ title = 'Архив предложений
         styles={{ body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
       >
         <Flex vertical gap="medium" style={{ flex: 1, minHeight: 0 }}>
-          <Flex justify="space-between" align="center" wrap gap="medium">
-            {/* No icon in page headings (only the section buttons have icons). */}
-            <Title level={3} style={{ margin: 0 }}>
-              {title}
-            </Title>
-            <Space wrap>
-              <Input.Search
-                placeholder="Поиск: предложения…"
-                allowClear
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  scrollToTop();
-                }}
-                style={{ width: 280 }}
-              />
-              <Button icon={<ReloadOutlined />} aria-label="Обновить" onClick={reload} />
-            </Space>
-          </Flex>
+          {/* No icon in page headings (only the section buttons have icons). */}
+          <Title level={3} style={{ margin: 0 }}>
+            {title}
+          </Title>
 
           <Text type="secondary">Сохранённые предложения и история изменения реквизитов.</Text>
+
+          {/* One toolbar above the table: search on the left; Обновить on the right (no other actions in this section). */}
+          <TableToolbar
+            left={
+              <>
+                <Input.Search
+                  placeholder="Поиск: предложения…"
+                  allowClear
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    scrollToTop();
+                  }}
+                  style={{ width: 280 }}
+                />
+              </>
+            }
+            right={
+              <Button icon={<ReloadOutlined />} onClick={reload}>
+                Обновить
+              </Button>
+            }
+          />
 
           <Text type="secondary">
             {filtered.length} {plural(filtered.length, ['предложение', 'предложения', 'предложений'])} · Сортировка: {sortLabel}
