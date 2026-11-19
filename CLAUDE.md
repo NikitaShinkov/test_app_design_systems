@@ -83,22 +83,24 @@ logo, and a shared folder (not copies). App 3 also uses a sidebar (its source `i
   `marginInlineEnd: marginSM`, so search → actions stays ≥ 24px.
   **Navigation keeps the source app's pattern** (`AppShell navigation`): `"tabs"` (default) = horizontal Menu under the
   header (CRM); `"sidebar"` (Register, Configurator) = light `Layout.Sider` under the header, left of the Content:
-  220px expanded / 49px collapsed = 4px inner padding (antd's `Menu.itemMarginInline` 4) + **40 × 40px square
+  232px expanded / 49px collapsed = 4px inner padding (antd's `Menu.itemMarginInline` 4) + **40 × 40px square
   buttons** + 4px + the 1px right border; **no dead gaps**: items are 44px with no margin (`sidebarTheme` Menu
   `itemMarginBlock` 0, `itemHeight` 44) and paint only their middle 40px (CSS transparent `border-block: 2px` +
   `background-clip: padding-box`, which keeps the side padding next to the icon), so hovering / clicking the 4px gap
   hits the nearer button; icons only, no tooltips (`Menu tooltip={false}`); **instant, no animation**
   (`sidebarTheme` `motion: false`, nested ConfigProvider around the Sider); toggled by a text Button with the Material
   Symbols **Left Panel Open** (collapsed) / **Left Panel Close** (expanded) icons (antd custom `Icon`) at the **left of the header** (header `paddingInlineStart` 8,
-  so its icon centre is x 24); every section icon is also centred at x 24 in both states (`inlineIndent` 13,
-  `collapsedIconSize` 14); a click in the sidebar outside the `.ant-menu-item`s toggles it (both ways); count badges
+  so its icon centre is x 24); every section icon (**18px**, `sidebarTheme` Menu `iconSize` /
+  `collapsedIconSize` 18) is also centred at x 24 in both states (`inlineIndent` (40 − 18) / 2 = 11); a click in the sidebar outside the `.ant-menu-item`s toggles it (both ways); count badges
   follow the name when expanded and sit on the icon when collapsed (CSS rules: collapsed items `overflow: visible`;
   badge `line-height` restored, so the digits sit at the same height as when expanded; the Badge wrapper and its icon get
-  `line-height: 1` + `align-self: center`, and Badge `offset={[0, -6]}` puts the count's top edge on the button's top
+  `line-height: 1` + `align-self: center`, and Badge `offset` [−2, −4] (computed from the icon size) puts the count's top edge on the button's top
   edge); the Sider has a real 1px
   `colorSplit` right border and the header the same bottom border. The Sider is `position: absolute` (zIndex 10) and
   the content has `marginInlineStart` = the sidebar width. `breakpoint="md"`: starts collapsed; expanded below md it
-  overlays. Never convert one pattern into the other. Section icons only where the source shows them; **page headings
+  overlays. The user's expanded/collapsed choice persists across reloads (`localStorage` `dynamics.sidebarCollapsed`,
+  try/catch; `"responsive"` onCollapse calls aren't saved, and at md+ they restore the saved state). Never convert one
+  pattern into the other. Section icons only where the source shows them; **page headings
   never have an icon**. Demo section switching: each app keeps `section` in state (`activeSection` +
   `onSectionChange`); every section shows the same page, only the heading changes to the section name (the default
   section keeps its own title).
@@ -453,6 +455,27 @@ npm run build -w antd-contacts   # one app
   x 4–44 / 4–215, y 104–144 (13px each side of the icon); collapsed badge top 103.9 vs button top 104, inside x 4–44,
   digits offset unchanged; toggle shows left_panel_open collapsed and left_panel_close expanded, centred at x 24; gaps
   still hover/click the nearer button; 0 console warnings; build passes.
+- 2026-11-19: Requested: double the sidebar icons. `sidebarTheme` Menu `iconSize` / `collapsedIconSize` 28
+  (`SIDEBAR_ICON_SIZE`; CRM tabs and the header toggle keep 14px); `inlineIndent` = (40 − 28) / 2 = 6; collapsed Badge
+  `offset` [−7, +1] (top on the button top, inside the button); expanded width 220 → 232 because "Архив предложений 28"
+  was clipped (content right 214 vs 207 available). Verified (Register, Configurator, both states): icons 28 × 28,
+  centred at x 24 (toggle too) and vertically in the button; badges top 103.8 vs button 104, x 18.4–43.6 inside 4–44;
+  no clipped labels; gaps, toggling, section switching unchanged; CRM tab icons 14px; 0 console warnings; build passes.
+- 2026-11-19: Requested: sidebar icons were too large; make them 18px high. `SIDEBAR_ICON_SIZE` 28 → 18; `inlineIndent`
+  and the collapsed badge offset are now formulas of the icon size (11; [−2, −4]). Verified (Register, Configurator, both
+  states): icons 18 × 18, centred at x 24 (toggle too) and vertically in the button; collapsed badges top 103.6 vs
+  button 104, inside x 4–44; no clipped labels (widest content right 209 of 219); gaps hover/click unchanged; CRM tab
+  icons 14px; 0 console warnings; build passes.
+- 2026-11-19: Requested: the expand/collapse icon 18px high, like the section icons. `fontSize: SIDEBAR_ICON_SIZE` on
+  the toggle's Icon (not `Button.onlyIconSize`, which would resize the bell etc.). Verified (Register, Configurator, both
+  states): toggle svg 18 × 18, centred at x 24 / y 27.5 in its 32px button (= the section icons' x), header still 56px,
+  bell icon still 14px, 0 console warnings, build passes.
+- 2026-11-19: Requested: the sidebar's expanded/collapsed state survives a reload. `localStorage`
+  (`dynamics.sidebarCollapsed`), read for the initial state, written on user toggles only; antd's responsive
+  `onCollapse` calls aren't saved and restore the saved state at md+. Verified (Register, Configurator): fresh 232;
+  collapse + reload 49 on the first frame (no flash); expand by an empty-area click + reload 232; saved expanded + 390px
+  load 49 with the saved "0" kept, widen 232, narrow 49; storage throwing: starts 232, toggles, no page errors;
+  production build: collapse + reload 49, 211 rows, no errors; 0 console warnings.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -534,4 +557,6 @@ npm run build -w antd-contacts   # one app
   (`padding-block` + `content-box` also clips away the side padding).
 - A Badge used as a collapsed menu item's icon is stretched to the item height (antd's `line-height: itemHeight` on
   the wrapper and the icon, plus flex stretch), so its count sits at the item's top edge.
+- antd `Layout.Sider` with `breakpoint` calls `onCollapse(matches, "responsive")` on mount as well. With a controlled,
+  persisted `collapsed`, ignore/restore on `"responsive"` or it overwrites the saved state on every load.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.

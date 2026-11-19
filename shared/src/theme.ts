@@ -50,11 +50,13 @@ export const appTheme: ThemeConfig = {
  * The menu keeps antd's 4px item inset (itemMarginInline) as the sidebar's inner padding; the collapsed width is set
  * so that the buttons inside it are 40 × 40px (AppShell).
  * Menu items have no vertical margin and are 44px tall: the 4px gap between the 40px buttons is drawn inside the items
- * (antd-overrides.css: 2px padding-block + background-clip), so hovering or clicking the gap hits the adjacent button.
+ * (antd-overrides.css: transparent border-block + background-clip), so hovering or clicking the gap hits the adjacent
+ * button. Section icons are 18px high (antd: 14), the same size collapsed and expanded.
  */
+export const SIDEBAR_ICON_SIZE = 18;
 export const sidebarTheme: ThemeConfig = {
   token: { motion: false },
   components: {
-    Menu: { itemMarginBlock: 0, itemHeight: 44 },
+    Menu: { itemMarginBlock: 0, itemHeight: 44, iconSize: SIDEBAR_ICON_SIZE, collapsedIconSize: SIDEBAR_ICON_SIZE },
   },
 };

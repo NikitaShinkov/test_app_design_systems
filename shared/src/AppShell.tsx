@@ -27,7 +27,7 @@ import {
 } from '@ant-design/icons';
 import defaultLogo from '../assets/logo.svg';
 import { useSharedStrings } from './i18n';
-import { sidebarTheme } from './theme';
+import { SIDEBAR_ICON_SIZE, sidebarTheme } from './theme';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -37,20 +37,22 @@ const LOGO_HEIGHT = 24;
 /** Application name next to the logo: Regular Italic at this font size (px). */
 const PRODUCT_NAME_FONT_SIZE = 25;
 /**
- * Sidebar widths (px), including its 1px right border. Expanded: fits "Архив предложений" + its count badge.
+ * Sidebar widths (px), including its 1px right border. Expanded: fits "Архив предложений" + its count badge next to
+ * the section icon.
  * Collapsed: 4px inner padding (antd's itemMarginInline) + a 40px button + 4px + the border, so the collapsed section
  * buttons are 40 × 40px squares.
  */
-const SIDER_WIDTH = 220;
+const SIDER_WIDTH = 232;
 const SIDER_ITEM_INSET = 4;
 const SIDER_BUTTON_SIZE = 40;
 const SIDER_COLLAPSED_WIDTH = SIDER_ITEM_INSET + SIDER_BUTTON_SIZE + SIDER_ITEM_INSET + 1;
 /**
- * Sidebar icon line. Collapsed, antd centres the 14px icon in the 48px menu column (x 17–31, centre 24 = the centre of
- * the 40px button at x 4–44). Expanded, the icon starts at itemMarginInline (4) + inlineIndent, so inlineIndent 13 keeps
- * it at the same x in both states. The header toggle button (32px, starting at x 8) has its icon on the same centre.
+ * Sidebar icon line. Collapsed, antd centres the 18px icon in the 48px menu column (x 15–33, centre 24 = the centre of
+ * the 40px button at x 4–44). Expanded, the icon starts at itemMarginInline (4) + inlineIndent, so inlineIndent
+ * (40 − 18) / 2 = 11 keeps it at the same x in both states. The header toggle button (32px, starting at x 8) has its
+ * icon on the same centre.
  */
-const SIDER_INLINE_INDENT = 13;
+const SIDER_INLINE_INDENT = (SIDER_BUTTON_SIZE - SIDEBAR_ICON_SIZE) / 2;
 const SIDER_TOGGLE_OFFSET = 8;
 /** Below md the expanded sidebar overlays the page, so it is drawn above the content. */
 const SIDER_Z_INDEX = 10;
@@ -72,11 +74,39 @@ const LeftPanelCloseSvg = () => (
   </svg>
 );
 /**
- * Collapsed sidebar: the count badge sits on the icon's top-right corner by default (centred on it). Move it up so its
- * top edge is on the button's top edge: (button 40 − icon 14) / 2 = 13px from button top to icon top, minus half the
- * badge height (7) = 6px up.
+ * Collapsed sidebar: the count badge sits on the icon's top-right corner by default (centred on it).
+ * Vertical: its top edge goes on the button's top edge. The icon top is (40 − 18) / 2 = 11px below the button top and
+ * the badge starts half its height (7) above the icon top, so it moves 11 − 7 = 4px up.
+ * Horizontal: centred on the icon's right edge (11px inside the button's right edge), a 3-digit badge (25px) would
+ * stick out 1.5px; shifting it left by that (rounded up to 2px) keeps it inside the button.
  */
-const COLLAPSED_BADGE_OFFSET: [number, number] = [0, -6];
+const BADGE_HEIGHT_SM = 14;
+const BADGE_3_DIGIT_WIDTH = 25;
+const ICON_TO_BUTTON_EDGE = (SIDER_BUTTON_SIZE - SIDEBAR_ICON_SIZE) / 2;
+/**
+ * The sidebar state the user chose (expanded / collapsed) survives a page reload: it is kept in localStorage (per app:
+ * each app has its own origin). Storage can be unavailable (private mode, blocked site data), so every access is
+ * guarded and the default is expanded.
+ */
+const SIDER_STORAGE_KEY = 'dynamics.sidebarCollapsed';
+const readStoredCollapsed = (): boolean => {
+  try {
+    return window.localStorage.getItem(SIDER_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+const storeCollapsed = (collapsed: boolean) => {
+  try {
+    window.localStorage.setItem(SIDER_STORAGE_KEY, collapsed ? '1' : '0');
+  } catch {
+    // not persisted; the sidebar still works
+  }
+};
+const COLLAPSED_BADGE_OFFSET: [number, number] = [
+  Math.min(0, Math.floor(ICON_TO_BUTTON_EDGE - BADGE_3_DIGIT_WIDTH / 2)),
+  BADGE_HEIGHT_SM / 2 - ICON_TO_BUTTON_EDGE,
+];
 
 export interface ShellSection {
   key: string;
@@ -146,7 +176,13 @@ export function AppShell({
   const screens = Grid.useBreakpoint();
   const { message } = AntApp.useApp();
   const t = useSharedStrings();
-  const [siderCollapsed, setSiderCollapsed] = useState(false);
+  const [siderCollapsed, setSiderCollapsed] = useState(readStoredCollapsed);
+  // A user toggle (header button or a click on the empty sidebar area) is saved for the next page load.
+  const toggleSider = () => {
+    const next = !siderCollapsed;
+    setSiderCollapsed(next);
+    storeCollapsed(next);
+  };
 
   const notInDemo = (what: string) => message.info(t.notInDemo(what));
   const searchLabel = searchPlaceholder.replace(/[….]+$/, '');
@@ -213,10 +249,11 @@ export function AppShell({
         {isSidebar && (
           <Button
             type="text"
-            icon={<Icon component={siderCollapsed ? LeftPanelOpenSvg : LeftPanelCloseSvg} />}
+            // Same 18px icon size as the sidebar's section icons (Button.onlyIconSize would resize every icon button).
+            icon={<Icon component={siderCollapsed ? LeftPanelOpenSvg : LeftPanelCloseSvg} style={{ fontSize: SIDEBAR_ICON_SIZE }} />}
             aria-label={siderCollapsed ? t.expandNav : t.collapseNav}
             aria-expanded={!siderCollapsed}
-            onClick={() => setSiderCollapsed((c) => !c)}
+            onClick={toggleSider}
           />
         )}
         {/* Flex (not Space) so the logo and the name sit side by side without wrapper divs.
@@ -311,7 +348,11 @@ export function AppShell({
               collapsible
               trigger={null /* the toggle button lives in the header */}
               collapsed={siderCollapsed}
-              onCollapse={setSiderCollapsed}
+              // Breakpoint changes are not the user's choice and are not saved: below md the sidebar collapses; back at
+              // md+ (also on load, when antd reports the current breakpoint) the saved state is restored.
+              onCollapse={(collapsed, type) =>
+                setSiderCollapsed(type === 'responsive' && !collapsed ? readStoredCollapsed() : collapsed)
+              }
               breakpoint="md" /* starts collapsed on narrow screens; the toggle still expands it */
               style={{
                 position: 'absolute',
@@ -325,7 +366,7 @@ export function AppShell({
               }}
               // A click anywhere in the sidebar except on a section item toggles it (expands or collapses).
               onClick={(e) => {
-                if (!(e.target as HTMLElement).closest('.ant-menu-item')) setSiderCollapsed((c) => !c);
+                if (!(e.target as HTMLElement).closest('.ant-menu-item')) toggleSider();
               }}
             >
               <Menu

@@ -45,10 +45,11 @@ section given in brackets.
 6. **Labels to the left of inputs:** a field's label is on the same line, to the left of the input, never above it (8).
 7. **Keep the source app's navigation pattern** for the top-level sections: a sidebar stays a sidebar, a horizontal
    tab bar stays a horizontal tab bar (`AppShell navigation`). A sidebar (5.1):
-   - is **collapsible**: 220px expanded; collapsed, only the section icons show, as **40 × 40px square buttons** with
+   - has **18px-high section icons** (antd: 14px);
+   - is **collapsible**: 232px expanded; collapsed, only the section icons show, as **40 × 40px square buttons** with
      the sidebar's **4px inner padding** around them; the **4px gaps between buttons are not dead space**: hovering a
      gap highlights the nearer button and clicking it opens that section;
-   - **expands and collapses instantly**, with no animation;
+   - **expands and collapses instantly**, with no animation, and **remembers its state across page reloads**;
    - is toggled by a **button at the left of the header** with the Material Symbols **Left Panel Open** (collapsed) /
      **Left Panel Close** (expanded) icon, on the
      same vertical line as the section icons; a **click anywhere in the sidebar outside the section buttons also
@@ -148,9 +149,9 @@ in components. Apps don't override tokens.
 | `Layout.headerHeight` | 56 | header height |
 | `Menu.itemPaddingInline` | 8 | `--ant-menu-item-padding-inline` |
 | `Menu.horizontalLineHeight` | `32px` | menu item height |
-| `Menu.collapsedIconSize` | 14 | sidebar icons keep one size collapsed and expanded (antd: 16 / 14) |
+| `Menu.collapsedIconSize` | 14 | collapsed menu icons keep the expanded size (antd: 16 / 14); the sidebar overrides both to 18 |
 | `Badge.paddingInline` | 4 | multi-digit counts are narrower ("211" 25px instead of 33px), so they fit on an icon in the 40px collapsed sidebar |
-| `sidebarTheme`: `motion` false; `Menu.itemMarginBlock` 0, `Menu.itemHeight` 44 | (nested `ConfigProvider` around the Sider) | the sidebar switches instantly (other components keep their motion); items touch, so there is no dead gap between them (the visible 40px button and 4px gap come from the CSS rule below) |
+| `sidebarTheme`: `motion` false; `Menu.itemMarginBlock` 0, `Menu.itemHeight` 44, `Menu.iconSize` / `collapsedIconSize` 18 (`SIDEBAR_ICON_SIZE`) | (nested `ConfigProvider` around the Sider) | the sidebar switches instantly (other components keep their motion); items touch, so there is no dead gap between them (the visible 40px button and 4px gap come from the CSS rule below) |
 | `Table.cellPaddingBlock` | 4.5 | **32px rows** (4.5 + 22 + 4.5 + 1px border) |
 | `Modal.motionDurationSlow` / `Mid` | `0.225s` / `0.15s` | popups animate at **75%** of the antd default (Modal only) |
 
@@ -206,9 +207,16 @@ in components. Apps don't override tokens.
     continuous (the CSS override).
   - **Sidebar** in the source (`navigation="sidebar"`; Replacement Register, Configurator): the header stays on top,
     and below it a light `Layout.Sider` with an inline `Menu` sits to the left of the content.
-    - **Widths** (including the 1px right border): **220px** expanded (fits "Архив предложений" + its badge), **49px**
+    - **Widths** (including the 1px right border): **232px** expanded (fits "Архив предложений" + its badge next to the
+      icon), **49px**
       collapsed = 4px inner padding + a **40 × 40px** square button + 4px + the border. The 4px padding is antd's own
-      menu item inset (`Menu.itemMarginInline`, default 4), so expanded items are 211 × 40px at x 4.
+      menu item inset (`Menu.itemMarginInline`, default 4), so expanded items are 223 × 40px at x 4.
+    - **State survives a reload:** the user's choice is saved in `localStorage` (`dynamics.sidebarCollapsed`, "1" /
+      "0"; per app, since each app is its own origin) and read for the first render, so the right width shows from the
+      first frame. Every storage access is in try/catch (private mode, blocked site data): the sidebar then starts
+      expanded and still toggles. Breakpoint changes aren't saved: antd's Sider reports the current breakpoint through
+      `onCollapse(…, "responsive")` (also on load, which would otherwise expand a saved collapsed sidebar), so below md
+      it collapses without touching the saved value, and at md+ the saved state is restored.
     - **Instant, no animation:** a nested `ConfigProvider theme={sidebarTheme}` around the Sider sets `motion: false`,
       so the width, labels and icons switch in one frame. Other components keep their motion.
     - **Right border:** a real 1px `colorSplit` `borderInlineEnd` on the Sider (part of its border-box width). An inset
@@ -220,8 +228,10 @@ in components. Apps don't override tokens.
       Развернуть меню", `aria-expanded`; no tooltip. The Sider's own trigger is off (`trigger={null}`). The header's
       left padding is 8px, so the 32px button's icon is centred at x 24.
     - **Icon line:** every section icon is centred at **x 24** (the centre of the 40px button at x 4–44) in both states,
-      the same as the toggle icon. Collapsed, antd centres the 14px icon in the 48px menu column; expanded,
-      `inlineIndent={13}` + the 4px item margin puts it at the same x, and `Menu.collapsedIconSize` 14 keeps its size.
+      the same as the toggle icon. Section icons are **18px** high (`sidebarTheme` `Menu.iconSize` and
+      `collapsedIconSize`). Collapsed, antd centres the icon in the 48px menu column (x 15–33); expanded,
+      `inlineIndent` = (40 − 18) / 2 = 11 + the 4px item margin puts it at the same x. The header toggle icon is 18px too (`style={{ fontSize:
+      SIDEBAR_ICON_SIZE }}` on the icon; `Button.onlyIconSize` would resize every icon-only button).
     - **No tooltips:** `Menu tooltip={false}` (antd shows the label in a tooltip on collapsed items by default).
     - **Click to toggle:** a click anywhere in the sidebar **outside the section buttons** toggles it, in both
       directions (the Sider `onClick` ignores clicks inside `.ant-menu-item`; the Sider has a pointer cursor). A click
@@ -233,13 +243,14 @@ in components. Apps don't override tokens.
       cursor over the upper half highlights the button above, over the lower half the button below, and a click there
       opens that section (and doesn't toggle the sidebar).
     - **Count badges:** expanded, the `Badge` follows the section name; collapsed (labels hidden), it moves onto the
-      section icon's top-right corner, moved up (`Badge offset={[0, -6]}`: (40 − 14) / 2 − 14 / 2) so that its **top
-      edge is on the button's top edge**, inside the 40 × 40 button. The digits sit at the same height in both
+      section icon's top-right corner, moved with `Badge offset` so that its **top edge is on the button's top edge**
+      and it stays inside the 40 × 40 button: vertical 14 / 2 − (40 − 18) / 2 = −4px, horizontal −2px (centred on the
+      icon's right edge, a 3-digit badge would stick 1.5px out of the button). Both are computed from the icon size. The digits sit at the same height in both
       states (CSS rule: badge line height); `title=""` removes antd's native count tooltip.
     - **Header border:** with a sidebar, the header has a 1px `colorSplit` bottom border, the same line as the
       sidebar's right edge.
     - **Layout:** the Sider is `position: absolute` (`zIndex` 10) and the content `Layout` has `marginInlineStart` =
-      the sidebar width (220 or 49). `breakpoint="md"`: below 768px the sidebar starts collapsed, and when expanded it
+      the sidebar width (232 or 49). `breakpoint="md"`: below 768px the sidebar starts collapsed, and when expanded it
       **overlays** the page instead of squeezing it (the content stays at 49px).
     - The content `Layout` has `minHeight: 0` and `minWidth: 0`, so the page stays one viewport high and wide tables
       don't widen it.
@@ -420,7 +431,7 @@ const { errors, reset, formProps } = useSubmitValidation<Values>();
 
 | Source element | Standard |
 |---|---|
-| Left sidebar navigation | `AppShell navigation="sidebar"`: collapsible `Layout.Sider` (220 / 40px, toggle in the header) + inline `Menu` (same order; counts as `count`) |
+| Left sidebar navigation | `AppShell navigation="sidebar"`: collapsible `Layout.Sider` (232 / 49px, 18px icons, toggle in the header) + inline `Menu` (same order; counts as `count`) |
 | Horizontal tab bar / top navigation | `AppShell navigation="tabs"` (default): horizontal `Menu` under the header |
 | Sidebar user block, role switcher | user `Dropdown` (+ `userMenuExtra` submenu) |
 | Settings nav item / gear icon | the header "Settings / Настройки" outlined button only |
@@ -461,20 +472,23 @@ Run against the dev server **and** the production build (`npm run build` + `vite
   - The header, menu, breadcrumb, title and column header don't move while the list scrolls.
   - No `.ant-pagination`.
   - Navigation pattern = the source app's (`.ant-layout-sider` vs `.ant-menu-horizontal`); no `.ant-layout-footer`.
-  - Sidebar: 220px expanded (items 211 × 40 at x 4); the header button (Left Panel Close icon; Left Panel Open when
+  - Sidebar: 232px expanded (items 223 × 40 at x 4; section icons 18 × 18); the header button (Left Panel Close icon; Left Panel Open when
     collapsed) collapses it to 49px;
     collapsed items are 40 × 40px at x 4; all section icons stay visible, labels hidden. The toggle icon and every
     section icon have their centre at x 24 in both states. Badges: inside the label when expanded, on the icon (within
     the button, its top edge on the button's top edge) when collapsed, with the same text offset inside the badge in
-    both states. The hover / selected background covers the whole button (x 4–44 collapsed, 4–215 expanded). A click on empty sidebar
+    both states. The hover / selected background covers the whole button (x 4–44 collapsed, 4–227 expanded). A click on empty sidebar
     space toggles it both ways; a click on a section button doesn't. Sider right border and header bottom border: 1px
-    `colorSplit`. Content left = 220 / 49. Collapsed by default below 768px; expanded there, it overlays.
+    `colorSplit`. Content left = 232 / 49. No label or badge is clipped when expanded. Collapsed by default below 768px; expanded there, it overlays.
   - Gaps: the hit boxes of neighbouring items touch (44px each); the painted button is the middle 40px
     (`background-clip: padding-box` inside a transparent 2px `border-block`); `:hover` at 1px above / below a gap's middle is the item above / below; a click in
     the gap selects that item and the sidebar width doesn't change. Collapsed badges lie inside their button.
   - Section switching (demo): a click on another section selects it and changes only the page heading to the
     section's name; the page structure and the table stay the same; no "not part of this demo" message.
   - No page heading has an icon.
+  - Persistence: collapse → reload → collapsed on the first frame (and the reverse); with "expanded" saved, a 390px
+    load shows it collapsed and keeps the saved value; widening restores 232px; with storage throwing, it starts expanded
+    and toggles without errors. Check the production build too.
   - Instant toggle: sampling the width every `requestAnimationFrame` after a click gives only the old and the new
     value, and `document.getAnimations()` is empty.
   - No tooltips: hovering the sidebar items, header buttons, badges, table headers, rows and Tags shows no
