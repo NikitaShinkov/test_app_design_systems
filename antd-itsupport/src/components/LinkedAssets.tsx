@@ -1,6 +1,6 @@
 import { Card, Table, Tag, Typography } from 'antd';
 import type { TableProps } from 'antd';
-import { tableComponents } from '@dynamics/ui-shared';
+import { tableComponents, useTableScrollY } from '@dynamics/ui-shared';
 import { statusColors, statusLabels } from '../api';
 import type { Asset } from '../api';
 import { useAssetDialogs } from './AssetDialogs';
@@ -17,6 +17,7 @@ interface LinkedAssetsProps {
 /** Read-only list of the assets linked to an employee or a workplace; a row click opens the asset card. */
 export function LinkedAssets({ title, assets, extra }: LinkedAssetsProps) {
   const { openCard } = useAssetDialogs();
+  const { tableRef, scrollY } = useTableScrollY({ maxHeight: 192 });
   const columns: TableProps<Asset>['columns'] = [
     { key: 'inv', title: 'Инв. номер', width: 130, render: (_, a) => a.inventoryNumber },
     {
@@ -41,7 +42,8 @@ export function LinkedAssets({ title, assets, extra }: LinkedAssetsProps) {
         columns={columns}
         dataSource={assets}
         pagination={false}
-        scroll={{ y: 192 }}
+        ref={tableRef}
+        scroll={{ y: scrollY }}
         locale={{ emptyText: 'Нет закреплённых ТМЦ' }}
         onRow={(a) => ({ onClick: () => openCard(a.id), style: { cursor: 'pointer' } })}
       />

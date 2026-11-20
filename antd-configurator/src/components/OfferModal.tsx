@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Card, Descriptions, Divider, Flex, Form, Input, Modal, Space, Table, Tag, Typography } from 'antd';
 import type { TableProps } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
-import { FormField, FormFields, tableComponents, useSubmitValidation } from '@dynamics/ui-shared';
+import { FormField, FormFields, tableComponents, useSubmitValidation, useTableScrollY } from '@dynamics/ui-shared';
 import { formatUtc, kindLabels, requisitesSummary } from '../data/offers';
 import type { Offer, OfferRequisites, OfferVersion } from '../data/offers';
 
@@ -56,6 +56,7 @@ export function OfferModal({ offer, open, onSave, onClose }: OfferModalProps) {
   const { errors, reset, formProps } = useSubmitValidation<FormValues>();
   const [dirty, setDirty] = useState(false);
   const [resetCount, setResetCount] = useState(0);
+  const { tableRef: historyRef, scrollY: historyScrollY } = useTableScrollY({ maxHeight: 160 });
 
   if (!offer) return null;
   const saved: OfferRequisites = { name: offer.name, customer: offer.customer, number: offer.number };
@@ -161,7 +162,8 @@ export function OfferModal({ offer, open, onSave, onClose }: OfferModalProps) {
                 columns={historyColumns}
                 dataSource={offer.history}
                 pagination={false}
-                scroll={{ y: 160 }}
+                ref={historyRef}
+                scroll={{ y: historyScrollY }}
               />
             </Card>
           </Flex>

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Button, Card, Descriptions, Flex, Modal, Table, Tag, Typography } from 'antd';
 import type { TableProps } from 'antd';
-import { tableComponents } from '@dynamics/ui-shared';
+import { tableComponents, useTableScrollY } from '@dynamics/ui-shared';
 import { operationLabels, statusColors, statusLabels } from '../api';
 import type { Asset, Movement } from '../api';
 import { formatDateTime } from '../format';
@@ -46,6 +46,7 @@ export function AssetCardModal({ open, asset, onClose, onEdit, onMove, onCheck }
   const employee = asset?.employeeId ? employeeById.get(asset.employeeId) : undefined;
   const workplace = asset?.workplaceId ? workplaceById.get(asset.workplaceId) : undefined;
   const retired = asset?.status === 'retired';
+  const { tableRef: historyRef, scrollY: historyScrollY } = useTableScrollY({ maxHeight: 224 });
 
   return (
     <Modal
@@ -111,7 +112,8 @@ export function AssetCardModal({ open, asset, onClose, onEdit, onMove, onCheck }
               columns={historyColumns}
               dataSource={history}
               pagination={false}
-              scroll={{ x: 800, y: 224 }}
+              ref={historyRef}
+              scroll={{ x: 800, y: historyScrollY }}
             />
           </Card>
           {retired && <Text type="secondary">ТМЦ списано: передача и подтверждение наличия недоступны.</Text>}

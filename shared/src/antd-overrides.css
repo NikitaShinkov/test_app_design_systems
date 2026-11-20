@@ -42,23 +42,49 @@
 }
 
 /*
- * Sidebar buttons have no dead gap between them. sidebarTheme makes the menu items 44px tall with no vertical margin
- * (antd: 40px + 4px margin, which left a 4px strip that was neither hovered nor clickable). Here each item gets a 2px
- * transparent border at the top and bottom and paints its background (hover / selected) only inside the border
- * (padding-box: the side padding next to the icon stays part of the button), so the visible button is still 40px with
- * a 4px gap, but the gap belongs to the adjacent buttons: hovering it highlights the nearer button and clicking it
- * opens that section. The vertical corner radius is increased by the 2px border, so the clipped background keeps
- * antd's 8px corners. The menu's 2px padding keeps the first button where it was.
+ * Sidebar buttons have no dead space around them: the sidebar's inner padding and the gaps between buttons belong to
+ * the nearest button (hovering highlights it, clicking opens that section). Only the area below the last button stays
+ * empty sidebar space (a click there toggles the sidebar).
+ * - Gaps: sidebarTheme makes the items 44px tall with no vertical margin (antd: 40px + 4px margin, a dead strip);
+ *   each item gets a 2px transparent border at the top and bottom, so the 4px gap is split between its neighbours.
+ * - Side padding: antd's 4px item margin (`itemMarginInline`) becomes a 4px transparent border on each side
+ *   (margin 0, full width). The token stays 4, because antd uses it to compute the collapsed padding, so the icon
+ *   stays at x 24 in both states.
+ * - Top padding: the first item's top border is 4px (the menu has no padding), the last item's bottom border is 4px
+ *   too; both are 2px taller, so every visible button is still 40px.
+ * The background (hover / selected) is painted only inside the border (padding-box: the padding next to the icon stays
+ * part of the visible button), so the visible buttons are unchanged: 40px high, 4px from the sidebar edges and 4px
+ * apart. The corner radius is increased by the border widths, so the clipped background keeps antd's 8px corners.
  * (content-box clipping was wrong: it also cut off the side padding.) No token covers the hit area.
  * Selectors: one class more than antd's inline-menu item rules.
  */
 .ant-layout-sider .ant-menu.ant-menu-root {
-  padding-block: 2px;
+  padding-block: 0;
 }
 .ant-layout-sider .ant-menu.ant-menu-root > .ant-menu-item {
-  border-block: 2px solid transparent;
+  margin-inline: 0;
+  width: 100%;
+  border: solid transparent;
+  border-width: 2px var(--ant-menu-item-margin-inline);
   background-clip: padding-box;
-  border-radius: var(--ant-menu-item-border-radius) / calc(var(--ant-menu-item-border-radius) + 2px);
+  border-radius: calc(var(--ant-menu-item-border-radius) + var(--ant-menu-item-margin-inline)) /
+    calc(var(--ant-menu-item-border-radius) + 2px);
+}
+.ant-layout-sider .ant-menu.ant-menu-root > .ant-menu-item:first-child {
+  border-top-width: 4px;
+  height: calc(var(--ant-menu-item-height) + 2px);
+  border-start-start-radius: calc(var(--ant-menu-item-border-radius) + var(--ant-menu-item-margin-inline))
+    calc(var(--ant-menu-item-border-radius) + 4px);
+  border-start-end-radius: calc(var(--ant-menu-item-border-radius) + var(--ant-menu-item-margin-inline))
+    calc(var(--ant-menu-item-border-radius) + 4px);
+}
+.ant-layout-sider .ant-menu.ant-menu-root > .ant-menu-item:last-child {
+  border-bottom-width: 4px;
+  height: calc(var(--ant-menu-item-height) + 2px);
+  border-end-start-radius: calc(var(--ant-menu-item-border-radius) + var(--ant-menu-item-margin-inline))
+    calc(var(--ant-menu-item-border-radius) + 4px);
+  border-end-end-radius: calc(var(--ant-menu-item-border-radius) + var(--ant-menu-item-margin-inline))
+    calc(var(--ant-menu-item-border-radius) + 4px);
 }
 
 /*

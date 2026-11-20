@@ -52,8 +52,9 @@ section given in brackets.
    tab bar stays a horizontal tab bar (`AppShell navigation`). A sidebar (5.1):
    - has **18px-high section icons** (antd: 14px);
    - is **collapsible**: 232px expanded; collapsed, only the section icons show, as **40 × 40px square buttons** with
-     the sidebar's **4px inner padding** around them; the **4px gaps between buttons are not dead space**: hovering a
-     gap highlights the nearer button and clicking it opens that section;
+     the sidebar's **4px inner padding** around them; **neither the inner padding nor the 4px gaps between buttons are
+     dead space**: hovering the padding next to a button (left, right, above the first, below the last) or a gap
+     highlights the nearest button, and clicking it opens that section, exactly like the button itself;
    - **expands and collapses instantly**, with no animation, and **remembers its state across page reloads**;
    - is toggled by a **button at the left of the header** with the Material Symbols **Left Panel Open** (collapsed) /
      **Left Panel Close** (expanded) icon, on the
@@ -76,6 +77,11 @@ section given in brackets.
     on the **left**; the buttons on the **right**: the refresh button (if any) **first**, as a secondary button with
     text ("Обновить" / "Refresh"), then the other secondary buttons, and the **primary button always last** (far
     right). The title row holds only the page title.
+13. **Vertical scrollbar only when the table doesn't fit** (6.2): if all rows fit vertically in the table's outer
+    container, the table shows **no** vertical scrollbar (and no scrollbar gutter in the column header). The fit is
+    re-checked whenever the screen is resized or the table's contents change (refresh, search, filters, added or
+    removed rows): when the rows stop fitting the scrollbar appears, when they fit again it disappears. This applies
+    to every table, including small fixed-height tables inside popups (`useTableScrollY`).
 
 The original screenshots or UI tell the skill **what the page contains and how it is organised** (sections, fields,
 columns, actions). They are **not** a source of colours, spacing, fonts or component shapes. Those come only from the
@@ -91,7 +97,7 @@ Public API (`shared/src/index.ts`):
 | `AppShell` | The application frame: header, section navigation (`navigation`: `"tabs"` or `"sidebar"`), content; no footer (section 5). |
 | `FormFields`, `FormField`, `LABEL_EXTRA_WIDTH` | Standard form layout (section 8). |
 | `useSubmitValidation()` | Standard validation timing (section 8). |
-| `useTableScrollY()` | Full-height table with a fixed header (section 6). |
+| `useTableScrollY()` / `useTableScrollY({ maxHeight })` | Full-height (or fixed-max-height) table with a fixed header; vertical scrollbar only when the rows don't fit (section 6.2). |
 | `tableComponents` | Pass to every `Table` (`components={tableComponents}`): header cells without native `title` tooltips. |
 | `TableToolbar` `left` / `right` | The one toolbar above a table: search and filters on the left; Refresh, other secondary buttons, then the primary on the right (6.1). |
 | `sidebarTheme` | Sub-theme for the sidebar (motion off, full-width menu items); applied by `AppShell`. |
@@ -203,11 +209,14 @@ in components. Apps don't override tokens.
     the collapsed icon wrapper and the icon `line-height: itemHeight`, so a Badge wrapper became item-tall and put the
     count at the item's top edge, above the button. Now the wrapper is icon-sized, and the Badge `offset` (5.1) moves
     the count up to the button's top edge.
-  - Sidebar buttons without dead gaps: menu `padding-block: 2px`; items `border-block: 2px solid transparent`,
-    `background-clip: padding-box` and a vertical corner radius + 2px. The 44px item is the hit area; its background
-    (hover, selected) is painted only inside the transparent border, i.e. the full-width 40px middle, so a 4px gap
-    shows between buttons but belongs to them. (`padding-block` + `content-box` is wrong: content-box also drops the
-    side padding next to the icon.)
+  - Sidebar buttons without dead space (gaps and inner padding): menu `padding-block: 0`; items `margin-inline: 0`,
+    `width: 100%`, a transparent border of 2px top/bottom and `itemMarginInline` (4px) left/right (the first item
+    4px on top, the last 4px at the bottom, both 2px taller), `background-clip: padding-box`, and corner radii
+    increased by the border widths. The item including its border is the hit area; its background (hover, selected)
+    is painted only inside the border, so the visible 40px buttons, 4px from the sidebar edges and 4px apart, are
+    unchanged, but the padding and the gaps belong to them. The `itemMarginInline` token stays 4, because antd uses
+    it to compute the collapsed padding (icon at x 24). (`padding-block` + `content-box` is wrong: content-box
+    also drops the side padding next to the icon.)
 - `shared/src/fonts.css`: the italic face.
 - Inline layout styles: full-height flex (`flex: 1; min-height: 0`), the Content padding `16px 24px`, the page
   Card `boxShadow: 'none'`, and the sidebar layout (absolute Sider with a right border, content offset, header bottom
@@ -265,12 +274,14 @@ in components. Apps don't override tokens.
     - **Click to toggle:** a click anywhere in the sidebar **outside the section buttons** toggles it, in both
       directions (the Sider `onClick` ignores clicks inside `.ant-menu-item`; the Sider has a pointer cursor). A click
       on a section button opens that section and leaves the sidebar as it is.
-    - **No dead gaps between buttons:** the items are 44px tall with no margin (`sidebarTheme`), and a CSS rule paints
-      their background only in the middle 40px (2px transparent `border-block` + `background-clip: padding-box`, so
-      the side padding next to the icon stays part of the highlighted button). The buttons look
-      the same (40px, 4px apart, first one at the same y), but each gap belongs to the buttons on either side: the
-      cursor over the upper half highlights the button above, over the lower half the button below, and a click there
-      opens that section (and doesn't toggle the sidebar).
+    - **No dead space around buttons (gaps and inner padding):** the items are 44px tall with no margin
+      (`sidebarTheme`) and full width, and a CSS rule paints their background only inside a transparent border (2px
+      top/bottom, 4px left/right; 4px above the first item and below the last) + `background-clip: padding-box`, so
+      the side padding next to the icon stays part of the highlighted button. The buttons look the same (40px, 4px
+      from the sidebar edges, 4px apart, first one at y 60), but the sidebar's inner padding belongs to the adjacent
+      button and each gap to the buttons on either side: the cursor there highlights that button (upper half of a gap:
+      the button above, lower half: the button below), and a click opens that section (and doesn't toggle the
+      sidebar). Only the empty space below the last button's 4px toggles the sidebar.
     - **Count badges:** expanded, the `Badge` follows the section name; collapsed (labels hidden), it moves onto the
       section icon's top-right corner, moved with `Badge offset` so that its **top edge is on the button's top edge**
       and it stays inside the 40 × 40 button: vertical 14 / 2 − (40 − 18) / 2 = −4px, horizontal −2px (centred on the
@@ -363,6 +374,17 @@ CSV export, totals in the count line) and its `PageFrame` component (title + ful
   </div>
   ```
   Call `scrollToTop()` after search, filter or view changes and after creating a record.
+- **Vertical scrollbar only when the rows don't fit** (core rule 13). antd always sets `overflow-y: scroll` on the
+  body when `scroll.y` is a number (a permanent scrollbar plus a header gutter, even for 3 rows), so never pass a
+  fixed `scroll.y` yourself: `useTableScrollY` returns `scrollY` as a number only while the rows (plus a horizontal
+  scrollbar, if the columns are wider than the table) overflow the available height, and `undefined` while they fit.
+  It re-checks with a `ResizeObserver` on the container and on the table, so window resizes, a sidebar toggle,
+  refresh, search, filters and added/removed rows all update it before the next paint. Small tables with a fixed
+  maximum height (e.g. a history list inside a popup) use the same hook with `maxHeight` instead of a container:
+  ```tsx
+  const { tableRef, scrollY } = useTableScrollY({ maxHeight: 192 });
+  <Table ref={tableRef} pagination={false} scroll={{ y: scrollY }} … />
+  ```
 - **Rows are exactly 32px and single-line.** Put secondary info inline after the main text as
   `<Text type="secondary">`. Never stack two lines in a cell. Use `ellipsis: { showTitle: false }` on text columns (the
   "…" without a native tooltip).
@@ -519,6 +541,12 @@ Run against the dev server **and** the production build (`npm run build` + `vite
   - The document doesn't scroll (`scrollHeight ≤ innerHeight`) at 1440×900.
   - The Card reaches the content bottom, the table body scrolls, and every row is 32px.
   - The header, menu, title and column header don't move while the list scrolls.
+  - Scrollbar only when needed, for every table (list pages and popups): a vertical scrollbar
+    (`.ant-table-body` `offsetWidth − clientWidth > 0`, header `th.ant-table-cell-scrollbar`) exists **if and only if**
+    the body overflows (`scrollHeight > clientHeight`); without one, the table's bottom is inside its container.
+    Check at 1440×900, a tall window (e.g. 3000px: a short list has no scrollbar), a short one (420px: it has one),
+    back at 900px, after a search that leaves a few rows, after clearing it, and after "Обновить". Launch headless
+    Chrome with `ignoreDefaultArgs: ['--hide-scrollbars']`, otherwise every scrollbar measures 0px.
   - No `.ant-pagination`.
   - No `.ant-breadcrumb` in any single-page section; every filter is in the table toolbar.
   - Toolbar: one row at 1440px directly above the table; the left group starts at the table's left edge (search
@@ -534,9 +562,12 @@ Run against the dev server **and** the production build (`npm run build` + `vite
     both states. The hover / selected background covers the whole button (x 4–44 collapsed, 4–227 expanded). A click on empty sidebar
     space toggles it both ways; a click on a section button doesn't. Sider right border and header bottom border: 1px
     `colorSplit`. Content left = 232 / 49. No label or badge is clipped when expanded. Collapsed by default below 768px; expanded there, it overlays.
-  - Gaps: the hit boxes of neighbouring items touch (44px each); the painted button is the middle 40px
-    (`background-clip: padding-box` inside a transparent 2px `border-block`); `:hover` at 1px above / below a gap's middle is the item above / below; a click in
-    the gap selects that item and the sidebar width doesn't change. Collapsed badges lie inside their button.
+  - Gaps and inner padding: the hit boxes cover x 0–231 (expanded) / 0–48 (collapsed), i.e. up to the 1px border, from
+    the sidebar top (y 56) to 4px below the last button, and neighbouring ones touch; the painted buttons are unchanged
+    (x 4–227 / 4–44, 40px high, tops 60, 104, …). Hovering x 1 (left padding), x 229 / 46 (right padding), y 57 (above
+    the first button), 1px above a button (gap) and 2px below the last button gives that button antd's hover colour
+    (or keeps the selected one), and a click there selects that section without changing the sidebar width. A click
+    further below still toggles the sidebar. Collapsed badges lie inside their button.
   - Section switching (demo): a click on another section selects it and changes only the page heading to the
     section's name; the page structure and the table stay the same; no "not part of this demo" message.
   - No page heading has an icon.
@@ -593,6 +624,8 @@ Run against the dev server **and** the production build (`npm run build` + `vite
   `ellipsis` (`showTitle: false`) and on sortable header cells with `ellipsis` (antd's sorter sets it after
   `onHeaderCell`, so use `components={tableComponents}`); `Typography` `ellipsis={{ tooltip }}`.
 - **Table `scroll.y` must be numeric:** use `useTableScrollY`, and every flex ancestor needs `min-height: 0`.
+- **A numeric `scroll.y` always shows a vertical scrollbar** (antd: `overflow-y: scroll`, plus a scrollbar column in
+  the header), even when the rows fit. `useTableScrollY` passes `undefined` while they fit; never hard-code `y`.
 - **`Typography.Link` with only `onClick`** isn't focusable or a link role, so add `role="button"` and `aria-label`.
 - **Pressing Enter in a DatePicker inside a Form submits the form.**
 - **Workspaces on Windows:** stopping `npx vite` can leave node running on the port; check with `netstat`.

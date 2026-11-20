@@ -85,10 +85,12 @@ logo, and a shared folder (not copies). App 3 also uses a sidebar (its source `i
   **Navigation keeps the source app's pattern** (`AppShell navigation`): `"tabs"` (default) = horizontal Menu under the
   header (CRM); `"sidebar"` (Register, Configurator) = light `Layout.Sider` under the header, left of the Content:
   232px expanded / 49px collapsed = 4px inner padding (antd's `Menu.itemMarginInline` 4) + **40 × 40px square
-  buttons** + 4px + the 1px right border; **no dead gaps**: items are 44px with no margin (`sidebarTheme` Menu
-  `itemMarginBlock` 0, `itemHeight` 44) and paint only their middle 40px (CSS transparent `border-block: 2px` +
-  `background-clip: padding-box`, which keeps the side padding next to the icon), so hovering / clicking the 4px gap
-  hits the nearer button; icons only, no tooltips (`Menu tooltip={false}`); **instant, no animation**
+  buttons** + 4px + the 1px right border; **no dead space** (gaps or inner padding): items are 44px with no margin
+  (`sidebarTheme` Menu `itemMarginBlock` 0, `itemHeight` 44) and full width, and paint only inside a transparent
+  border (CSS: 2px top/bottom, `itemMarginInline` 4px left/right, 4px above the first item and below the last, the
+  menu has no padding; `background-clip: padding-box`, which keeps the side padding next to the icon), so hovering /
+  clicking the sidebar padding next to a button or the 4px gap hits the nearest button (only the space below the
+  last button toggles); icons only, no tooltips (`Menu tooltip={false}`); **instant, no animation**
   (`sidebarTheme` `motion: false`, nested ConfigProvider around the Sider); toggled by a text Button with the Material
   Symbols **Left Panel Open** (collapsed) / **Left Panel Close** (expanded) icons (antd custom `Icon`) at the **left of the header** (header `paddingInlineStart` 8,
   so its icon centre is x 24); every section icon (**18px**, `sidebarTheme` Menu `iconSize` /
@@ -110,7 +112,12 @@ logo, and a shared folder (not copies). App 3 also uses a sidebar (its source `i
   "Настройки" item, because settings live in the header button.
 - Page layout: exactly one viewport high (`Layout` `100dvh`). Content → Card → `ant-card-body` stretch to the
   free height. Tables have **no pagination**. Only the body scrolls (`useTableScrollY()` measures `scroll.y` with a
-  ResizeObserver), so the header, menu, toolbar and table header stay fixed. Sorting is by column
+  ResizeObserver), so the header, menu, toolbar and table header stay fixed.
+  **Vertical scrollbar only when the rows don't fit:** `scrollY` is a number only while the rows (+ a horizontal
+  scrollbar) overflow the container, otherwise `undefined` (antd's numeric `scroll.y` always forces
+  `overflow-y: scroll`). Re-checked on every container/table resize (window, sidebar, refresh, search, filters). Popup
+  tables use `useTableScrollY({ maxHeight })` instead of a fixed `scroll.y` (Configurator history 160, IT Support
+  asset history 224, linked assets 192). Sorting is by column
   headers, with a "· Sort: …" label in the count line.
 - **Breadcrumbs only for moving between pages within a section.** All sections in the four apps are single pages, so
   no app shows a `Breadcrumb` (no "Контакты / Контакты"). Breadcrumb items never filter tables: the CRM view switch
@@ -172,7 +179,8 @@ design/
 │       ├── i18n.ts            # shared strings ru/en (shell + messages), useSharedStrings()
 │       ├── FormField.tsx      # FormFields grid (label col = widest label + 30) + FormField
 │       ├── useSubmitValidation.ts  # submit-only validation timing → errors + formProps
-│       ├── useTableScrollY.ts      # full-height table: boxRef, tableRef, scrollY, scrollToTop
+│       ├── useTableScrollY.ts      # full-height / maxHeight table: boxRef, tableRef, scrollY (undefined when the
+│       │                           #   rows fit → no scrollbar), scrollToTop
 │       ├── tableComponents.tsx     # Table components: header cell without native title tooltips
 │       ├── TableToolbar.tsx        # the toolbar above a table: left (search, filters, refresh) / right (actions)
 │       ├── fonts.css          # italic @font-face → Inter 3.19 (matches Figma)
@@ -536,6 +544,24 @@ npm run build -w antd-contacts   # one app
   rules, IT Support added to the list-page and popup references, the toolbar added to the fixed parts of a list page,
   a wrong section reference fixed (6.6 → 6.3). Committed and pushed together with app 4 and the breadcrumb / toolbar /
   refresh rules.
+- 2026-11-20: New rule: a table shows a vertical scrollbar only when its rows don't fit in the outer container,
+  re-checked on resize and on refresh/search/filter. `useTableScrollY` now returns `scrollY` = `undefined` while the
+  rows fit (ResizeObserver on the container and the table, applied with `flushSync` before paint) and takes
+  `{ maxHeight }` for fixed-height tables; the 3 popup tables (Configurator history, IT Support asset history and linked
+  assets) use it instead of a fixed `scroll.y`. Verified in Chrome with real scrollbars (no screenshots) on all 7 list
+  pages and the popups: scrollbar (15px + header gutter) ⇔ body overflow in all 50 states (900 / 3000 / 900 / 420px
+  windows, search with few rows, cleared, "Обновить"; popups with 0, 1, 3, 7 and 8 rows, the 192px limit = 6 rows); the
+  table bottom stays inside its container and the page never scrolls; 0 console warnings; all four builds pass. Guide:
+  core rule 13, §6.2, §10, §11.
+- 2026-11-20: Requested: the sidebar's inner padding next to a section button hovers and clicks like the button. Items
+  now have `margin-inline: 0`, full width and a transparent 4px side border (antd's `itemMarginInline` token stays 4
+  for its collapsed padding maths); the menu's 2px padding-block became a 4px top border on the first item and a 4px
+  bottom border on the last (both 2px taller); corner radii grow by the border widths. Verified in Chrome (Register,
+  Configurator, both states; no screenshots): visible buttons unchanged (x 4–227 / 4–44, 40px, tops 60, 104, …), hit
+  areas x 0–231 / 0–48 from y 56, contiguous; hovering x 1, x 229 / 46, y 57, a gap and 2px below the last button gives
+  that button the hover colour (selected keeps its colour), and a click there opens that section without toggling;
+  the empty area further down still toggles; icons at x 24; collapsed badges on the button top; CRM tabs unaffected;
+  67/67, 0 console warnings; all builds pass. Guide: core rule 7, §4, §5.1, §10.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -619,4 +645,8 @@ npm run build -w antd-contacts   # one app
   the wrapper and the icon, plus flex stretch), so its count sits at the item's top edge.
 - antd `Layout.Sider` with `breakpoint` calls `onCollapse(matches, "responsive")` on mount as well. With a controlled,
   persisted `collapsed`, ignore/restore on `"responsive"` or it overwrites the saved state on every load.
+- antd Table with a numeric `scroll.y` sets `overflow-y: scroll` on the body whenever there is data, so the scrollbar
+  (and a header gutter column) is always there. Pass `scroll.y` only while the rows overflow.
+- Headless Chrome (Playwright) runs with `--hide-scrollbars`: every scrollbar measures 0px. Use
+  `ignoreDefaultArgs: ['--hide-scrollbars']` to measure them.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.
