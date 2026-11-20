@@ -8,7 +8,7 @@ design system, so we can judge how it looks and how well the skill can use it.
 Repository: https://github.com/NikitaShinkov/test_app_design_systems (public, branch `main`).
 
 **Outcome:** Ant Design v6 + the shared layer in `shared/` was selected and adapted on three apps, then used to
-redesign a fourth, real one (IT Support 0.2.0, `antd-itsupport`). The handover for
+redesign two real ones (IT Support 0.2.0, `antd-itsupport`; Replacement Register, `antd-register`). The handover for
 the redesign-skill developer is **`REDESIGN_SKILL_GUIDE.md`** (procedure, rules, logo/name, mapping,
 verification, pitfalls). Keep it in sync with `shared/` whenever a rule changes. Results: `screenshots/`.
 
@@ -71,7 +71,8 @@ logo, and a shared folder (not copies). App 3 also uses a sidebar (its source `i
   `--ant-font-family` starts with `'Inter Variable'`.
 - **Screenshots: do not generate any** (not `screenshots/`, not visual checks) unless the user explicitly asks.
   Verify with computed styles and DOM measurements instead. `screenshots/` holds the desktop (1440×900) main pages and
-  popups of the three apps, retaken on 2026-11-19 at the user's request. The old `docs/` folder was deleted.
+  popups of all five apps, one subfolder per project (112 files: every section, every popup, sidebar expanded/collapsed),
+  retaken on 2026-11-20 at the user's request. The old `docs/` folder was deleted.
 - Shell = `AppShell` from `shared` (each app passes `productName`, `sections`, `activeSection`, search placeholder,
   user; there is no footer; shell texts come from `shared/src/i18n.ts` by `AppProviders lang`).
   Header (56px): logo `shared/assets/logo.svg` (the Dynamics logo, 92×24 viewBox, copied from the root `logo.svg`)
@@ -155,14 +156,16 @@ logo, and a shared folder (not copies). App 3 also uses a sidebar (its source `i
 ```
 design/
 ├── CLAUDE.md            # this file
-├── package.json         # npm workspaces: shared, antd-contacts, antd-proposals, antd-configurator, antd-itsupport
+├── package.json         # npm workspaces: shared, antd-contacts, antd-proposals, antd-configurator, antd-itsupport,
+│                        #   antd-register, antd-register/backend/app
 ├── img_design_1.png     # reference screenshot, app 1 (structure only)
 ├── img_design_2.png     # reference screenshot, app 2 (structure only)
 ├── img_design_3_1.png, img_design_3_1 (updated).png, img_design_3_2 (updated).png  # app 3 references
 ├── logo.svg             # Dynamics logo, 92×24 (source; copy in shared/assets), shown 24px high
 ├── favicon_logo.svg     # favicon source, 32×32 (copied to <app>/public/favicon.svg)
 ├── REDESIGN_SKILL_GUIDE.md  # handover for the redesign-skill developer (read this first)
-├── screenshots/         # desktop 1440×900: 1-crm-*, 2-register-*, 3-configurator-* (main page + popups)
+├── screenshots/         # desktop 1440×900, 2026-11-20, one folder per project: antd-contacts (12), antd-proposals (16),
+│                        #   antd-configurator (7), antd-itsupport (18), antd-register (59): NN-sidebar-*, NN-section-*, NN-*-popup-*
 ├── shared/              # @dynamics/ui-shared — the standard UI layer (TS source, consumed via workspace link)
 │   ├── package.json     # exports "." → src/index.ts; peer deps antd/react/icons; deps @fontsource-variable/inter,
 │   │                    #   inter-ui@3.19.3 (pinned, italic only)
@@ -224,6 +227,25 @@ design/
 │       │                #   Workplaces (single-line: count + grey names), History, Data (backup/restore), Help
 │       └── components/  # AssetDialogs (card popup instead of the side panel, add/edit, transfer, presence check),
 │                        #   EmployeeModal / WorkplaceModal (+ linked assets), PageFrame (breadcrumb + full-height Card)
+├── antd-register/       # app 5 (ru): redesign of the real Replacement Register; a STANDALONE app (no old_apps needed),
+│   │                    #   see its README.md. Start: `npm run start:register` → http://127.0.0.1:4182 (Node 22+)
+│   ├── serve.mjs        # starts backend/app/server.js (local review, port 4181) on antd-register/data (created from
+│   │                    #   backend/seed on first run, git-ignored) + serves dist/ on 4182, forwarding /api without the
+│   │                    #   Origin header (the local-review server is same-origin only)
+│   ├── backend/app      # the original server vendored from old_apps (workspace @dynamics/replacement-register-server; no old
+│   │                    #   client/tests/QA; + public/export-name-policy.js and the PDF.js fonts it reads). One change: auth.js
+│   │                    #   reads crypto.argon2 optionally (then Node < 24.7 starts; argon2 = named-account passwords only)
+│   ├── backend/database # SQL files the server reads; backend/seed: test data (131 proposals, 59 records, exchange files)
+│   ├── vite.config.ts   # dev port 5177, /api proxy → 127.0.0.1:4181 (drops Origin)
+│   └── src/
+│       ├── api.ts, jobs.ts   # review-role headers, cursor fetchAll; preparations, business commands, export issue/download
+│       ├── App.tsx      # AppShell "Replacement Register", sidebar (source pattern, "Сервисное меню" flattened), 11 sections
+│       │                #   (role-dependent), role switch in the user menu, global search → Предложения, Настройки → maintenance
+│       ├── components/  # ListTable (standard table), ExportDialog, ProposalCardModal (side panel → popup with the decision
+│       │                #   form + history), CommandResultModal, HistoryTable, PageFrame; workflow/ (M01, import review, M05/M07/M09
+│       │                #   scope, M11 archive/restore, saved exports/imports)
+│       └── pages/       # Overview, Workflow (M01–M11), Proposals, Rounds, Final approval, Source BOMs, Database, Audit,
+│                        #   Decision history, References, Maintenance (M90, M91)
 └── antd-proposals/      # app 2 (en), port 5174 (same configs as app 1; extra dep: dayjs for DatePicker values)
     └── src/
         ├── main.tsx     # <AppProviders lang="en"><App/></AppProviders>
@@ -255,6 +277,8 @@ npm run dev:contacts        # app 1 → http://localhost:5173
 npm run dev:proposals       # app 2 → http://localhost:5174
 npm run dev:configurator    # app 3 → http://localhost:5175
 npm run dev:itsupport       # app 4 dev → http://localhost:5176 (needs serve.mjs running for the API)
+npm run start:register      # app 5 standalone: build + server + web → http://127.0.0.1:4182 (data in antd-register/data)
+npm run serve -w antd-register   # app 5 without rebuilding; npm run dev:register → http://localhost:5177 (needs serve running)
 # app 4 production: npm run build -w antd-itsupport, then in antd-itsupport:
 #   "../../old_apps/IT-Support-0.2.0-Windows-x64/runtime/node.exe" serve.mjs   → http://127.0.0.1:4180
 npm run build               # tsc -b + vite build for every app (a >500 kB chunk warning from antd is expected)
@@ -562,6 +586,51 @@ npm run build -w antd-contacts   # one app
   that button the hover colour (selected keeps its colour), and a click there opens that section without toggling;
   the empty area further down still toggles; icons at x 24; collapsed badges on the button top; CRM tabs unaffected;
   67/67, 0 console warnings; all builds pass. Guide: core rule 7, §4, §5.1, §10.
+- 2026-11-20: Replacement Register (old_apps, a real Node app; test data added earlier) redesigned per the guide as app 5
+  `antd-register`: client only, on a copy of the original server and data (serve.mjs). All 11 sections (sidebar as in
+  the source, its service group flattened; role-dependent as in the source), M01–M11 flows (inspect/match review,
+  export prepare → issue → download with ExportDialog, import upload → review → commit command, M05/M07/M09 scope
+  popups, M10 with the result table, M11 review → run, saved exports/imports), proposal card popup with the decision
+  form and history, database record edit/delete, references (add/edit, rename/merge with preview, history), source BOMs
+  (registration, rows, cells), audit (+ XLSX export), decision history, maintenance (M90, M91). Shared: AppShell
+  `onSearch` / `onSettings` (optional). Standard fix found: antd `Select` puts a native `title` on its value →
+  `title=""` on every Select in all five apps. Verified in Chrome (no screenshots), production and dev: 11 sections, rows
+  32px, page never scrolls, no pagination, scrollbar ⇔ overflow (0 mismatches at 900/420/3000px, search, clear), 0
+  titles, toolbar one row at 1440 (Proposals 1127 of 1160px), no horizontal scroll at 390; popups: first control
+  focused (read-only: body), no Cancel, primary last 24/20px from the corner; decision save, M03 issue + download, M04
+  commit, M10 result in Russian, M11 review, saved export re-download, role switch; 0 console warnings/errors. All five
+  builds pass. Not rebuilt: personal views, field filters and row selection of the register (report = current filters),
+  proposal attachments, managed approval rounds, import column mapping, preparation retry/cancel lists.
+- 2026-11-20: Requested: all apps launched locally (CRM 5173, Register demo 5174, Configurator 5175 dev; IT Support 4180
+  and Replacement Register 4182 via serve.mjs) and `screenshots/` replaced with 14 current 1440×900 PNGs (1-crm ×3,
+  2-register ×2, 3-configurator ×2, 4-itsupport ×3, 5-rr ×4). The screenshots showed three app-5 defects, fixed before
+  the final shots: part number and manufacturer glued together in the proposal card (Descriptions content is flex →
+  wrap in a span), raw history event codes (SUPPLIER_REPLY, CLIENT_REPLY, FINAL_EVIDENCE now labelled), uneven
+  workflow module cards with cut titles (now a Row/Col grid, 3 per row, full title in the card body); the overview
+  "Предложено" column widened. All builds pass.
+- 2026-11-20: Requested: the app on 4182 made a standalone local application inside design/. The server was vendored
+  into antd-register/backend (app: 137 server modules + data + assets + export-name-policy.js + PDF.js standard fonts;
+  database: SQL; seed: the test data), registered as a workspace (its deps install with the root npm install), and
+  auth.js reads crypto.argon2 optionally so it runs on the installed Node 22. serve.mjs no longer uses old_apps or the
+  portable Node: data in antd-register/data (git-ignored, seeded on first run); `npm run start:register` builds and
+  starts. Verified on Node 22.14 via `npm run start:register`: 11 sections, rows 32px, toolbars one row; decision save,
+  M03 issue + download, M04 commit, M10 result, M11 review, saved export re-download, DB/BOM/reference popups, role
+  switch; M07 DOCX and M09 ZIP preparations and M01 inspection succeed; 0 console warnings/errors. README.md added.
+- 2026-11-20: Requested: screenshots of every section, every popup and the sidebar expanded/collapsed of all apps, in
+  one subfolder per project (screenshots/<project>/, 112 PNG, 1440×900; the 14 flat files were replaced). App 5 ran
+  on a temporary data copy (port 4192, removed afterwards), so the shots did not change antd-register/data; IT Support
+  popups were only opened and closed. The shots found two app-5 bugs, fixed: the audit export is synchronous (201
+  with the export review, not a preparation job; the client polled /api/preparations/undefined), and an import of an
+  already processed file showed an empty table with "Реестр ещё не изменён" (now "файл уже обработан ранее" + the
+  saved result). Builds pass.
+- 2026-11-20: Before the first push of app 5 (public repo): all bundled Replacement Register data made fictional.
+  backend/app/data anonymized consistently (products → "Gateway Module GM-1" etc., decimal numbers → DSC.*,
+  suppliers → Delta Supply / Orion Assembly, orders 9226/1826 → 7226/7126, production orders, 1C codes, decision
+  letters, people); the M07 Word template's names neutralized (server.js expected hash updated); the decimal-number
+  pattern in import-source.js / original-bom-inspection.js accepts any letter prefix. backend/seed regenerated by
+  running M01–M11 on the fictional data in a temporary server copy (same counts: 131 proposals, 59 records). The
+  screenshots of app 5 were retaken on the new data; a full scan of the repo files and the seed (incl. XLSX/DOCX inside
+  ZIPs) finds no real names. The repo was not pushed before this, so the real data is not in the git history.
 
 ## Gotchas found
 - `Breadcrumb` item `menu` is not typed as `MenuProps`. Derive the type:
@@ -650,3 +719,9 @@ npm run build -w antd-contacts   # one app
 - Headless Chrome (Playwright) runs with `--hide-scrollbars`: every scrollbar measures 0px. Use
   `ignoreDefaultArgs: ['--hide-scrollbars']` to measure them.
 - `Typography.Text italic` puts the text in an inner `<i>`, so check `fontStyle` on that element, not the span.
+- antd `Select` (rc-select) sets a native `title` (the option label) on the selected value; `title=""` on the Select
+  overrides it.
+- Replacement Register's local-review server rejects requests whose Origin isn't its own port (403 PREVIEW_ORIGIN_DENIED); a
+  proxy must drop Origin. Its list endpoints are cursor-paged with a hard maximum page size (200 registers, 100 others).
+- Replacement Register: POST /api/audit/exports returns the export review directly (201); other exports return a
+  202 preparation job. An import of a file with the same content returns review.summary.duplicate=true and no rows.

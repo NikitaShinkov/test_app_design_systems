@@ -209,7 +209,7 @@ export default function AssetsPage({ title = 'Реестр ТМЦ' }: { title?: 
               onChange={(e) => onFilter(setQuery)(e.target.value)}
               style={{ width: 240 }}
             />
-            <Select
+            <Select title=""
               placeholder="Все статусы"
               allowClear
               value={status}
@@ -217,7 +217,7 @@ export default function AssetsPage({ title = 'Реестр ТМЦ' }: { title?: 
               options={(Object.keys(statusLabels) as AssetStatus[]).map((s) => ({ value: s, label: statusLabels[s] }))}
               style={{ width: 140 }}
             />
-            <Select
+            <Select title=""
               placeholder="Все сотрудники"
               allowClear
               showSearch={{ optionFilterProp: 'label' }}
@@ -226,7 +226,7 @@ export default function AssetsPage({ title = 'Реестр ТМЦ' }: { title?: 
               options={employeeOptions}
               style={{ width: 200 }}
             />
-            <Select
+            <Select title=""
               placeholder="Все рабочие места"
               allowClear
               showSearch={{ optionFilterProp: 'label' }}

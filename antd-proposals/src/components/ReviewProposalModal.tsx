@@ -80,7 +80,7 @@ export function ReviewProposalModal({ open, proposal, proposals, onSubmit, onCan
     >
       <FormFields>
         <FormField formName={FORM} name="proposalId" label="Proposal" rules={[{ required: true }]} error={errors.proposalId}>
-          <Select
+          <Select title=""
             autoFocus
             showSearch
             placeholder="Select a proposal"
@@ -88,7 +88,7 @@ export function ReviewProposalModal({ open, proposal, proposals, onSubmit, onCan
           />
         </FormField>
         <FormField formName={FORM} name="decision" label="Decision" rules={[{ required: true }]} error={errors.decision}>
-          <Select options={(Object.keys(decisionLabels) as Decision[]).map((d) => ({ value: d, label: decisionLabels[d] }))} />
+          <Select title="" options={(Object.keys(decisionLabels) as Decision[]).map((d) => ({ value: d, label: decisionLabels[d] }))} />
         </FormField>
         <FormField
           formName={FORM}

@@ -1,0 +1,562 @@
+{
+  "metadata": {
+    "sourceSha256": "227804F525D48C70AEEF63F6DB2D518BF6EFD7225A3648291114F99CEBB283B4",
+    "sourceFile": "Alternative Components Database AC8v12v3.xlsm"
+  },
+  "aliases": [
+    {
+      "alias": "3М",
+      "manufacturer": "3M"
+    },
+    {
+      "alias": "ADI",
+      "manufacturer": "Analog Devices"
+    },
+    {
+      "alias": "AIMTEC",
+      "manufacturer": "Aimtec"
+    },
+    {
+      "alias": "ANALOG DEVICES",
+      "manufacturer": "Analog Devices"
+    },
+    {
+      "alias": "AVX",
+      "manufacturer": "KYOCERA AVX"
+    },
+    {
+      "alias": "BOURNS",
+      "manufacturer": "Bourns"
+    },
+    {
+      "alias": "CONNFLY",
+      "manufacturer": "Connfly Electronic"
+    },
+    {
+      "alias": "CUI",
+      "manufacturer": "CUI Devices"
+    },
+    {
+      "alias": "DEGSON",
+      "manufacturer": "DEGSON"
+    },
+    {
+      "alias": "DIODES",
+      "manufacturer": "Diodes Incorporated"
+    },
+    {
+      "alias": "EPSON",
+      "manufacturer": "Epson"
+    },
+    {
+      "alias": "ISSI",
+      "manufacturer": "Integrated Silicon Solution"
+    },
+    {
+      "alias": "KINGBRIGHT",
+      "manufacturer": "Kingbright"
+    },
+    {
+      "alias": "LITTELFUSE",
+      "manufacturer": "Littelfuse"
+    },
+    {
+      "alias": "MICROCHIP",
+      "manufacturer": "Microchip Technology"
+    },
+    {
+      "alias": "MORNSUN",
+      "manufacturer": "MORNSUN"
+    },
+    {
+      "alias": "MURATA",
+      "manufacturer": "Murata"
+    },
+    {
+      "alias": "NEXPERI",
+      "manufacturer": "Nexperia"
+    },
+    {
+      "alias": "NXP SEMICONDUCTOR",
+      "manufacturer": "NXP Semiconductors"
+    },
+    {
+      "alias": "ON",
+      "manufacturer": "onsemi"
+    },
+    {
+      "alias": "ON SEMI",
+      "manufacturer": "onsemi"
+    },
+    {
+      "alias": "ON SEMICONDUCTOR",
+      "manufacturer": "onsemi"
+    },
+    {
+      "alias": "ONSEMI",
+      "manufacturer": "onsemi"
+    },
+    {
+      "alias": "PHOENIX CONTACT",
+      "manufacturer": "Phoenix Contact"
+    },
+    {
+      "alias": "PULSE",
+      "manufacturer": "Pulse Electronics"
+    },
+    {
+      "alias": "ST",
+      "manufacturer": "STMicroelectronics"
+    },
+    {
+      "alias": "ST MICROELECTRONICS",
+      "manufacturer": "STMicroelectronics"
+    },
+    {
+      "alias": "TEXAS INSTRUMENTS",
+      "manufacturer": "Texas Instruments"
+    },
+    {
+      "alias": "TI",
+      "manufacturer": "Texas Instruments"
+    },
+    {
+      "alias": "TJ",
+      "manufacturer": "TJ"
+    },
+    {
+      "alias": "VISHAY",
+      "manufacturer": "Vishay"
+    },
+    {
+      "alias": "VISHAY/VITRAMON",
+      "manufacturer": "Vishay"
+    },
+    {
+      "alias": "YAGEO",
+      "manufacturer": "Yageo"
+    }
+  ],
+  "manufacturers": [
+    "3M",
+    "Aimtec",
+    "Alpha Wire",
+    "Altera",
+    "Amphenol",
+    "Analog Devices",
+    "Bourns",
+    "Central Semiconductor Corp.",
+    "Coilcraft",
+    "Connfly Electronic",
+    "Cooper Bussmann",
+    "CTS",
+    "CUI Devices",
+    "DEGSON",
+    "Diodes Incorporated",
+    "Dow",
+    "Eaton Corp",
+    "ECS Inc. International",
+    "Epson",
+    "EVER OHMS",
+    "G-nor Electronics",
+    "guiguanglight",
+    "Infineon Technologies",
+    "Integrated Silicon Solution",
+    "International Rectifier",
+    "IQD",
+    "KEMET",
+    "Kingbright",
+    "KYOCERA AVX",
+    "Linear Technology",
+    "Littelfuse",
+    "LRC",
+    "Maxim Integrated Products",
+    "Microchip Technology",
+    "MORNSUN",
+    "Murata",
+    "Nexperia",
+    "Nidec Components",
+    "NXP Semiconductors",
+    "Omron",
+    "onsemi",
+    "Panasonic",
+    "Phoenix Contact",
+    "Pulse Electronics",
+    "Raltron",
+    "Samsung Electro-Mechanics",
+    "Samtec Inc.",
+    "Semtech",
+    "SIBA",
+    "SJK",
+    "Stackpole Electronics Inc",
+    "STMicroelectronics",
+    "Tadiran Batteries",
+    "TDK",
+    "TE Connectivity",
+    "Texas Instruments",
+    "TJ",
+    "Univision Technology Inc.",
+    "Vishay",
+    "Winbond Electronics",
+    "XFCN",
+    "Yageo",
+    "N/A"
+  ],
+  "products": [
+    {
+      "product": "Display Board DB-4",
+      "productDecimalNo": "DSC.504040.404"
+    },
+    {
+      "product": "Interface Board IB-5",
+      "productDecimalNo": "DSC.505050.505 Ex"
+    },
+    {
+      "product": "Relay Board RB-6",
+      "productDecimalNo": "DSC.506060.606"
+    },
+    {
+      "product": "Controller Board CB-7",
+      "productDecimalNo": "DSC.507070.707 Ex"
+    },
+    {
+      "product": "Connector Board XB-7",
+      "productDecimalNo": "DSC.508080.808"
+    },
+    {
+      "product": "Network Board NB-9",
+      "productDecimalNo": "DSC.509090.909"
+    },
+    {
+      "product": "Analog Board AB-10",
+      "productDecimalNo": "DSC.510101.010"
+    },
+    {
+      "product": "Logic Board LB-11",
+      "productDecimalNo": "DSC.511111.111"
+    },
+    {
+      "product": "Telemetry Board TB-12",
+      "productDecimalNo": "DSC.512121.212 Ex"
+    },
+    {
+      "product": "Gateway Module GM-1",
+      "productDecimalNo": "DSC.501010.101-03"
+    },
+    {
+      "product": "Power Board PB-3",
+      "productDecimalNo": "DSC.503030.303"
+    },
+    {
+      "product": "Sensor Board SB-2",
+      "productDecimalNo": "DSC.502020.202"
+    }
+  ],
+  "suppliers": [
+    "Orion Assembly",
+    "Delta Supply"
+  ],
+  "relationships": [
+    {
+      "original": "National Semiconductor",
+      "current": "Texas Instruments",
+      "relation": "Acquired",
+      "effectiveDate": "9/1/11",
+      "notes": "Acquired by TI"
+    },
+    {
+      "original": "Linear Technology",
+      "current": "Analog Devices",
+      "relation": "Acquired",
+      "effectiveDate": "3/1/17",
+      "notes": "ADI acquisition"
+    },
+    {
+      "original": "Maxim Integrated",
+      "current": "Analog Devices",
+      "relation": "Acquired",
+      "effectiveDate": "8/1/21",
+      "notes": "ADI acquisition"
+    },
+    {
+      "original": "Altera",
+      "current": "Intel",
+      "relation": "Acquired",
+      "effectiveDate": "12/28/15",
+      "notes": "Intel приобрела Altera за $16.7B. FPGA продукты переведены в Intel Programmable Solutions Group"
+    },
+    {
+      "original": "Linear Technology",
+      "current": "Analog Devices",
+      "relation": "Acquired",
+      "effectiveDate": "3/10/17",
+      "notes": "ADI приобрела Linear Technology. Большинство продуктов LT продолжают выпускаться под брендом Analog Devices"
+    },
+    {
+      "original": "Maxim Integrated",
+      "current": "Analog Devices",
+      "relation": "Acquired",
+      "effectiveDate": "8/26/21",
+      "notes": "ADI приобрела Maxim. Интеграция аналоговых IC, power management и mixed-signal продуктов"
+    },
+    {
+      "original": "Cypress Semiconductor",
+      "current": "Infineon Technologies",
+      "relation": "Acquired",
+      "effectiveDate": "4/16/20",
+      "notes": "Infineon приобрела Cypress. MCU, памяти и automotive решения теперь Infineon"
+    },
+    {
+      "original": "International Rectifier (IR)",
+      "current": "Infineon Technologies",
+      "relation": "Acquired",
+      "effectiveDate": "1/13/15",
+      "notes": "Infineon приобрела IR за $3B. Power MOSFET, IGBT, драйверы"
+    },
+    {
+      "original": "Fairchild Semiconductor",
+      "current": "ON Semiconductor",
+      "relation": "Acquired",
+      "effectiveDate": "9/19/16",
+      "notes": "ON Semiconductor приобрела Fairchild. Power semiconductors объединены под ON"
+    },
+    {
+      "original": "Atmel",
+      "current": "Microchip Technology",
+      "relation": "Acquired",
+      "effectiveDate": "11/1/16",
+      "notes": "Microchip приобрела Atmel. AVR MCU, EEPROM, touch controllers"
+    },
+    {
+      "original": "Microsemi",
+      "current": "Microchip Technology",
+      "relation": "Acquired",
+      "effectiveDate": "5/29/18",
+      "notes": "Microchip приобрела Microsemi. FPGA, timing, power management"
+    },
+    {
+      "original": "SMSC (Standard Microsystems Corporation)",
+      "current": "Microchip Technology",
+      "relation": "Acquired",
+      "effectiveDate": "5/2/12",
+      "notes": "Ethernet controllers, embedded connectivity"
+    },
+    {
+      "original": "IDT (Integrated Device Technology)",
+      "current": "Renesas Electronics",
+      "relation": "Acquired",
+      "effectiveDate": "3/30/19",
+      "notes": "Renesas расширила портфель timing, memory interface, RF IC"
+    },
+    {
+      "original": "Intersil",
+      "current": "Renesas Electronics",
+      "relation": "Acquired",
+      "effectiveDate": "2/24/17",
+      "notes": "Power management, analog IC"
+    },
+    {
+      "original": "Dialog Semiconductor",
+      "current": "Renesas Electronics",
+      "relation": "Acquired",
+      "effectiveDate": "8/31/21",
+      "notes": "Power management, BLE, IoT IC"
+    },
+    {
+      "original": "National Semiconductor",
+      "current": "Texas Instruments",
+      "relation": "Acquired",
+      "effectiveDate": "9/23/11",
+      "notes": "TI приобрела National за $6.5B. Analog IC, amplifiers, regulators"
+    },
+    {
+      "original": "Burr-Brown",
+      "current": "Texas Instruments",
+      "relation": "Acquired",
+      "effectiveDate": "6/27/00",
+      "notes": "Precision analog, ADC/DAC. Интегрировано в TI"
+    },
+    {
+      "original": "Unitrode",
+      "current": "Texas Instruments",
+      "relation": "Acquired",
+      "effectiveDate": "6/26/00",
+      "notes": "Power management IC portfolio"
+    },
+    {
+      "original": "Luminary Micro",
+      "current": "Texas Instruments",
+      "relation": "Acquired",
+      "effectiveDate": "6/9/09",
+      "notes": "ARM Cortex-M MCU (Stellaris), позже TI Tiva"
+    },
+    {
+      "original": "Freescale Semiconductor",
+      "current": "NXP Semiconductors",
+      "relation": "Merger / Acquired",
+      "effectiveDate": "12/7/15",
+      "notes": "NXP объединилась с Freescale. Automotive MCU, processors"
+    },
+    {
+      "original": "Marvell Semiconductor",
+      "current": "Cavium",
+      "relation": "Acquired",
+      "effectiveDate": "7/19/18",
+      "notes": "После покупки Cavium компания сохранила имя Marvell"
+    },
+    {
+      "original": "Cavium",
+      "current": "Marvell Technology",
+      "relation": "Acquired",
+      "effectiveDate": "7/19/18",
+      "notes": "Networking processors, ARM server chips"
+    },
+    {
+      "original": "Broadcom Corporation",
+      "current": "Avago Technologies",
+      "relation": "Acquired",
+      "effectiveDate": "1/30/16",
+      "notes": "Avago приобрела Broadcom и переименовалась в Broadcom Inc."
+    },
+    {
+      "original": "LSI Corporation",
+      "current": "Broadcom",
+      "relation": "Acquired",
+      "effectiveDate": "5/16/14",
+      "notes": "Storage controllers, networking IC"
+    },
+    {
+      "original": "PMC-Sierra",
+      "current": "Microsemi",
+      "relation": "Acquired",
+      "effectiveDate": "3/17/16",
+      "notes": "Networking/storage semiconductor assets"
+    },
+    {
+      "original": "Microsemi",
+      "current": "Microchip Technology",
+      "relation": "Acquired",
+      "effectiveDate": "5/29/18",
+      "notes": "См. выше. Создан крупный supplier FPGA/power/timing"
+    },
+    {
+      "original": "Spansion",
+      "current": "Cypress Semiconductor",
+      "relation": "Merger",
+      "effectiveDate": "3/12/15",
+      "notes": "Flash memory manufacturer merged with Cypress"
+    },
+    {
+      "original": "ISSI (Integrated Silicon Solution Inc.)",
+      "current": "Lumissil Technologies / Integrated Silicon Solution Inc.",
+      "relation": "Acquired",
+      "effectiveDate": "6/21/15",
+      "notes": "Memory products transferred under new ownership"
+    },
+    {
+      "original": "Micrel Semiconductor",
+      "current": "Microchip Technology",
+      "relation": "Acquired",
+      "effectiveDate": "8/3/15",
+      "notes": "Ethernet, analog, power IC"
+    },
+    {
+      "original": "Linear Systems",
+      "current": "Littelfuse",
+      "relation": "Acquired",
+      "effectiveDate": "2/16/22",
+      "notes": "Protection and semiconductor products"
+    },
+    {
+      "original": "IXYS Corporation",
+      "current": "Littelfuse",
+      "relation": "Acquired",
+      "effectiveDate": "1/17/18",
+      "notes": "Power semiconductors, thyristors, MOSFET"
+    },
+    {
+      "original": "Vishay Dale",
+      "current": "Vishay Intertechnology",
+      "relation": "Brand integration",
+      "effectiveDate": "1/1/01",
+      "notes": "Vishay consolidated Dale resistor business"
+    },
+    {
+      "original": "Siliconix",
+      "current": "Vishay Intertechnology",
+      "relation": "Acquired",
+      "effectiveDate": "1/1/01",
+      "notes": "MOSFET and analog semiconductor portfolio"
+    },
+    {
+      "original": "TEMIC Semiconductor",
+      "current": "Atmel",
+      "relation": "Acquired",
+      "effectiveDate": "1/1/01",
+      "notes": "Automotive and telecom ICs integrated into Atmel"
+    },
+    {
+      "original": "Vitesse Semiconductor",
+      "current": "Microsemi",
+      "relation": "Acquired",
+      "effectiveDate": "4/20/15",
+      "notes": "Networking semiconductor portfolio"
+    },
+    {
+      "original": "Actel",
+      "current": "Microsemi",
+      "relation": "Acquired",
+      "effectiveDate": "11/15/10",
+      "notes": "FPGA manufacturer, later Microchip"
+    },
+    {
+      "original": "Xilinx",
+      "current": "AMD",
+      "relation": "Acquired",
+      "effectiveDate": "2/14/22",
+      "notes": "FPGA and adaptive computing products integrated into AMD"
+    },
+    {
+      "original": "ATI Technologies",
+      "current": "AMD",
+      "relation": "Acquired",
+      "effectiveDate": "10/25/06",
+      "notes": "Graphics processors and SoC business"
+    },
+    {
+      "original": "Alcatel Microelectronics",
+      "current": "STMicroelectronics",
+      "relation": "Merger history",
+      "effectiveDate": "1/1/00",
+      "notes": "Semiconductor assets consolidated into ST"
+    },
+    {
+      "original": "Numonyx",
+      "current": "Micron Technology",
+      "relation": "Acquired",
+      "effectiveDate": "3/30/10",
+      "notes": "NOR/NAND flash memory"
+    },
+    {
+      "original": "Elpida Memory",
+      "current": "Micron Technology",
+      "relation": "Acquired",
+      "effectiveDate": "7/31/13",
+      "notes": "DRAM manufacturer integrated into Micron"
+    },
+    {
+      "original": "Micron Technology (Lexar)",
+      "current": "Longsys",
+      "relation": "Acquired",
+      "effectiveDate": "8/16/17",
+      "notes": "Lexar brand transferred to Longsys"
+    },
+    {
+      "original": "SIBA",
+      "current": "Littelfuse",
+      "relation": "Acquired test only",
+      "effectiveDate": "",
+      "notes": "test"
+    }
+  ]
+}

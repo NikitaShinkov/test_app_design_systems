@@ -1,0 +1,21 @@
+{
+  "name": "@dynamics/replacement-register-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Original Replacement Register server (API, storage, background jobs), vendored unchanged for antd-register",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "0.9.12",
+    "docx": "^9.15.1",
+    "exceljs": "^4.4.0",
+    "jszip": "^3.10.2",
+    "pg": "^8.16.3",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

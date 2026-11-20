@@ -6,13 +6,17 @@
     "antd-contacts",
     "antd-proposals",
     "antd-configurator",
-    "antd-itsupport"
+    "antd-itsupport",
+    "antd-register",
+    "antd-register/backend/app"
   ],
   "scripts": {
     "dev:contacts": "npm run dev -w antd-contacts",
     "dev:proposals": "npm run dev -w antd-proposals",
     "build": "npm run build --workspaces --if-present",
     "dev:configurator": "npm run dev -w antd-configurator",
-    "dev:itsupport": "npm run dev -w antd-itsupport"
+    "dev:itsupport": "npm run dev -w antd-itsupport",
+    "dev:register": "npm run dev -w antd-register",
+    "start:register": "npm run start -w antd-register"
   }
 }

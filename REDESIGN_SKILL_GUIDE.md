@@ -9,14 +9,14 @@ Then fix this guide.
 
 | Reference app | Original screens | Result |
 |---|---|---|
-| `antd-contacts` (CRM, ru) | `img_design_1.png` | `screenshots/1-*.png` |
-| `antd-proposals` (Replacement Register, en) | `img_design_2.png` | `screenshots/2-*.png` |
-| `antd-configurator` (Configurator, ru) | `img_design_3_1*.png`, `img_design_3_2 (updated).png` | `screenshots/3-*.png` |
-| `antd-itsupport` (IT Support, ru) | the running IT Support 0.2.0 release (`old_apps/IT-Support-0.2.0-Windows-x64`, compiled, no source) | runs on the original server (3.1) |
+| `antd-contacts` (CRM, ru) | `img_design_1.png` | `screenshots/antd-contacts/` |
+| `antd-proposals` (Replacement Register, en) | `img_design_2.png` | `screenshots/antd-proposals/` |
+| `antd-configurator` (Configurator, ru) | `img_design_3_1*.png`, `img_design_3_2 (updated).png` | `screenshots/antd-configurator/` |
+| `antd-itsupport` (IT Support, ru) | the running IT Support 0.2.0 release (`old_apps/IT-Support-0.2.0-Windows-x64`, compiled, no source) | runs on the original server (3.1); `screenshots/antd-itsupport/` |
+| `antd-register` (Replacement Register, ru) | the running Replacement Register app (`old_apps/Replacement Register`, Node server + plain-JS client, 11 sections, M01–M11 file workflow) | runs on a copy of the original server (3.2); `screenshots/antd-register/` |
 
-The `screenshots/` folder was taken on 2026-11-17/19, **before** the latest rules (Register and Configurator sidebars,
-no breadcrumbs, the table toolbar with "Обновить" on the right, no footer/tooltips). Use it for the overall look only;
-the code in the four apps and this guide are the reference for the current standard.
+The `screenshots/` folder (2026-11-20, desktop 1440×900) has one subfolder per app with every section, every popup and,
+for sidebar apps, the sidebar expanded and collapsed. The code in the apps and this guide remain the reference for the exact rules.
 
 ---
 
@@ -94,7 +94,7 @@ Public API (`shared/src/index.ts`):
 | Export | Use |
 |---|---|
 | `AppProviders` `lang="ru" \| "en"` | Root providers: antd locale, theme tokens, form rules, Inter fonts, CSS overrides, antd `App` (message/notification). |
-| `AppShell` | The application frame: header, section navigation (`navigation`: `"tabs"` or `"sidebar"`), content; no footer (section 5). |
+| `AppShell` | The application frame: header, section navigation (`navigation`: `"tabs"` or `"sidebar"`), content; no footer (section 5). `onSearch` (global search) and `onSettings` (header Settings button) connect a real app; without them both show a "not part of this demo" message. |
 | `FormFields`, `FormField`, `LABEL_EXTRA_WIDTH` | Standard form layout (section 8). |
 | `useSubmitValidation()` | Standard validation timing (section 8). |
 | `useTableScrollY()` / `useTableScrollY({ maxHeight })` | Full-height (or fixed-max-height) table with a fixed header; vertical scrollbar only when the rows don't fit (section 6.2). |
@@ -168,6 +168,40 @@ bundled Node). The skill rebuilds **only the front end** and keeps the back end 
   `Origin` header in the proxy (`proxyReq.removeHeader('origin')`); the session cookie and CSRF token still apply.
 - Replace summary cards with the count line ("43 ТМЦ · выдано 37 · на складе 2 …"), multi-line cells with one line
   (count + grey names), and a details side panel with a card popup.
+
+### 3.2 Large source app with its own server (keep the server, replace the client)
+Reference: `antd-register` (Replacement Register: Node server with background jobs, a ~1 MB plain-JS client, 11
+sections and an Excel/Word file workflow M01–M11). The skill rebuilds only the client; the server and its data format
+stay unchanged.
+- **Inventory the API from the original client code**, not from guesses: for every flow write down the exact calls
+  (method, path, headers, body, polling, result shape). Here: background *preparations* (POST → `202` job → poll
+  `GET /api/preparations/{id}` until `SUCCEEDED`), *business commands* (`POST /api/commands` with an
+  `Idempotency-Key`, poll `GET /api/commands/{id}`), exports that are **prepared → issued → downloaded**, imports that
+  are **uploaded → reviewed → committed**. Keep the same order of steps; the server enforces it.
+- **Ship it standalone:** the server is vendored into the app (`antd-register/backend/app`: only the modules,
+  data, assets and fonts the server reads; not the old client, tests or QA material; registered as a workspace so
+  `npm install` installs its dependencies), with its SQL folder and a seed of test data. `serve.mjs` starts it on the
+  app's own data folder (`antd-register/data`, created from the seed on first run) and serves `dist/`, forwarding
+  `/api`; `npm run start:register` builds and starts everything. Keep server changes minimal and commented (here only
+  an optional `crypto.argon2`, so it runs on Node 22).
+- **Same-origin check:** the server's local-review mode rejects requests whose `Origin` isn't its own port
+  ("Local review API requests must come from this application on the same computer", 403). The launcher and the Vite
+  dev proxy drop the `Origin` header (`proxyReq.removeHeader('origin')`); requests still come from 127.0.0.1.
+- **Review roles:** the original's sidebar role selector ("Режим просмотра") becomes a user-menu submenu
+  (`userMenuExtra`); every request carries the role headers the original sent (`X-User-Role`, `X-User-Name`), and
+  sections the role can't open are hidden, as in the source.
+- **A sidebar group** in the source ("Сервисное меню" with 6 items) is flattened into the same sidebar in the same
+  order (AppShell has no nested groups); duplicate entries (a "Diagnostics" nav item that only opened a dialog of the
+  maintenance page) become a button on that page.
+- **No pagination with a cursor API:** load every page of the cursor (`fetchAll`, at most the server's page size: 200
+  for the registers, 100 for audit, rounds, history and files) and search, filter and sort on the client.
+- **Server texts in English:** build the Russian result line from the result's counts (as the original client did),
+  translate the frequent messages, and show the server's own text otherwise.
+- One reusable `ListTable` (sorting by headers, count + sort line, full-height or `maxHeight` body, row click,
+  default `scroll.x` from the column widths so wide tables scroll inside themselves at 390px) keeps 25 tables on the
+  same rules; one `ExportDialog` (file name with the required `_vN` suffix, optional round, package members, "Выпустить
+  и скачать") serves every export; a `focusFirstControl` helper on `afterOpenChange` gives every popup its first-field
+  focus (read-only popups focus their body, never the X).
 
 ## 4. Theme and global styling
 
@@ -622,7 +656,9 @@ Run against the dev server **and** the production build (`npm run build` + `vite
 - **Tooltips come from many places:** antd `Tooltip`; Menu items in a collapsed sidebar (`tooltip={false}`); table
   sort hints (`showSorterTooltip={false}`); native `title` on Badges (`title=""`), on table body cells with
   `ellipsis` (`showTitle: false`) and on sortable header cells with `ellipsis` (antd's sorter sets it after
-  `onHeaderCell`, so use `components={tableComponents}`); `Typography` `ellipsis={{ tooltip }}`.
+  `onHeaderCell`, so use `components={tableComponents}`); `Typography` `ellipsis={{ tooltip }}`; and **`Select`**: the
+  selected value gets a native `title` with the option label (rc-select `.ant-select-content`), so every `Select` gets
+  `title=""` (the root `title` prop overrides the option title). All five apps now do this.
 - **Table `scroll.y` must be numeric:** use `useTableScrollY`, and every flex ancestor needs `min-height: 0`.
 - **A numeric `scroll.y` always shows a vertical scrollbar** (antd: `overflow-y: scroll`, plus a scrollbar column in
   the header), even when the rows fit. `useTableScrollY` passes `undefined` while they fit; never hard-code `y`.

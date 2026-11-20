@@ -226,7 +226,7 @@ export default function ProposalsPage({ title = 'Replacement proposals' }: { tit
                   onChange={(e) => onFilter(setQuery)(e.target.value)}
                   style={{ width: 180 }}
                 />
-                <Select
+                <Select title=""
                   placeholder="All orders"
                   allowClear
                   value={order}
@@ -234,7 +234,7 @@ export default function ProposalsPage({ title = 'Replacement proposals' }: { tit
                   options={orderOptions.map((o) => ({ value: o, label: o }))}
                   style={{ width: 130 }}
                 />
-                <Select
+                <Select title=""
                   placeholder="All decisions"
                   allowClear
                   value={decision}
@@ -245,7 +245,7 @@ export default function ProposalsPage({ title = 'Replacement proposals' }: { tit
                   }))}
                   style={{ width: 120 }}
                 />
-                <Select
+                <Select title=""
                   placeholder="All products"
                   allowClear
                   value={product}

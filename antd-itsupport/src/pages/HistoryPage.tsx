@@ -117,7 +117,7 @@ export default function HistoryPage({ title = 'История операций' 
               }}
               style={{ width: 280 }}
             />
-            <Select
+            <Select title=""
               placeholder="Все операции"
               allowClear
               value={operation}

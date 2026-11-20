@@ -8,3 +8,6 @@ npm-debug.log*
 .vite/
 .DS_Store
 Thumbs.db
+
+# antd-register: local data of the standalone app (created from antd-register/backend/seed on first run)
+antd-register/data/

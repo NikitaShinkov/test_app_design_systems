@@ -88,7 +88,7 @@ export function AssetFormModal({ open, asset, onClose }: AssetFormModalProps) {
           <Input />
         </FormField>
         <FormField formName={FORM} name="category" label="Категория" rules={[{ required: true }]} error={errors.category}>
-          <Select options={categories.map((c) => ({ value: c, label: c }))} />
+          <Select title="" options={categories.map((c) => ({ value: c, label: c }))} />
         </FormField>
         <FormField formName={FORM} name="serialNumber" label="Серийный номер" rules={[{ max: 100 }]} error={errors.serialNumber}>
           <Input />

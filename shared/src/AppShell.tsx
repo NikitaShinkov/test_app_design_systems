@@ -144,6 +144,10 @@ export interface AppShellProps {
   userMenuExtra?: MenuProps['items'];
   onUserMenuClick?: (key: string) => void;
   notificationCount?: number;
+  /** Global search handler (Enter / search icon). Without it a search only shows a "not part of this demo" message. */
+  onSearch?: (value: string) => void;
+  /** Header "Settings" button handler. Without it the button only shows a "not part of this demo" message. */
+  onSettings?: () => void;
   children: ReactNode;
 }
 
@@ -170,6 +174,8 @@ export function AppShell({
   userMenuExtra,
   onUserMenuClick,
   notificationCount = 0,
+  onSearch,
+  onSettings,
   children,
 }: AppShellProps) {
   const { token } = theme.useToken();
@@ -290,7 +296,11 @@ export function AppShell({
             placeholder={searchPlaceholder}
             allowClear
             style={{ flex: 1, maxWidth: 520, marginInlineEnd: token.marginSM }}
-            onSearch={(value) => value && notInDemo(t.globalSearch(value))}
+            onSearch={(value) => {
+              if (!value) return;
+              if (onSearch) onSearch(value);
+              else notInDemo(t.globalSearch(value));
+            }}
           />
         ) : (
           <Button
@@ -329,7 +339,7 @@ export function AppShell({
           </Dropdown>
 
           {/* Default (outlined) button so its border is clearly visible. */}
-          <Button icon={<SettingOutlined />} onClick={() => notInDemo(t.settings)}>
+          <Button icon={<SettingOutlined />} onClick={() => (onSettings ? onSettings() : notInDemo(t.settings))}>
             {t.settings}
           </Button>
         </Space>

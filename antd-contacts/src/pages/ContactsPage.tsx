@@ -208,7 +208,7 @@ export default function ContactsPage({ title = 'Контакты' }: { title?: s
                   style={{ width: 280 }}
                 />
                 {/* Dedicated table filter (it used to be a menu inside the breadcrumb). */}
-                <Select
+                <Select title=""
                   aria-label="Показать"
                   value={view}
                   onChange={(v: ViewKey) => {

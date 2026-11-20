@@ -111,13 +111,13 @@ export function MoveModal({ open, asset, onClose }: MoveModalProps) {
     >
       <FormFields>
         <FormField formName={FORM} name="status" label="Новое состояние" rules={[{ required: true }]} error={errors.status}>
-          <Select
+          <Select title=""
             autoFocus
             options={(Object.keys(statusLabels) as AssetStatus[]).map((s) => ({ value: s, label: statusLabels[s] }))}
           />
         </FormField>
         <FormField formName={FORM} name="employeeId" label="Сотрудник" rules={[requiredWhenAssigned]} error={errors.employeeId}>
-          <Select
+          <Select title=""
             showSearch={{ optionFilterProp: 'label' }}
             allowClear
             disabled={status !== 'assigned'}
@@ -126,7 +126,7 @@ export function MoveModal({ open, asset, onClose }: MoveModalProps) {
           />
         </FormField>
         <FormField formName={FORM} name="workplaceId" label="Рабочее место" rules={[requiredWhenAssigned]} error={errors.workplaceId}>
-          <Select
+          <Select title=""
             showSearch={{ optionFilterProp: 'label' }}
             allowClear
             disabled={status !== 'assigned'}
